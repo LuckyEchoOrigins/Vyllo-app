@@ -776,7 +776,7 @@ export default function Profile({ userName, setUserName, items, onNavigate, enab
     <div className="screen">
       <div className="screen-content">
         {/* Header */}
-        <div style={{ position: 'relative', background: 'linear-gradient(160deg, var(--accent), var(--accent-2))', padding: '32px 20px 40px', textAlign: 'center' }}>
+        <div style={{ position: 'relative', background: 'linear-gradient(160deg, var(--accent), var(--accent-2))', padding: 'calc(env(safe-area-inset-top) + 32px) 20px 40px', textAlign: 'center' }}>
           <div style={{
             width: 80, height: 80, borderRadius: '50%',
             background: 'rgba(255,255,255,0.25)',
