@@ -29,6 +29,7 @@ export default function BottomNav({ activeTab, onTabChange }) {
       paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
       zIndex: 40,
       boxShadow: '0 -4px 20px rgba(0,0,0,0.06)',
+      pointerEvents: 'auto',
     }}>
       {tabs.map((tab, i) => {
         if (i === 2) return (

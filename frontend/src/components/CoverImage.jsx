@@ -42,7 +42,7 @@ export default function CoverImage({ src, category, size = 56, radius = 10, fill
   // Modo fill → preenche 100% do contentor (posição absoluta, à prova de flexbox)
   const dims = fill
     ? { position: 'absolute', inset: 0, width: '100%', height: '100%' }
-    : { width: size, height: size * 1.4, flexShrink: 0 }
+    : { width: size, height: size * 1.4, flexShrink: 0, display: 'block' }
 
   if (!effectiveSrc || err) {
     const color = CAT_COLOR[category]

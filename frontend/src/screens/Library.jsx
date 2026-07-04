@@ -541,7 +541,7 @@ function LibraryItem({ item, onClick, t }) {
         textAlign: 'left', width: '100%',
         border: '1.5px solid transparent',
         borderBottom: `3px solid ${color}`,
-        transition: 'all 0.15s',
+        transition: 'border-bottom 0.15s, all 0.15s',
       }}
     >
       <div style={{ position: 'relative', flexShrink: 0, width: 50, height: 70, overflow: 'hidden' }}>
