@@ -359,7 +359,7 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
   const atAiredCap = !!airedCap && (form.current_season || 1) === airedCap.s && (form.current_episode || 1) >= airedCap.e
 
   return (
-    <div className="overlay-full" style={{ animation: 'slideUp 0.3s cubic-bezier(.22,1,.36,1) both' }}>
+    <div className="overlay-full" style={{ animation: 'slideUp 0.3s cubic-bezier(.22,1,.36,1) both', paddingTop: '60px' }}>
       {showShare && <ShareItem item={item} onClose={() => setShowShare(false)} />}
       {showCoverPicker && (
         <BookCoverPicker
