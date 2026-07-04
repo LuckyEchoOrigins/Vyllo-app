@@ -540,10 +540,11 @@ function LibraryItem({ item, onClick, t }) {
         boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
         textAlign: 'left', width: '100%',
         border: '1.5px solid transparent',
+        borderBottom: `3px solid ${color}`,
         transition: 'all 0.15s',
       }}
     >
-      <div style={{ position: 'relative', flexShrink: 0 }}>
+      <div style={{ position: 'relative', flexShrink: 0, width: 50, height: 70, overflow: 'hidden' }}>
         <CoverImage src={item.cover} category={item.category} size={50} radius={10} isMovie={item.category === 'film' && !item.is_series} />
         {hasAllAchievements(item) && <PlatinumBadge size={20} style={{ top: -6, right: -6 }} />}
       </div>
@@ -582,13 +583,6 @@ function LibraryItem({ item, onClick, t }) {
           )}
         </div>
       </div>
-      {/* Linha inferior com a cor da categoria */}
-      <div style={{
-        position: 'absolute', left: 0, right: 0, bottom: 0,
-        height: 3, background: color,
-        borderBottomLeftRadius: 16, borderBottomRightRadius: 16,
-        boxShadow: `0 0 6px ${color}`,
-      }} />
     </button>
   )
 }

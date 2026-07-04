@@ -354,6 +354,7 @@ function RecentItem({ item, onClick, t }) {
         background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', borderRadius: 14, padding: '12px 12px 14px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
         textAlign: 'left', width: '100%',
+        borderBottom: `3px solid ${color}`,
       }}
     >
       <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -373,15 +374,6 @@ function RecentItem({ item, onClick, t }) {
           {item.subtitle || item.genre || ''}
         </p>
       </div>
-      {/* Linha inferior = base do cartão, acompanha a curvatura dos cantos */}
-      <div style={{
-        position: 'absolute', left: 0, right: 0, bottom: 0,
-        height: 3,
-        background: color,
-        borderBottomLeftRadius: 14,
-        borderBottomRightRadius: 14,
-        boxShadow: `0 0 6px ${color}`,
-      }} />
     </button>
   )
 }
