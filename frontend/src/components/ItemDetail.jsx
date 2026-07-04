@@ -359,7 +359,7 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
   const atAiredCap = !!airedCap && (form.current_season || 1) === airedCap.s && (form.current_episode || 1) >= airedCap.e
 
   return (
-    <div className="overlay-full" style={{ animation: 'slideUp 0.3s cubic-bezier(.22,1,.36,1) both', marginTop: '80px' }}>
+    <div className="overlay-full" style={{ animation: 'slideUp 0.3s cubic-bezier(.22,1,.36,1) both' }}>
       {showShare && <ShareItem item={item} onClose={() => setShowShare(false)} />}
       {showCoverPicker && (
         <BookCoverPicker
@@ -385,7 +385,7 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
       )}
 
       {/* ── Fundo desfocado da capa — página inteira (fixo atrás de tudo) ── */}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden' }} aria-hidden>
+      <div style={{ position: 'absolute', inset: '-50px 0 0 0', zIndex: 0, overflow: 'hidden' }} aria-hidden>
         {hasBlurBg ? (
           <img
             src={item.cover}
@@ -406,7 +406,7 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
 
       {/* ── Cabeçalho (sobre o fundo) ─────────────────────────────────── */}
       <div style={{ position: 'relative', zIndex: 1, flexShrink: 0 }}>
-        <div style={{ position: 'relative', padding: '50px 20px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ position: 'relative', padding: '16px 20px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
           {/* Back button + Share button */}
           <div style={{ width: '100%', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
