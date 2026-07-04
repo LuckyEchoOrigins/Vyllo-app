@@ -405,7 +405,7 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
       </div>
 
       {/* ── Cabeçalho (sobre o fundo) ─────────────────────────────────── */}
-      <div style={{ position: 'relative', zIndex: 1, flexShrink: 0 }}>
+      <div style={{ position: 'relative', zIndex: 1, flexShrink: 0, paddingTop: 'env(safe-area-inset-top)' }}>
         <div style={{ position: 'relative', padding: '16px 20px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
           {/* Back button + Share button */}

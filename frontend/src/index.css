@@ -100,7 +100,7 @@ body {
   overflow: hidden;
   position: relative;
   width: 100%;
-  padding-top: env(safe-area-inset-top);
+  padding-top: 0;
   margin-top: 0;
 }
 
