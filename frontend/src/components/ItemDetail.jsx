@@ -385,7 +385,7 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
       )}
 
       {/* ── Fundo desfocado da capa — página inteira (fixo atrás de tudo) ── */}
-      <div style={{ position: 'absolute', inset: '-120px 0 0 0', zIndex: 0, overflow: 'hidden' }} aria-hidden>
+      <div style={{ position: 'absolute', top: '-200px', left: 0, right: 0, bottom: 0, zIndex: 0, overflow: 'hidden' }} aria-hidden>
         {hasBlurBg ? (
           <img
             src={item.cover}
