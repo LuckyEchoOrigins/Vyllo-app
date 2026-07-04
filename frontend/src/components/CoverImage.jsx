@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { CAT_COLOR, isPremium } from '../utils'
+import { optimizeImageUrl } from '../utils/cloudinary'
 import CategoryIcon from './CategoryIcon'
 
 // CDNs alternativos da Steam (se um falhar/for bloqueado, tenta o seguinte)
@@ -22,7 +23,8 @@ function steamFallback(url, attempt) {
 
 export default function CoverImage({ src, category, size = 56, radius = 10, fill = false, title, isMovie = false }) {
   const isManual = typeof src === 'string' && src.startsWith('data:')
-  const effectiveSrc = (isMovie && !isPremium() && !isManual) ? null : src
+  const baseSrc = (isMovie && !isPremium() && !isManual) ? null : src
+  const effectiveSrc = baseSrc ? optimizeImageUrl(baseSrc) : null
   const [current, setCurrent] = useState(effectiveSrc)
   const [err, setErr] = useState(false)
   const [visible, setVisible] = useState(false)
@@ -105,6 +107,7 @@ export default function CoverImage({ src, category, size = 56, radius = 10, fill
       src={current}
       alt=""
       decoding="async"
+      loading="lazy"
       onLoad={() => setVisible(true)}
       onError={() => {
         const next = steamFallback(current)
