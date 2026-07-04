@@ -1,6 +1,5 @@
-import { useState, useRef, useEffect, memo } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { List } from 'react-window'
 import CoverImage from '../components/CoverImage'
 import PlatinumBadge from '../components/PlatinumBadge'
 import WishlistRandomizer from '../components/WishlistRandomizer'
@@ -374,8 +373,8 @@ export default function Library({ items, onItemClick, initialCat = 'all', initia
         </div>
 
         {/* Items list */}
-        {filtered.length === 0 ? (
-          <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '52px 24px' }}>
               <div style={{ width: 64, height: 64, borderRadius: 20, margin: '0 auto 14px', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" /></svg>
@@ -387,10 +386,14 @@ export default function Library({ items, onItemClick, initialCat = 'all', initia
                 {q ? t('library.empty_search') : activeList ? t('library.empty_list') : activeFilters > 0 ? t('library.empty_filters') : t('library.empty_add')}
               </p>
             </div>
-          </div>
-        ) : (
-          <VirtualItemList items={sorted} onItemClick={onItemClick} t={t} />
-        )}
+          ) : (
+            sorted.map((item, i) => (
+              <div key={item.id} style={i < 8 ? { animation: 'fadeInUp 0.25s ease both', willChange: 'transform, opacity' } : undefined}>
+                <LibraryItem item={item} onClick={() => onItemClick(item)} t={t} />
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Botão flutuante de sorteio — só na lista "Em espera" */}
@@ -423,55 +426,6 @@ export default function Library({ items, onItemClick, initialCat = 'all', initia
           onPick={(it) => { setRandomizing(false); onItemClick(it) }}
         />
       )}
-    </div>
-  )
-}
-
-const Row = memo(({ index, style, data }) => {
-  const { items, onItemClick, t } = data
-  const item = items[index]
-  const isFirstEight = index < 8
-  return (
-    <div style={{
-      ...style,
-      paddingLeft: 20,
-      paddingRight: 20,
-      boxSizing: 'border-box',
-      animation: isFirstEight ? 'fadeInUp 0.25s ease both' : undefined,
-      willChange: isFirstEight ? 'transform, opacity' : undefined,
-    }}>
-      <LibraryItem item={item} onClick={() => onItemClick(item)} t={t} />
-    </div>
-  )
-})
-Row.displayName = 'Row'
-
-function VirtualItemList({ items, onItemClick, t }) {
-  const listRef = useRef(null)
-  const [listHeight, setListHeight] = useState(600)
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (listRef.current?.parentElement) {
-        const rect = listRef.current.parentElement.getBoundingClientRect()
-        setListHeight(Math.max(300, window.innerHeight - rect.top - 40))
-      }
-    }, 0)
-    return () => clearTimeout(timer)
-  }, [])
-
-  return (
-    <div ref={listRef}>
-      <List
-        height={listHeight}
-        itemCount={items.length}
-        itemSize={90}
-        width="100%"
-        itemData={{ items, onItemClick, t }}
-        overscanCount={5}
-      >
-        {Row}
-      </List>
     </div>
   )
 }
