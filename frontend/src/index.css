@@ -95,13 +95,13 @@ body {
 
 #root {
   background: var(--bg);
-  border-radius: 44px;
-  box-shadow: 0 0 0 11px #1A1A24, 0 0 0 13px #2A2A38, 0 40px 80px rgba(0,0,0,0.55);
-  height: 844px;
+  height: 100vh;
   max-height: 100vh;
   overflow: hidden;
   position: relative;
-  width: 390px;
+  width: 100%;
+  padding-top: 0;
+  margin-top: 0;
 }
 
 #root::before {
