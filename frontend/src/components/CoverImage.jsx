@@ -60,6 +60,7 @@ export default function CoverImage({ src, category, size = 56, radius = 10, fill
           background: `linear-gradient(150deg, ${color} 0%, ${color}E6 38%, #15151F 150%)`,
           overflow: 'hidden', boxSizing: 'border-box',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
+          containIntrinsicSize: `${size}px ${size * 1.4}px`,
         }}>
           {/* Marca de água — ícone grande, muito subtil */}
           <span style={{ position: 'absolute', right: '-16%', bottom: '-14%', color: 'rgba(255,255,255,0.10)', display: 'flex', pointerEvents: 'none' }}>

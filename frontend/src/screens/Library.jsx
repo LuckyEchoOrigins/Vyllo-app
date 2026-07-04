@@ -506,6 +506,7 @@ function FilterGroup({ label, options, value, onChange, color }) {
 }
 
 function LibraryItem({ item, onClick, t }) {
+  const catColor = CAT_COLOR[item.category] || '#6C47FF'
   const color = `var(--cat-${item.category})`
   // Itens concluídos não mostram barra/percentagem (estariam sempre a 100%)
   const showProgress = item.status !== 'wishlist' && item.status !== 'completed'
@@ -540,7 +541,7 @@ function LibraryItem({ item, onClick, t }) {
         boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
         textAlign: 'left', width: '100%',
         border: '1.5px solid transparent',
-        borderBottom: `3px solid ${color}`,
+        borderBottom: `3px solid ${color || catColor}`,
         transition: 'border-bottom 0.15s, all 0.15s',
       }}
     >

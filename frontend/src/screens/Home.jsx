@@ -326,7 +326,7 @@ function formatShortDate(d, t, lang) {
 }
 
 function RecentItem({ item, onClick, t }) {
-  const color = CAT_COLOR[item.category]
+  const color = CAT_COLOR[item.category] || '#6C47FF'
   const pct = getProgress(item)
 
   const statusColors = {
