@@ -144,7 +144,7 @@ export default function Library({ items, onItemClick, initialCat = 'all', initia
     <div className="screen" style={{ animation: 'screenEnter 0.3s ease both' }}>
       <div className="screen-content">
         {/* Header */}
-        <div style={{ padding: '20px 20px 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ padding: 'calc(env(safe-area-inset-top) + 20px) 20px 12px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 22 }}>{t('library.title')}</h1>
             <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>{t('library.items_in_collection', { n: items.length })}</p>

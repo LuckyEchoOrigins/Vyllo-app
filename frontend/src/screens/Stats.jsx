@@ -141,7 +141,7 @@ export default function Stats({ items, onItemClick, onNavigate, enabledCats = ['
       <div className="screen-content">
 
         {/* Header */}
-        <div style={{ padding: '20px 20px 12px', animation: 'fadeInUp 0.3s ease both' }}>
+        <div style={{ padding: 'calc(env(safe-area-inset-top) + 20px) 20px 12px', animation: 'fadeInUp 0.3s ease both' }}>
           <h1 style={{ fontSize: 22 }}>{t('stats.title')}</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>{t('stats.subtitle')}</p>
         </div>

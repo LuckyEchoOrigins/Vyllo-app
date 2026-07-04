@@ -72,7 +72,7 @@ export default function Home({ items, onItemClick, userName, onCategoryClick, en
     <div className="screen" style={{ animation: 'screenEnter 0.3s ease both' }}>
       <div className="screen-content">
         {/* Top bar */}
-        <div style={{ padding: '20px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', animation: 'fadeInUp 0.3s ease both' }}>
+        <div style={{ padding: 'calc(env(safe-area-inset-top) + 20px) 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', animation: 'fadeInUp 0.3s ease both' }}>
           <div>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>{greeting} 👋</p>
             <h1 style={{ fontSize: 22, lineHeight: 1.1, marginTop: 2 }}>{userName}!</h1>
