@@ -1,0 +1,3 @@
+{
+  "rewrites": [{ "source": "/((?!api|privacy|terms|delete-account|manifest|sw|favicon|apple-touch|web-app).*)", "destination": "/index.html" }]
+}

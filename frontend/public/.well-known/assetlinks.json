@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.vyllo_app.twa",
+    "sha256_cert_fingerprints": ["CA:45:3A:E4:77:D3:01:F1:3E:AE:A7:88:E0:62:79:EE:AF:29:2F:BA:D2:9C:F9:C9:F9:93:B1:EC:D4:21:F1:AD"]
+  }
+}]
