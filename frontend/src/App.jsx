@@ -231,7 +231,9 @@ export default function App() {
 
   return (
     <>
-      {screens[tab]}
+      <div style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        {screens[tab]}
+      </div>
       <BottomNav activeTab={tab} onTabChange={handleTabChange} />
 
       {showAdd && (
