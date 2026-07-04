@@ -231,7 +231,9 @@ export default function App() {
 
   return (
     <>
-      {screens[tab]}
+      <div style={{ paddingBottom: 72 }}>
+        {screens[tab]}
+      </div>
       <BottomNav activeTab={tab} onTabChange={handleTabChange} />
 
       {showAdd && (

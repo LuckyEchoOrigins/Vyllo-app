@@ -14,7 +14,7 @@ export default function BottomNav({ activeTab, onTabChange }) {
 
   return (
     <nav style={{
-      position: 'absolute',
+      position: 'fixed',
       bottom: 0,
       left: 0,
       right: 0,
@@ -26,7 +26,8 @@ export default function BottomNav({ activeTab, onTabChange }) {
       alignItems: 'center',
       justifyContent: 'space-around',
       padding: '0 8px',
-      zIndex: 50,
+      paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
+      zIndex: 40,
       boxShadow: '0 -4px 20px rgba(0,0,0,0.06)',
     }}>
       {tabs.map((tab, i) => {
