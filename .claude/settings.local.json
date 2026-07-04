@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Program Files/**)",
+      "Read(//c/Users/leona/AppData/Roaming/**)",
+      "Read(//c/Users/leona/**)",
+      "PowerShell(& \"C:\\\\Program Files\\\\nodejs\\\\node.exe\" --version)",
+      "PowerShell(& \"C:\\\\Program Files\\\\nodejs\\\\npm.cmd\" --version)",
+      "PowerShell($npm = \"C:\\\\Program Files\\\\nodejs\\\\npm.cmd\"; Set-Location \"C:\\\\Users\\\\leona\\\\Desktop\\\\Media Tracker\"; & $npm install 2>&1 | Select-Object -Last 8)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\leona\\\\Desktop\\\\Media Tracker\\\\backend\"; $job = Start-Job -ScriptBlock { & \"C:\\\\Program Files\\\\nodejs\\\\node.exe\" \"C:\\\\Users\\\\leona\\\\Desktop\\\\Media Tracker\\\\backend\\\\server.js\" }; Start-Sleep -Seconds 4; Receive-Job $job; Stop-Job $job; Remove-Job $job)",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"require\\('./routes/tmdb'\\); console.log\\('tmdb route OK'\\)\")",
+      "Bash(node --check server.js)",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\); const k=process.env.TMDB_KEY||''; console.log\\('TMDB_KEY length:', k.length, '| empty:', k.trim\\(\\)===''\\); const s=process.env.STEAM_API_KEY||''; console.log\\('STEAM length:', s.length\\)\")",
+      "Bash(node --check routes/search.js)",
+      "Bash(node --check routes/tmdb.js)",
+      "Bash(awk -F= '{ if \\($2==\"\"\\) print $1\"= \\(vazio\\)\"; else print $1\"= <\"length\\($2\\)\" chars>\" }' .env.example)",
+      "Bash(node --check routes/tv.js)",
+      "Bash(curl -s --max-time 10 \"http://localhost:3001/api/tv/next?title=Severance\")",
+      "Bash(curl -s --max-time 10 \"http://localhost:3001/api/tv/next?title=Breaking%20Bad\")",
+      "Bash(curl -s --max-time 35 -X POST http://localhost:3001/api/search -H 'Content-Type: application/json' -d '{\"query\":\"__TRACKED_VAR__\",\"cat\":\"film\"}')",
+      "Bash(grep -rnoE \"'#[0-9A-Fa-f]{3,6}'|rgba\\\\\\([0-9]\" screens/MonthView.jsx screens/YearView.jsx)",
+      "Bash(grep -nE \"\\\\{/\\\\* |<h[23]\" MonthView.jsx)",
+      "Bash(grep -nE \"\\\\{/\\\\* [0-9]| \\\\d —|<h3\" YearView.jsx)",
+      "Bash(node --input-type=module -e ' *)",
+      "Bash(sort -t: -k2 -rn)",
+      "Bash(npx vite *)",
+      "Bash(awk '{print $5}')",
+      "PowerShell(cd \"C:\\\\Users\\\\leona\\\\Desktop\\\\Media Tracker\\\\frontend\\\\public\"; Remove-Item -Force favicon.svg, icon.svg -ErrorAction SilentlyContinue; Get-ChildItem | Where-Object { $_.Name -match 'icon|favicon|manifest|apple' } | Select-Object Name, @{N='Size';E={'{0:N0} KB' -f \\($_.Length/1KB\\)}})",
+      "mcp__Claude_Preview__preview_start"
+    ]
+  }
+}
