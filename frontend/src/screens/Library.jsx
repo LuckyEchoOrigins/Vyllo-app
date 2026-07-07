@@ -492,7 +492,7 @@ function LibraryItem({ item, onClick, t }) {
         position: 'relative', overflow: 'hidden',
         display: 'flex', alignItems: 'center', gap: 14,
         background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', borderRadius: 16, padding: '14px 14px 16px',
-        boxShadow: `0 2px 8px rgba(0,0,0,0.05), 0 -2px 8px ${(color || catColor)}60`,
+        boxShadow: `0 2px 8px rgba(0,0,0,0.05), 0 -4px 12px ${(color || catColor)}70, 0 -2px 6px ${(color || catColor)}50`,
         textAlign: 'left', width: '100%',
         borderBottom: `3px solid ${color || catColor}`,
         transition: 'border-bottom 0.15s, all 0.15s',

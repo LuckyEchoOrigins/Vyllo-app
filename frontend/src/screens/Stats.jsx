@@ -619,7 +619,7 @@ function StatCard({ value, label, status, color, delay = 0, onClick }) {
       style={{
         position: 'relative', overflow: 'hidden',
         background: 'var(--surface)', borderRadius: 14, padding: '14px 16px 16px', cursor: 'pointer', textAlign: 'left',
-        borderBottom: `3px solid ${color}`, boxShadow: `0 2px 10px rgba(0,0,0,0.06), 0 -2px 8px ${color}60`,
+        borderBottom: `3px solid ${color}`, boxShadow: `0 2px 10px rgba(0,0,0,0.06), 0 -4px 12px ${color}70, 0 -2px 6px ${color}50`,
         animation: `fadeInUp 0.35s cubic-bezier(.22,1,.36,1) ${0.1 + delay * 0.06}s both`,
         transition: 'transform 0.12s',
       }}
