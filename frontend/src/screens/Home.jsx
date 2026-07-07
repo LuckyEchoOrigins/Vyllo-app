@@ -187,9 +187,8 @@ export default function Home({ items, onItemClick, userName, onCategoryClick, en
                 const color = `var(--cat-${item.category})`
                 const showBar = item.category !== 'game' && pct !== null
                 return (
-                  <button
+                  <div
                     key={item.id}
-                    onClick={() => onItemClick(item)}
                     style={{
                       flex: '0 0 auto',
                       width: 130,
@@ -221,14 +220,15 @@ export default function Home({ items, onItemClick, userName, onCategoryClick, en
                         )}
                       </div>
                     </div>
-                  </button>
+                  </div>
                 )
               })}
 
               {/* Ver tudo — quando há mais de 4 em progresso */}
               {inProgress.length > 4 && (
-                <button
+                <div
                   onClick={() => onCategoryClick && onCategoryClick('all', 'in_progress')}
+                  style={{ cursor: 'pointer' }}
                   style={{
                     flex: '0 0 auto',
                     width: 130, minHeight: 226,
@@ -249,7 +249,7 @@ export default function Home({ items, onItemClick, userName, onCategoryClick, en
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--accent)', fontFamily: 'Nunito' }}>{t('home.view_all')}</span>
                   <span style={{ fontSize: 10, color: 'var(--accent)', opacity: 0.7, fontWeight: 600 }}>+{inProgress.length - 4}</span>
-                </button>
+                </div>
               )}
             </div>
           </div>
