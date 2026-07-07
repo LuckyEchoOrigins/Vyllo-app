@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { haptic } from '../feedback'
 import { searchMedia, addItem } from '../api'
 import { CAT_COLOR, formatRuntime, formatMinutes, isPremium, openPremium } from '../utils'
@@ -70,6 +70,18 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
   const [manualIsSeries, setManualIsSeries]   = useState(false)
   const [manualSeasons, setManualSeasons]     = useState('')
   const [manualEpisodes, setManualEpisodes]   = useState('')
+
+  // Levanta a sheet acima do teclado no iOS (o WKWebView não redimensiona sozinho)
+  const [kb, setKb] = useState(0)
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const onResize = () => setKb(Math.max(0, window.innerHeight - vv.height - vv.offsetTop))
+    vv.addEventListener('resize', onResize)
+    vv.addEventListener('scroll', onResize)
+    onResize()
+    return () => { vv.removeEventListener('resize', onResize); vv.removeEventListener('scroll', onResize) }
+  }, [])
 
   const resetManual = () => {
     setManualTitle(''); setManualSubtitle(''); setManualYear('')
@@ -165,7 +177,7 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
   const subtitleLabel = cat === 'book' ? t('add.author_placeholder') : cat === 'game' ? t('add.developer_placeholder') : t('add.studio_placeholder')
 
   return (
-    <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()} style={{ paddingBottom: kb, transition: 'padding-bottom 0.18s ease' }}>
       <div className="bottom-sheet" style={{ maxHeight: '90vh' }}>
         <div className="sheet-handle" />
 
@@ -256,7 +268,6 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
                   onFocus={() => setSearchFocus(true)}
                   onBlur={() => setSearchFocus(false)}
                   placeholder={cat === 'book' ? t('add.search_book') : cat === 'game' ? t('add.search_game') : t('add.search_film')}
-                  autoFocus
                   disabled={limitHit}
                   style={{ paddingRight: 48, borderColor: searchFocus ? color : 'var(--border)', boxShadow: searchFocus ? `0 0 8px ${color}99` : 'none', opacity: limitHit ? 0.5 : 1 }}
                 />
@@ -363,7 +374,6 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
                     value={manualTitle}
                     onChange={e => setManualTitle(e.target.value)}
                     placeholder={cat === 'book' ? t('add.book_title') : cat === 'game' ? t('add.game_name') : t('add.film_title')}
-                    autoFocus
                     style={{ borderColor: manualTitle ? color : 'var(--border)', boxShadow: manualTitle ? `0 0 6px ${color}55` : 'none' }}
                   />
                   <input

@@ -19,7 +19,7 @@ export default function BottomNav({ activeTab, onTabChange }) {
       left: 0,
       right: 0,
       width: '100%',
-      height: 72,
+      height: 'calc(64px + max(8px, env(safe-area-inset-bottom)))',
       background: 'var(--surface)',
       borderTop: '1px solid var(--border)',
       display: 'flex',
