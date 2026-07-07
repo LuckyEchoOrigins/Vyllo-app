@@ -352,7 +352,7 @@ function RecentItem({ item, onClick, t }) {
         position: 'relative', overflow: 'hidden',
         display: 'flex', alignItems: 'center', gap: 12,
         background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', borderRadius: 14, padding: '12px 12px 14px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+        boxShadow: `0 2px 8px rgba(0,0,0,0.05), 0 -2px 8px ${color}60`,
         textAlign: 'left', width: '100%',
         borderBottom: `3px solid ${color}`,
       }}

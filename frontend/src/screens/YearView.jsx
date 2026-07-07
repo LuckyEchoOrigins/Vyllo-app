@@ -567,7 +567,7 @@ function ShelfRow({ cat, covers, direction, catName, months }) {
 
 function BigStat({ value, label, emoji, color }) {
   return (
-    <div style={{ background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', borderRadius: 14, padding: '16px', borderBottom: `3px solid ${color}`, boxShadow: `0 2px 10px rgba(0,0,0,0.06), inset 0 -3px 8px ${color}40` }}>
+    <div style={{ background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', borderRadius: 14, padding: '16px', borderBottom: `3px solid ${color}`, boxShadow: `0 2px 10px rgba(0,0,0,0.06), 0 -2px 8px ${color}60` }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <p style={{ fontSize: 26, fontWeight: 900, color }}>{value}</p>
         <span style={{ fontSize: 20 }}>{emoji}</span>
