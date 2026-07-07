@@ -67,18 +67,20 @@ export default function BottomNav({ activeTab, onTabChange }) {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
+              justifyContent: 'flex-start',
               gap: 3,
-              padding: '8px 12px',
+              padding: '8px 4px',
               background: 'none',
               color: isActive ? 'var(--accent)' : '#8E8EA0',
               flex: 1,
+              minWidth: 0,
               transition: 'color 0.15s',
             }}
           >
-            <span style={{ transition: 'transform 0.15s, filter 0.15s', transform: isActive ? 'scale(1.12)' : 'scale(1)', filter: isActive ? 'drop-shadow(0 0 7px var(--accent))' : 'none' }}>
+            <span style={{ height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.15s, filter 0.15s', transform: isActive ? 'scale(1.12)' : 'scale(1)', filter: isActive ? 'drop-shadow(0 0 7px var(--accent))' : 'none' }}>
               {tab.icon}
             </span>
-            <span style={{ fontSize: 10, fontWeight: 700, fontFamily: 'Nunito' }}>{tab.label}</span>
+            <span style={{ fontSize: 10, fontWeight: 700, fontFamily: 'Nunito', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{tab.label}</span>
           </button>
         )
       })}
