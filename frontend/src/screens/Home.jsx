@@ -199,7 +199,7 @@ export default function Home({ items, onItemClick, userName, onCategoryClick, en
                       overflow: 'hidden',
                       boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
                       textAlign: 'left',
-                      borderBottom: `3px solid ${require('../utils').CAT_COLOR[item.category]}`,
+                      borderBottom: `3px solid ${CAT_COLOR[item.category]}`,
                     }}
                   >
                     <div style={{ position: 'relative', width: '100%', height: 170, flexShrink: 0 }}>
