@@ -521,7 +521,7 @@ function RatingSheet({ stars, items, onClose, onItemClick, t }) {
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {ratingItems.map((it, i) => (
             <div key={it.id} onClick={() => { onClose(); onItemClick?.(it) }}
-              style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 14, padding: '12px 14px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', animation: `fadeInUp 0.22s ease ${i * 0.04}s both`, borderBottom: `3px solid var(--cat-${it.category})` }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 14, padding: '12px 14px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', animation: `fadeInUp 0.22s ease ${i * 0.04}s both` }}>
               <CoverImage src={it.cover} category={it.category} size={48} radius={10} isMovie={it.category === 'film' && !it.is_series} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</p>
@@ -597,7 +597,7 @@ function YearSheet({ year, items, initialCat = 'all', onClose, onItemClick, t })
             ? <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, marginTop: 32 }}>{t('stats.no_completed')}</p>
             : yearItems.map((it, i) => (
               <div key={it.id} onClick={() => { onClose(); onItemClick?.(it) }}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 14, padding: '12px 14px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', animation: `fadeInUp 0.22s ease ${i * 0.03}s both`, borderBottom: `3px solid var(--cat-${it.category})` }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 14, padding: '12px 14px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', animation: `fadeInUp 0.22s ease ${i * 0.03}s both` }}>
                 <CoverImage src={it.cover} category={it.category} size={48} radius={10} isMovie={it.category === 'film' && !it.is_series} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</p>
