@@ -181,14 +181,15 @@ export default function Home({ items, onItemClick, userName, onCategoryClick, en
             <div className="section-header">
               <h2 style={{ fontSize: 16 }}>{t('home.continue')}</h2>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'nowrap', alignItems: 'flex-start', gap: 12, padding: '4px 20px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-              {inProgress.slice(0, 4).map(item => {
+            <div style={{ display: 'flex', flexWrap: 'nowrap', alignItems: 'flex-start', gap: 12, padding: '4px 20px', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', gap: 12, animation: `scrollInfinite ${inProgress.length > 0 ? 20 : 10}s linear infinite` }}>
+              {[...inProgress.slice(0, 4), ...inProgress.slice(0, 4)].map((item, idx) => {
                 const pct = getProgress(item)
                 const color = `var(--cat-${item.category})`
                 const showBar = item.category !== 'game' && pct !== null
                 return (
                   <div
-                    key={item.id}
+                    key={`${item.id}-${idx}`}
                     style={{
                       flex: '0 0 auto',
                       width: 130,
@@ -198,6 +199,7 @@ export default function Home({ items, onItemClick, userName, onCategoryClick, en
                       overflow: 'hidden',
                       boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
                       textAlign: 'left',
+                      borderBottom: `3px solid ${require('../utils').CAT_COLOR[item.category]}`,
                     }}
                   >
                     <div style={{ position: 'relative', width: '100%', height: 170, flexShrink: 0 }}>
@@ -223,35 +225,25 @@ export default function Home({ items, onItemClick, userName, onCategoryClick, en
                   </div>
                 )
               })}
-
-              {/* Ver tudo — quando há mais de 4 em progresso */}
-              {inProgress.length > 4 && (
-                <div
-                  onClick={() => onCategoryClick && onCategoryClick('all', 'in_progress')}
-                  style={{ cursor: 'pointer' }}
-                  style={{
-                    flex: '0 0 auto',
-                    width: 130, minHeight: 226,
-                    background: 'var(--purple-light)',
-                    borderRadius: 16,
-                    border: 'none', cursor: 'pointer',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10,
-                  }}
-                >
-                  <div style={{
-                    width: 44, height: 44, borderRadius: '50%', background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 2px 8px rgba(var(--accent-rgb),0.2)',
-                  }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9 18l6-6-6-6"/>
-                    </svg>
-                  </div>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--accent)', fontFamily: 'Nunito' }}>{t('home.view_all')}</span>
-                  <span style={{ fontSize: 10, color: 'var(--accent)', opacity: 0.7, fontWeight: 600 }}>+{inProgress.length - 4}</span>
-                </div>
-              )}
+              </div>
             </div>
+
+            {/* Ver tudo — quando há mais de 4 em progresso */}
+            {inProgress.length > 4 && (
+              <button
+                onClick={() => onCategoryClick && onCategoryClick('all', 'in_progress')}
+                style={{
+                  width: '100%', marginTop: 12, padding: '12px 20px',
+                  background: 'var(--purple-light)', borderRadius: 14, border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent)', fontFamily: 'Nunito' }}>{t('home.view_all')} (+{inProgress.length - 4})</span>
+              </button>
+            )}
           </div>
         )}
 

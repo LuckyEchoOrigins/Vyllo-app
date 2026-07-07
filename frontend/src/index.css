@@ -454,3 +454,8 @@ textarea::placeholder {
   0%, 100% { box-shadow: 0 6px 22px rgba(var(--accent-rgb),0.45); }
   50% { box-shadow: 0 6px 30px rgba(var(--accent-rgb),0.65); }
 }
+
+@keyframes scrollInfinite {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
