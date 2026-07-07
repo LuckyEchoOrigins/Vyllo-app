@@ -47,6 +47,20 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Recebe o idToken do Google Sign-In nativo (iOS) e completa a sessão no Supabase.
+  // O código Swift envia: window.postMessage({ type: 'GOOGLE_SIGN_IN', idToken }, '*')
+  useEffect(() => {
+    const onMessage = (e) => {
+      const data = e.data
+      if (data && data.type === 'GOOGLE_SIGN_IN' && data.idToken) {
+        supabase.auth.signInWithIdToken({ provider: 'google', token: data.idToken })
+          .catch(() => {})
+      }
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [])
+
   const signIn = (email, password) => supabase.auth.signInWithPassword({ email, password })
   const signUp = (email, password) => supabase.auth.signUp({ email, password })
   const signOut = async () => {
