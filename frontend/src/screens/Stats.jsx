@@ -619,7 +619,7 @@ function StatCard({ value, label, status, color, delay = 0, onClick }) {
       style={{
         position: 'relative', overflow: 'hidden',
         background: 'var(--surface)', borderRadius: 14, padding: '14px 16px 16px', cursor: 'pointer', textAlign: 'left',
-        border: '1px solid var(--border)', boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
+        borderBottom: `3px solid ${color}`, boxShadow: `0 2px 10px rgba(0,0,0,0.06), inset 0 -3px 8px ${color}40`,
         animation: `fadeInUp 0.35s cubic-bezier(.22,1,.36,1) ${0.1 + delay * 0.06}s both`,
         transition: 'transform 0.12s',
       }}
@@ -632,8 +632,6 @@ function StatCard({ value, label, status, color, delay = 0, onClick }) {
         <span style={{ color, display: 'flex' }}><StatusIcon status={status} size={20} strokeWidth={2.2} /></span>
       </div>
       <p style={{ fontSize: 12, color, fontWeight: 700, marginTop: 4, opacity: 0.85 }}>{label}</p>
-      {/* linha de acento (mesma linguagem dos cartões da Biblioteca) */}
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: color, borderBottomLeftRadius: 14, borderBottomRightRadius: 14, boxShadow: `0 0 6px ${color}` }} />
     </button>
   )
 }
