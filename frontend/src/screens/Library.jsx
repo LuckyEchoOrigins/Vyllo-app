@@ -497,8 +497,8 @@ function LibraryItem({ item, onClick, t }) {
         transition: 'all 0.15s',
       }}
     >
-      <div style={{ position: 'relative', flexShrink: 0, width: 50, height: 70, overflow: 'hidden' }}>
-        <CoverImage src={item.cover} category={item.category} size={50} radius={10} isMovie={item.category === 'film' && !item.is_series} />
+      <div style={{ position: 'relative', flexShrink: 0, width: 50, height: 70, overflow: 'hidden', borderRadius: 10, transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
+        <CoverImage src={item.cover} category={item.category} size={50} radius={10} fill isMovie={item.category === 'film' && !item.is_series} />
         {hasAllAchievements(item) && <PlatinumBadge size={20} style={{ top: -6, right: -6 }} />}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -537,7 +537,7 @@ function LibraryItem({ item, onClick, t }) {
         </div>
       </div>
       {/* Borda de acento com glow — só a borda brilha, não o card */}
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: color || catColor, boxShadow: `0 0 8px 1px ${color || catColor}` }} />
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: color || catColor, boxShadow: `0 0 8px 1px ${color || catColor}`, borderBottomLeftRadius: 16, borderBottomRightRadius: 16 }} />
     </button>
   )
 }

@@ -200,7 +200,7 @@ export default function Home({ items, onItemClick, userName, onCategoryClick, en
                       textAlign: 'left',
                     }}
                   >
-                    <div style={{ position: 'relative', width: '100%', height: 170, flexShrink: 0 }}>
+                    <div style={{ position: 'relative', width: '100%', height: 170, flexShrink: 0, borderRadius: '16px 16px 0 0', overflow: 'hidden', transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
                       <CoverImage src={item.cover} category={item.category} radius={0} fill title={item.title} isMovie={item.category === 'film' && !item.is_series} />
                       {hasAllAchievements(item) && <PlatinumBadge size={26} style={{ top: 8, right: 8 }} />}
                     </div>
@@ -374,7 +374,7 @@ function RecentItem({ item, onClick, t }) {
         </p>
       </div>
       {/* Borda de acento com glow — só a borda brilha, não o card */}
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: color, boxShadow: `0 0 8px 1px ${color}` }} />
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: color, boxShadow: `0 0 8px 1px ${color}`, borderBottomLeftRadius: 14, borderBottomRightRadius: 14 }} />
     </button>
   )
 }

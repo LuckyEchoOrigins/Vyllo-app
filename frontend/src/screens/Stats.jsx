@@ -529,7 +529,7 @@ function RatingSheet({ stars, items, onClose, onItemClick, t }) {
               </div>
               <span style={{ color: `var(--cat-${it.category})`, display: 'flex', flexShrink: 0 }}><CategoryIcon cat={it.category} size={18} strokeWidth={2.1} /></span>
               {/* Borda de acento com glow — só a borda brilha, não o card */}
-              <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: `var(--cat-${it.category})`, boxShadow: `0 0 8px 1px var(--cat-${it.category})` }} />
+              <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: `var(--cat-${it.category})`, boxShadow: `0 0 8px 1px var(--cat-${it.category})`, borderBottomLeftRadius: 14, borderBottomRightRadius: 14 }} />
             </div>
           ))}
         </div>
@@ -606,7 +606,7 @@ function YearSheet({ year, items, initialCat = 'all', onClose, onItemClick, t })
                 </div>
                 <span style={{ color: `var(--cat-${it.category})`, display: 'flex', flexShrink: 0 }}><CategoryIcon cat={it.category} size={18} strokeWidth={2.1} /></span>
                 {/* Borda de acento com glow — só a borda brilha, não o card */}
-                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: `var(--cat-${it.category})`, boxShadow: `0 0 8px 1px var(--cat-${it.category})` }} />
+                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: `var(--cat-${it.category})`, boxShadow: `0 0 8px 1px var(--cat-${it.category})`, borderBottomLeftRadius: 14, borderBottomRightRadius: 14 }} />
               </div>
             ))
           }
@@ -637,7 +637,7 @@ function StatCard({ value, label, status, color, delay = 0, onClick }) {
       </div>
       <p style={{ fontSize: 12, color, fontWeight: 700, marginTop: 4, opacity: 0.85 }}>{label}</p>
       {/* Borda de acento com glow — só a borda brilha, não o card */}
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: color, boxShadow: `0 0 8px 1px ${color}` }} />
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: color, boxShadow: `0 0 8px 1px ${color}`, borderBottomLeftRadius: 14, borderBottomRightRadius: 14 }} />
     </button>
   )
 }

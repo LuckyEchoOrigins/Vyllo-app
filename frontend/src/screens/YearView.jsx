@@ -574,7 +574,7 @@ function BigStat({ value, label, emoji, color }) {
       </div>
       <p style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginTop: 4 }}>{label}</p>
       {/* Borda de acento com glow — só a borda brilha, não o card */}
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: color, boxShadow: `0 0 8px 1px ${color}` }} />
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: color, boxShadow: `0 0 8px 1px ${color}`, borderBottomLeftRadius: 14, borderBottomRightRadius: 14 }} />
     </div>
   )
 }
