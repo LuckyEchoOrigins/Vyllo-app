@@ -74,13 +74,22 @@ export function useAuth() {
     setUser(null)
     window.location.reload()
   }
-  const signInWithOAuth = (provider) => supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo: window.location.origin,
-      queryParams: { prompt: 'select_account' },
-    },
-  })
+  const signInWithOAuth = (provider) => {
+    // No app iOS nativo, o Google OAuth web é bloqueado (WebView). Dispara antes
+    // o Google Sign-In nativo (GIDSignIn) que devolve o idToken via postMessage.
+    const nativeGoogle = provider === 'google' && window.webkit?.messageHandlers?.['google-signin']
+    if (nativeGoogle) {
+      nativeGoogle.postMessage({})
+      return Promise.resolve({ error: null })
+    }
+    return supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: window.location.origin,
+        queryParams: { prompt: 'select_account' },
+      },
+    })
+  }
 
   return { user, authLoading, signIn, signUp, signOut, signInWithOAuth }
 }
