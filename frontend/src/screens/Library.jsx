@@ -492,10 +492,9 @@ function LibraryItem({ item, onClick, t }) {
         position: 'relative', overflow: 'hidden',
         display: 'flex', alignItems: 'center', gap: 14,
         background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', borderRadius: 16, padding: '14px 14px 16px',
-        boxShadow: `0 2px 8px rgba(0,0,0,0.05), 0 -4px 12px ${(color || catColor)}70, 0 -2px 6px ${(color || catColor)}50`,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
         textAlign: 'left', width: '100%',
-        borderBottom: `3px solid ${color || catColor}`,
-        transition: 'border-bottom 0.15s, all 0.15s',
+        transition: 'all 0.15s',
       }}
     >
       <div style={{ position: 'relative', flexShrink: 0, width: 50, height: 70, overflow: 'hidden' }}>
@@ -537,6 +536,8 @@ function LibraryItem({ item, onClick, t }) {
           )}
         </div>
       </div>
+      {/* Borda de acento com glow — só a borda brilha, não o card */}
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: color || catColor, boxShadow: `0 0 8px 1px ${color || catColor}` }} />
     </button>
   )
 }

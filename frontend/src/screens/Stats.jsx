@@ -521,13 +521,15 @@ function RatingSheet({ stars, items, onClose, onItemClick, t }) {
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {ratingItems.map((it, i) => (
             <div key={it.id} onClick={() => { onClose(); onItemClick?.(it) }}
-              style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 14, padding: '12px 14px', cursor: 'pointer', boxShadow: `0 2px 8px rgba(0,0,0,0.06), inset 0 -3px 8px var(--cat-${it.category})40`, animation: `fadeInUp 0.22s ease ${i * 0.04}s both`, borderBottom: `3px solid var(--cat-${it.category})` }}>
+              style={{ position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 14, padding: '12px 14px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', animation: `fadeInUp 0.22s ease ${i * 0.04}s both` }}>
               <CoverImage src={it.cover} category={it.category} size={48} radius={10} isMovie={it.category === 'film' && !it.is_series} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</p>
                 <StarRating value={it.rating} readonly />
               </div>
               <span style={{ color: `var(--cat-${it.category})`, display: 'flex', flexShrink: 0 }}><CategoryIcon cat={it.category} size={18} strokeWidth={2.1} /></span>
+              {/* Borda de acento com glow — só a borda brilha, não o card */}
+              <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: `var(--cat-${it.category})`, boxShadow: `0 0 8px 1px var(--cat-${it.category})` }} />
             </div>
           ))}
         </div>
@@ -597,12 +599,14 @@ function YearSheet({ year, items, initialCat = 'all', onClose, onItemClick, t })
             ? <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, marginTop: 32 }}>{t('stats.no_completed')}</p>
             : yearItems.map((it, i) => (
               <div key={it.id} onClick={() => { onClose(); onItemClick?.(it) }}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 14, padding: '12px 14px', cursor: 'pointer', boxShadow: `0 2px 8px rgba(0,0,0,0.06), inset 0 -3px 8px var(--cat-${it.category})40`, animation: `fadeInUp 0.22s ease ${i * 0.03}s both`, borderBottom: `3px solid var(--cat-${it.category})` }}>
+                style={{ position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 14, padding: '12px 14px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', animation: `fadeInUp 0.22s ease ${i * 0.03}s both` }}>
                 <CoverImage src={it.cover} category={it.category} size={48} radius={10} isMovie={it.category === 'film' && !it.is_series} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</p>
                 </div>
                 <span style={{ color: `var(--cat-${it.category})`, display: 'flex', flexShrink: 0 }}><CategoryIcon cat={it.category} size={18} strokeWidth={2.1} /></span>
+                {/* Borda de acento com glow — só a borda brilha, não o card */}
+                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: `var(--cat-${it.category})`, boxShadow: `0 0 8px 1px var(--cat-${it.category})` }} />
               </div>
             ))
           }
@@ -619,7 +623,7 @@ function StatCard({ value, label, status, color, delay = 0, onClick }) {
       style={{
         position: 'relative', overflow: 'hidden',
         background: 'var(--surface)', borderRadius: 14, padding: '14px 16px 16px', cursor: 'pointer', textAlign: 'left',
-        borderBottom: `3px solid ${color}`, boxShadow: `0 2px 10px rgba(0,0,0,0.06), 0 -4px 12px ${color}70, 0 -2px 6px ${color}50`,
+        border: '1px solid var(--border)', boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
         animation: `fadeInUp 0.35s cubic-bezier(.22,1,.36,1) ${0.1 + delay * 0.06}s both`,
         transition: 'transform 0.12s',
       }}
@@ -632,6 +636,8 @@ function StatCard({ value, label, status, color, delay = 0, onClick }) {
         <span style={{ color, display: 'flex' }}><StatusIcon status={status} size={20} strokeWidth={2.2} /></span>
       </div>
       <p style={{ fontSize: 12, color, fontWeight: 700, marginTop: 4, opacity: 0.85 }}>{label}</p>
+      {/* Borda de acento com glow — só a borda brilha, não o card */}
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: color, boxShadow: `0 0 8px 1px ${color}` }} />
     </button>
   )
 }

@@ -352,9 +352,8 @@ function RecentItem({ item, onClick, t }) {
         position: 'relative', overflow: 'hidden',
         display: 'flex', alignItems: 'center', gap: 12,
         background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', borderRadius: 14, padding: '12px 12px 14px',
-        boxShadow: `0 2px 8px rgba(0,0,0,0.05), 0 -4px 12px ${color}70, 0 -2px 6px ${color}50`,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
         textAlign: 'left', width: '100%',
-        borderBottom: `3px solid ${color}`,
       }}
     >
       <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -374,6 +373,8 @@ function RecentItem({ item, onClick, t }) {
           {item.subtitle || item.genre || ''}
         </p>
       </div>
+      {/* Borda de acento com glow — só a borda brilha, não o card */}
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: color, boxShadow: `0 0 8px 1px ${color}` }} />
     </button>
   )
 }
