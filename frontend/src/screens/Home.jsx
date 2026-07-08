@@ -69,7 +69,7 @@ export default function Home({ items, onItemClick, userName, onCategoryClick, en
     })
 
   return (
-    <div className="screen" style={{ animation: 'screenEnter 0.18s ease both' }}>
+    <div className="screen" style={{ animation: 'screenEnter 0.18s ease backwards' }}>
       <div className="screen-content">
         {/* Top bar */}
         <div style={{ padding: 'calc(env(safe-area-inset-top) + 20px) 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', animation: 'fadeInUp 0.3s ease both' }}>
