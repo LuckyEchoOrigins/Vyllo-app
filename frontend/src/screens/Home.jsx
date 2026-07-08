@@ -189,6 +189,7 @@ export default function Home({ items, onItemClick, userName, onCategoryClick, en
                 return (
                   <div
                     key={item.id}
+                    onClick={() => onItemClick(item)}
                     style={{
                       flex: '0 0 auto',
                       width: 130,
@@ -198,6 +199,7 @@ export default function Home({ items, onItemClick, userName, onCategoryClick, en
                       overflow: 'hidden',
                       boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
                       textAlign: 'left',
+                      cursor: 'pointer',
                     }}
                   >
                     <div style={{ position: 'relative', width: '100%', height: 170, flexShrink: 0, borderRadius: '16px 16px 0 0', overflow: 'hidden', transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
