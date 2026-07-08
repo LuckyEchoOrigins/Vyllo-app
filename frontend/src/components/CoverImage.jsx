@@ -110,9 +110,11 @@ export default function CoverImage({ src, category, size = 56, radius = 10, fill
       loading="lazy"
       onLoad={() => setVisible(true)}
       onError={() => {
-        const next = steamFallback(current)
-        if (next) { setCurrent(next); setVisible(false) }
-        else setErr(true)
+        const steam = steamFallback(current)
+        if (steam) { setCurrent(steam); setVisible(false); return }
+        // Otimização (Cloudinary) falhou → carrega o URL original da fonte
+        if (baseSrc && current !== baseSrc) { setCurrent(baseSrc); setVisible(false); return }
+        setErr(true)
       }}
       style={{
         ...dims,
