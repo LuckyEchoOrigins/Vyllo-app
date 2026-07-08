@@ -322,7 +322,17 @@ export default function Profile({ userName, setUserName, items, onNavigate, enab
     setTimeout(() => window.location.reload(), 800)
   }
 
-  const toggleVacation = () => {
+  const toggleVacation = async () => {
+    // Confirma ao ATIVAR — evita ativar acidentalmente
+    if (!activeVac) {
+      const ok = await confirmDialog({
+        title: t('profile.vacation_confirm_title'),
+        message: t('profile.vacation_confirm_message'),
+        confirmLabel: t('profile.vacation_confirm_btn'),
+        cancelLabel: t('profile.vacation_confirm_cancel'),
+      })
+      if (!ok) return
+    }
     const todayKey = new Date().toISOString().split('T')[0]
     const next = activeVac
       ? vacations.map(v => (v.end == null ? { ...v, end: todayKey } : v))   // termina férias
