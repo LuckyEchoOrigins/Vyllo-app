@@ -88,6 +88,14 @@ export default function App() {
     return () => clearTimeout(t)
   }, [])
 
+  // Avisa o app iOS nativo que a app está pronta → faz crossfade suave do ecrã
+  // de carregamento nativo direto para o conteúdo (sem spinner web pelo meio).
+  useEffect(() => {
+    if (!authLoading && !loading) {
+      try { window.webkit?.messageHandlers?.['app-ready']?.postMessage({}) } catch {}
+    }
+  }, [authLoading, loading])
+
   const visibleItems = items.filter(i => enabledCats.includes(i.category))
 
   const goToLibrary = (cat, status = 'all') => {
