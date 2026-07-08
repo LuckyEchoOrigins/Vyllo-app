@@ -388,7 +388,7 @@ export default function Library({ items, onItemClick, initialCat = 'all', initia
             </div>
           ) : (
             sorted.map((item, i) => (
-              <div key={item.id} style={i < 8 ? { animation: 'fadeInUp 0.25s ease both', willChange: 'transform, opacity' } : undefined}>
+              <div key={item.id} style={i < 8 ? { animation: 'fadeInUp 0.25s ease both' } : undefined}>
                 <LibraryItem item={item} onClick={() => onItemClick(item)} t={t} />
               </div>
             ))
@@ -491,10 +491,9 @@ function LibraryItem({ item, onClick, t }) {
       style={{
         position: 'relative', overflow: 'hidden',
         display: 'flex', alignItems: 'center', gap: 14,
-        background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', borderRadius: 16, padding: '14px 14px 16px',
+        background: 'var(--surface)', borderRadius: 16, padding: '14px 14px 16px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
         textAlign: 'left', width: '100%',
-        transition: 'all 0.15s',
       }}
     >
       <div style={{ position: 'relative', flexShrink: 0, width: 50, height: 70, overflow: 'hidden', borderRadius: 10, transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
