@@ -81,11 +81,20 @@ export default function MonthView({ items, onItemClick }) {
     .reduce((s, i) => s + i.runtime, 0)
 
   // ── Heatmap por dia ──
+  // Une o registo de atividade real (por dia) com o updated_at dos itens, contando
+  // itens distintos por dia. Sem isto, o heatmap só mostrava o último dia de update
+  // de cada item e perdia atividades feitas noutros dias.
+  const dayItems = {}
+  const addDay = (dateStr, key) => {
+    if (!dateStr || !dateStr.startsWith(monthPrefix)) return
+    const day = parseInt(dateStr.slice(8, 10))
+    if (!dayItems[day]) dayItems[day] = new Set()
+    dayItems[day].add(key)
+  }
+  activity.forEach(a => addDay(a.created_at, a.item_id ?? `a${a.id}`))
+  monthItems.forEach(i => addDay(i.updated_at, i.id))
   const dayCount = {}
-  monthItems.forEach(i => {
-    const day = parseInt(i.updated_at.slice(8, 10))
-    dayCount[day] = (dayCount[day] || 0) + 1
-  })
+  Object.keys(dayItems).forEach(d => { dayCount[d] = dayItems[d].size })
   const maxDay = Math.max(1, ...Object.values(dayCount))
   const firstWeekday = new Date(year, month, 1).getDay() // 0=Dom
 
