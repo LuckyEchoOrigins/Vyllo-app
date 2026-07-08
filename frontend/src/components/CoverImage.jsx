@@ -29,6 +29,7 @@ export default function CoverImage({ src, category, size = 56, radius = 10, fill
   const [err, setErr] = useState(false)
   const [visible, setVisible] = useState(false)
   const prevSrc = useRef(null)
+  const imgRef = useRef(null)
 
   useEffect(() => {
     if (effectiveSrc !== prevSrc.current) {
@@ -38,6 +39,12 @@ export default function CoverImage({ src, category, size = 56, radius = 10, fill
       setVisible(false)
     }
   }, [effectiveSrc])
+
+  // Imagens em cache podem já estar carregadas antes do onLoad ligar → revela na mesma
+  useEffect(() => {
+    const el = imgRef.current
+    if (el && el.complete && el.naturalWidth > 0) setVisible(true)
+  }, [current])
 
   // Modo fill → preenche 100% do contentor (posição absoluta, à prova de flexbox)
   const dims = fill
@@ -104,10 +111,10 @@ export default function CoverImage({ src, category, size = 56, radius = 10, fill
 
   return (
     <img
+      ref={imgRef}
       src={current}
       alt=""
       decoding="async"
-      loading="lazy"
       onLoad={() => setVisible(true)}
       onError={() => {
         const steam = steamFallback(current)
