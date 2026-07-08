@@ -53,7 +53,6 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
   const [showManualCover, setShowManualCover] = useState(false)
   const [steamHours, setSteamHours]   = useState(null)   // horas reais da Steam
   const [steamHoursLoading, setSteamHoursLoading] = useState(false)
-  const [scrollY, setScrollY]         = useState(0)      // colapso do cabeçalho
   const [showListSheet, setShowListSheet] = useState(false)
   const [listCount, setListCount]     = useState(() => getListsForItem(item.id).length)
   const [nextEp, setNextEp] = useState(null)   // próximo episódio (séries)
@@ -96,26 +95,11 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item.id])
 
-  // Cabeçalho colapsável: capa grande → encolhe ao fazer scroll
-  const COLLAPSE = 180
-  // Clamp [0,1] — sem o Math.max, o overscroll (scrollY negativo) fazia a capa
-  // crescer acima de 170 e "saltar" ao bater no topo.
-  const collapseT = Math.max(0, Math.min(scrollY / COLLAPSE, 1))   // 0 (topo) → 1 (colapsado)
-  const coverSize = Math.round(170 - collapseT * 80)     // 170 → 90
-
-  // Throttle do scroll a 1 update por frame (rAF). Sem isto, cada evento de
-  // scroll re-renderizava toda a página do item → scroll a travar e a "saltar".
-  const scrollRaf = useRef(0)
-  const latestScrollTop = useRef(0)
-  const onBodyScroll = useCallback((e) => {
-    latestScrollTop.current = e.currentTarget.scrollTop
-    if (scrollRaf.current) return
-    scrollRaf.current = requestAnimationFrame(() => {
-      scrollRaf.current = 0
-      setScrollY(latestScrollTop.current)
-    })
-  }, [])
-  useEffect(() => () => { if (scrollRaf.current) cancelAnimationFrame(scrollRaf.current) }, [])
+  // Capa de tamanho fixo. O colapso ligado ao scroll re-renderizava toda a
+  // página a cada frame e criava um ciclo de feedback (cabeçalho encolhe →
+  // corpo cresce → a altura scrollável muda → o scroll "saltava"). Fixar o
+  // tamanho remove os re-renders e deixa o scroll perfeitamente suave.
+  const coverSize = 150
 
   const steamId = (typeof localStorage !== 'undefined' && localStorage.getItem(`steamId_${user?.id}`)) || ''
   // Jogo da plataforma Steam → horas vêm da Steam, NUNCA contador manual
@@ -540,7 +524,6 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
 
       {/* ── Scrollable body — transparente, sobre o fundo desfocado ──── */}
       <div
-        onScroll={onBodyScroll}
         style={{
         flex: 1, overflowY: 'auto', padding: '12px 20px 20px', background: 'transparent',
         position: 'relative', zIndex: 1,
