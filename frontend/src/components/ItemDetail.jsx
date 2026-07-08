@@ -98,7 +98,9 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
 
   // Cabeçalho colapsável: capa grande → encolhe ao fazer scroll
   const COLLAPSE = 180
-  const collapseT = Math.min(scrollY / COLLAPSE, 1)      // 0 (topo) → 1 (colapsado)
+  // Clamp [0,1] — sem o Math.max, o overscroll (scrollY negativo) fazia a capa
+  // crescer acima de 170 e "saltar" ao bater no topo.
+  const collapseT = Math.max(0, Math.min(scrollY / COLLAPSE, 1))   // 0 (topo) → 1 (colapsado)
   const coverSize = Math.round(170 - collapseT * 80)     // 170 → 90
 
   const steamId = (typeof localStorage !== 'undefined' && localStorage.getItem(`steamId_${user?.id}`)) || ''
