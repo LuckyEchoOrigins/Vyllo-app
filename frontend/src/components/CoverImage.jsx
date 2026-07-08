@@ -115,6 +115,7 @@ export default function CoverImage({ src, category, size = 56, radius = 10, fill
       src={current}
       alt=""
       decoding="async"
+      loading={fill ? 'eager' : 'lazy'}
       onLoad={() => setVisible(true)}
       onError={() => {
         const steam = steamFallback(current)
