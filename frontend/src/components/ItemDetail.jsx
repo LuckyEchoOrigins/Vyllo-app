@@ -103,6 +103,20 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
   const collapseT = Math.max(0, Math.min(scrollY / COLLAPSE, 1))   // 0 (topo) → 1 (colapsado)
   const coverSize = Math.round(170 - collapseT * 80)     // 170 → 90
 
+  // Throttle do scroll a 1 update por frame (rAF). Sem isto, cada evento de
+  // scroll re-renderizava toda a página do item → scroll a travar e a "saltar".
+  const scrollRaf = useRef(0)
+  const latestScrollTop = useRef(0)
+  const onBodyScroll = useCallback((e) => {
+    latestScrollTop.current = e.currentTarget.scrollTop
+    if (scrollRaf.current) return
+    scrollRaf.current = requestAnimationFrame(() => {
+      scrollRaf.current = 0
+      setScrollY(latestScrollTop.current)
+    })
+  }, [])
+  useEffect(() => () => { if (scrollRaf.current) cancelAnimationFrame(scrollRaf.current) }, [])
+
   const steamId = (typeof localStorage !== 'undefined' && localStorage.getItem(`steamId_${user?.id}`)) || ''
   // Jogo da plataforma Steam → horas vêm da Steam, NUNCA contador manual
   const isSteamGame = item.category === 'game'
@@ -526,7 +540,7 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
 
       {/* ── Scrollable body — transparente, sobre o fundo desfocado ──── */}
       <div
-        onScroll={e => setScrollY(e.currentTarget.scrollTop)}
+        onScroll={onBodyScroll}
         style={{
         flex: 1, overflowY: 'auto', padding: '12px 20px 20px', background: 'transparent',
         position: 'relative', zIndex: 1,
