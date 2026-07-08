@@ -496,8 +496,8 @@ function LibraryItem({ item, onClick, t }) {
         textAlign: 'left', width: '100%',
       }}
     >
-      <div style={{ position: 'relative', flexShrink: 0, width: 50, height: 70, overflow: 'hidden', borderRadius: 10, transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
-        <CoverImage src={item.cover} category={item.category} size={50} radius={10} fill isMovie={item.category === 'film' && !item.is_series} />
+      <div style={{ position: 'relative', flexShrink: 0, width: 50, height: 70, overflow: 'hidden' }}>
+        <CoverImage src={item.cover} category={item.category} size={50} radius={10} isMovie={item.category === 'film' && !item.is_series} />
         {hasAllAchievements(item) && <PlatinumBadge size={20} style={{ top: -6, right: -6 }} />}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
