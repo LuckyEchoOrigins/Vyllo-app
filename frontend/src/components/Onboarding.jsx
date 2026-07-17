@@ -45,12 +45,7 @@ export default function Onboarding({ onDone }) {
 
   const s = SLIDES[i]
   return createPortal(
-    <div style={{ position: 'absolute', inset: 0, zIndex: 700, background: 'var(--bg)', display: 'flex', flexDirection: 'column', animation: 'fadeIn 0.25s ease both' }}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px 18px 0' }}>
-        {!last && (
-          <button onClick={finish} style={{ background: 'none', color: 'var(--text-muted)', fontSize: 13, fontWeight: 700, fontFamily: 'Nunito', cursor: 'pointer' }}>{t('onboarding.skip')}</button>
-        )}
-      </div>
+    <div style={{ position: 'absolute', inset: 0, zIndex: 700, background: 'var(--bg)', display: 'flex', flexDirection: 'column', animation: 'fadeIn 0.25s ease both', paddingTop: 'env(safe-area-inset-top)' }}>
 
       <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 36px', animation: 'fadeInUp 0.35s ease both' }}>
         <div style={{ marginBottom: 28 }}>{s.art}</div>

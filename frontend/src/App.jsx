@@ -55,6 +55,12 @@ export default function App() {
     }
   }, [user])
 
+  // Fecha o modal de login assim que a sessão é iniciada (ex.: login Google nativo
+  // completa via postMessage e não fecha o modal por si só).
+  useEffect(() => {
+    if (user) setShowAuth(false)
+  }, [user])
+
   useEffect(() => {
     if (!user) { setPremium(false); return }
     supabase.from('profiles').select('is_premium').eq('id', user.id).single()
