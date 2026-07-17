@@ -206,7 +206,7 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
         </div>
 
         {/* Steps indicator */}
-        <div style={{ display: 'flex', gap: 6, padding: '12px 20px' }}>
+        <div style={{ display: 'flex', gap: 6, padding: '10px 20px' }}>
           {[1, 2, 3].map(s => (
             <div key={s} style={{
               flex: 1, height: 4, borderRadius: 2,
@@ -216,12 +216,12 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
           ))}
         </div>
 
-        <div style={{ padding: '4px 20px 24px', overflowY: 'auto' }}>
+        <div style={{ padding: '4px 20px 24px', overflowY: (step === 1 && !manualMode) ? 'hidden' : 'auto' }}>
 
           {/* ── Step 1: Search or Manual ── */}
           {step === 1 && !manualMode && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>{t('add.select_category')}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>{t('add.select_category')}</p>
 
               {/* Library full warning */}
               {libraryFull && (
