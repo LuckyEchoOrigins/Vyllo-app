@@ -86,11 +86,7 @@ export function useAuth() {
       // Estamos dentro da app iOS mas sem o handler nativo (build desatualizada):
       // NÃO fazer o fluxo web (mostraria o erro do Google). Pede para atualizar.
       if (/PWAShell/i.test(navigator.userAgent)) {
-        // DIAGNÓSTICO TEMPORÁRIO — mostra que handlers nativos existem na build instalada
-        const w = window.webkit && window.webkit.messageHandlers
-        const chk = ['google-signin', 'app-ready', 'push-token', 'print']
-          .map(n => n + '=' + ((w && w[n]) ? '1' : '0')).join(' ')
-        return Promise.resolve({ error: { message: `DIAG wk=${window.webkit ? 1 : 0} ${chk}` } })
+        return Promise.resolve({ error: { message: 'Atualiza a app para a versão mais recente para entrares com Google.' } })
       }
     }
     return supabase.auth.signInWithOAuth({
