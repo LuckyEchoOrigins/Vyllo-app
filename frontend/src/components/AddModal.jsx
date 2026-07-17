@@ -178,7 +178,7 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
 
   return (
     <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()} style={{ paddingBottom: kb, transition: 'padding-bottom 0.18s ease' }}>
-      <div className="bottom-sheet" style={{ maxHeight: '90vh' }}>
+      <div className="bottom-sheet" style={{ maxHeight: '90vh', overflowY: (step === 1 && !manualMode) ? 'hidden' : 'auto' }}>
         <div className="sheet-handle" />
 
         {/* Header */}
