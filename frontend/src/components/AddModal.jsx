@@ -71,13 +71,12 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
   const [manualSeasons, setManualSeasons]     = useState('')
   const [manualEpisodes, setManualEpisodes]   = useState('')
 
-  // Altura da área visível (acima do teclado). A overlay usa esta altura para a
-  // sheet encostar exatamente ao topo do teclado — sem espaço vazio nem scroll.
-  const [vh, setVh] = useState(null)
+  // Levanta a sheet acima do teclado no iOS (o WKWebView não redimensiona sozinho)
+  const [kb, setKb] = useState(0)
   useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
-    const onResize = () => setVh(vv.height)
+    const onResize = () => setKb(Math.max(0, window.innerHeight - vv.height - vv.offsetTop))
     vv.addEventListener('resize', onResize)
     vv.addEventListener('scroll', onResize)
     onResize()
@@ -178,7 +177,7 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
   const subtitleLabel = cat === 'book' ? t('add.author_placeholder') : cat === 'game' ? t('add.developer_placeholder') : t('add.studio_placeholder')
 
   return (
-    <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()} style={{ bottom: 'auto', height: vh ? `${vh}px` : '100%' }}>
+    <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()} style={{ paddingBottom: kb, transition: 'padding-bottom 0.18s ease' }}>
       <div className="bottom-sheet" style={{ maxHeight: '90vh', overflowY: (step === 1 && !manualMode) ? 'hidden' : 'auto' }}>
         <div className="sheet-handle" />
 
