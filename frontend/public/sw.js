@@ -1,5 +1,5 @@
 // Service worker — cache do app shell para funcionar offline
-const CACHE = 'vyllo-v4'
+const CACHE = 'vyllo-v5'
 
 self.addEventListener('install', () => self.skipWaiting())
 
@@ -21,7 +21,23 @@ self.addEventListener('fetch', (e) => {
   if (url.pathname.startsWith('/api/')) return  // a API é sempre da rede (dados dinâmicos)
   if (url.pathname === '/sw.js') return         // nunca cachear o próprio SW
 
-  // Stale-while-revalidate: serve da cache e atualiza em segundo plano
+  // Navegações e HTML → NETWORK-FIRST. Garante que a app carrega sempre a versão
+  // mais recente (o index.html aponta para o bundle JS com hash atual). Sem isto,
+  // o stale-while-revalidate deixava o utilizador sempre uma versão atrás.
+  if (req.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+    e.respondWith(
+      fetch(req)
+        .then(res => {
+          const copy = res.clone()
+          caches.open(CACHE).then(cache => cache.put(req, copy)).catch(() => {})
+          return res
+        })
+        .catch(() => caches.match(req).then(r => r || caches.match('/index.html')))
+    )
+    return
+  }
+
+  // Restante (assets com hash, imagens) → stale-while-revalidate (seguro: têm hash no nome)
   e.respondWith(
     caches.open(CACHE).then(async (cache) => {
       const cached = await cache.match(req)
