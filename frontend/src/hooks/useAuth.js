@@ -75,12 +75,19 @@ export function useAuth() {
     window.location.reload()
   }
   const signInWithOAuth = (provider) => {
-    // No app iOS nativo, o Google OAuth web é bloqueado (WebView). Dispara antes
-    // o Google Sign-In nativo (GIDSignIn) que devolve o idToken via postMessage.
-    const nativeGoogle = provider === 'google' && window.webkit?.messageHandlers?.['google-signin']
-    if (nativeGoogle) {
-      nativeGoogle.postMessage({})
-      return Promise.resolve({ error: null })
+    if (provider === 'google') {
+      // No app iOS nativo, o Google OAuth web é bloqueado (WebView → erro 400).
+      // Dispara o Google Sign-In nativo (GIDSignIn), que devolve o idToken via postMessage.
+      const nativeGoogle = window.webkit?.messageHandlers?.['google-signin']
+      if (nativeGoogle) {
+        nativeGoogle.postMessage({})
+        return Promise.resolve({ error: null })
+      }
+      // Estamos dentro da app iOS mas sem o handler nativo (build desatualizada):
+      // NÃO fazer o fluxo web (mostraria o erro do Google). Pede para atualizar.
+      if (/PWAShell/i.test(navigator.userAgent)) {
+        return Promise.resolve({ error: { message: 'Atualiza a app para a versão mais recente para entrares com Google.' } })
+      }
     }
     return supabase.auth.signInWithOAuth({
       provider,
