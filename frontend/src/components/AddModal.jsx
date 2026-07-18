@@ -87,11 +87,21 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
   // scroll). O touch-action/overflow não chegam: o iOS arrasta o viewport com o
   // teclado aberto. Cancelar o touchmove (listener não-passivo) trava mesmo.
   const overlayRef = useRef(null)
+  const contentRef = useRef(null)
   const lockDrag = step === 1 && !manualMode
   useEffect(() => {
     const el = overlayRef.current
-    if (!el || !lockDrag) return
-    const onTouchMove = (e) => e.preventDefault()
+    if (!el) return
+    const onTouchMove = (e) => {
+      // Passo de pesquisa: cabe tudo → bloqueia sempre o arrasto.
+      // Outros passos (manual/resultados): deixa passar o scroll legítimo dentro
+      // do conteúdo, mas bloqueia o arrasto do viewport em tudo o resto.
+      if (!lockDrag) {
+        const sc = contentRef.current
+        if (sc && sc.contains(e.target) && sc.scrollHeight > sc.clientHeight) return
+      }
+      e.preventDefault()
+    }
     el.addEventListener('touchmove', onTouchMove, { passive: false })
     return () => el.removeEventListener('touchmove', onTouchMove)
   }, [lockDrag])
@@ -236,7 +246,7 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
           ))}
         </div>
 
-        <div style={{ padding: '4px 20px 24px', overflowY: (step === 1 && !manualMode) ? 'hidden' : 'auto' }}>
+        <div ref={contentRef} style={{ padding: '4px 20px 24px', overflowY: (step === 1 && !manualMode) ? 'hidden' : 'auto' }}>
 
           {/* ── Step 1: Search or Manual ── */}
           {step === 1 && !manualMode && (
