@@ -538,6 +538,9 @@ export const translations = {
       get_premium_trial: '✨ Start free trial',
       save_badge: 'Save 58%',
       restore: 'Restore purchase',
+      purchase_ok: 'Premium activated. Thank you!',
+      purchase_failed: 'Could not complete the purchase.',
+      nothing_to_restore: 'No previous purchase found.',
     },
 
     // AuthModal
@@ -1232,6 +1235,9 @@ export const translations = {
       get_premium_trial: '✨ Comenzar prueba gratis',
       save_badge: 'Ahorra 58%',
       restore: 'Restaurar compra',
+      purchase_ok: '¡Premium activado. Gracias!',
+      purchase_failed: 'No se pudo completar la compra.',
+      nothing_to_restore: 'No se encontró ninguna compra anterior.',
     },
     auth_modal: {
       confirm_email_title: 'Confirma tu correo',
@@ -1906,6 +1912,9 @@ export const translations = {
       get_premium_trial: '✨ Commencer l\'essai gratuit',
       save_badge: 'Économise 58%',
       restore: 'Restaurer l\'achat',
+      purchase_ok: 'Premium activé. Merci !',
+      purchase_failed: 'Impossible de finaliser l\'achat.',
+      nothing_to_restore: 'Aucun achat précédent trouvé.',
     },
     auth_modal: {
       confirm_email_title: 'Confirme ton e-mail',
@@ -2580,6 +2589,9 @@ export const translations = {
       get_premium_trial: '✨ Kostenlos testen',
       save_badge: 'Spare 58%',
       restore: 'Kauf wiederherstellen',
+      purchase_ok: 'Premium aktiviert. Danke!',
+      purchase_failed: 'Kauf konnte nicht abgeschlossen werden.',
+      nothing_to_restore: 'Kein früherer Kauf gefunden.',
     },
     auth_modal: {
       confirm_email_title: 'Bestätige deine E-Mail',
@@ -3286,6 +3298,9 @@ export const translations = {
       get_premium_trial: '✨ Começar 7 dias grátis',
       save_badge: 'Poupa 58%',
       restore: 'Restaurar compra',
+      purchase_ok: 'Premium ativado. Obrigado!',
+      purchase_failed: 'Não foi possível concluir a compra.',
+      nothing_to_restore: 'Não foi encontrada nenhuma compra anterior.',
     },
 
     // AuthModal

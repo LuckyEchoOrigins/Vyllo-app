@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { isPremium } from '../utils'
+import { isPremium, setPremium } from '../utils'
 import Icon from './Icon'
 import { useLang } from '../i18n'
 import { supabase } from '../supabase'
@@ -48,6 +48,49 @@ export default function PremiumModal() {
     return () => window.removeEventListener('open-premium', onOpen)
   }, [])
 
+  // Resultado da compra nativa (iOS). O nativo envia o JWS assinado pela Apple,
+  // que é validado no backend antes de ativar o premium.
+  useEffect(() => {
+    const onMsg = async (e) => {
+      const d = e.data
+      if (!d || d.type !== 'IAP_RESULT') return
+      setLoading(false)
+      if (!d.ok) {
+        if (d.code === 'cancelled' || d.code === 'pending') return
+        if (d.code === 'nothing_to_restore') {
+          showToast(t('premium_modal.nothing_to_restore'), 'error')
+          return
+        }
+        showToast(d.message || t('premium_modal.purchase_failed'), 'error')
+        return
+      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-apple-purchase`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session?.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ jws: d.jws }),
+          }
+        )
+        const out = await res.json()
+        if (out?.error) throw new Error(out.error)
+        setPremium(true)
+        showToast(t('premium_modal.purchase_ok'), 'success')
+        setOpen(false)
+      } catch (err) {
+        showToast(err.message || t('premium_modal.purchase_failed'), 'error')
+      }
+    }
+    window.addEventListener('message', onMsg)
+    return () => window.removeEventListener('message', onMsg)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   if (!open) return null
 
   const activate = async () => {
@@ -56,6 +99,14 @@ export default function PremiumModal() {
       if (!session) {
         setOpen(false)
         window.dispatchEvent(new Event('open-auth'))
+        return
+      }
+      // No app iOS a Apple exige In-App Purchase — dispara a compra nativa.
+      // O resultado chega por postMessage (IAP_RESULT).
+      const nativeIAP = window.webkit?.messageHandlers?.['iap-purchase']
+      if (nativeIAP) {
+        setLoading(true)
+        nativeIAP.postMessage({ plan })
         return
       }
       setLoading(true)
@@ -77,6 +128,17 @@ export default function PremiumModal() {
       showToast(e.message || 'Erro ao processar pagamento', 'error')
       setLoading(false)
     }
+  }
+
+  // Restaurar compras — exigido pela Apple. No browser não há nada a restaurar.
+  const restore = () => {
+    const nativeRestore = window.webkit?.messageHandlers?.['iap-restore']
+    if (nativeRestore) {
+      setLoading(true)
+      nativeRestore.postMessage({})
+      return
+    }
+    setOpen(false)
   }
 
   const featureLine = feature && FEATURE_LABEL[feature]
@@ -179,7 +241,7 @@ export default function PremiumModal() {
             style={{ width: '100%', marginTop: 6, padding: 8, background: 'none', color: 'var(--text-muted)', fontSize: 13, fontWeight: 700, fontFamily: 'Nunito', cursor: 'pointer' }}>
             {t('premium_modal.not_now')}
           </button>
-          <button onClick={() => setOpen(false)}
+          <button onClick={restore} disabled={loading}
             style={{ width: '100%', padding: '4px 0 2px', background: 'none', color: 'var(--text-muted)', fontSize: 11, fontFamily: 'Nunito', cursor: 'pointer', opacity: 0.55 }}>
             {t('premium_modal.restore')}
           </button>
