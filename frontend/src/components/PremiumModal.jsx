@@ -48,8 +48,8 @@ export default function PremiumModal() {
     return () => window.removeEventListener('open-premium', onOpen)
   }, [])
 
-  // Resultado da compra nativa (iOS). O nativo envia o JWS assinado pela Apple,
-  // que é validado no backend antes de ativar o premium.
+  // Resultado da compra nativa (iOS). O nativo envia o transactionId, que o
+  // backend confirma na App Store Server API antes de ativar o premium.
   useEffect(() => {
     const onMsg = async (e) => {
       const d = e.data
@@ -74,7 +74,7 @@ export default function PremiumModal() {
               'Authorization': `Bearer ${session?.access_token}`,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ jws: d.jws }),
+            body: JSON.stringify({ transactionId: d.transactionId }),
           }
         )
         const out = await res.json()
