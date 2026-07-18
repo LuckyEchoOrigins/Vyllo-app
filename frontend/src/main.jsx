@@ -21,13 +21,17 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 
 try { screen.orientation.lock('portrait').catch(() => {}) } catch {}
 
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {})
-    navigator.serviceWorker.addEventListener('message', e => {
-      if (e.data?.type === 'reload') window.location.reload()
-    })
-  })
+// Service worker DESATIVADO. Estava a servir versões em cache e a mascarar
+// atualizações — várias correções não chegavam ao dispositivo. Como a app
+// depende de rede (Supabase), o ganho offline não compensava.
+// Isto também limpa registos e caches antigos que ficaram nos dispositivos.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations()
+    .then((rs) => rs.forEach((r) => r.unregister()))
+    .catch(() => {})
+}
+if (typeof caches !== 'undefined') {
+  caches.keys().then((ks) => ks.forEach((k) => caches.delete(k))).catch(() => {})
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(
