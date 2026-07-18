@@ -177,7 +177,14 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
   const subtitleLabel = cat === 'book' ? t('add.author_placeholder') : cat === 'game' ? t('add.developer_placeholder') : t('add.studio_placeholder')
 
   return (
-    <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()} style={{ paddingBottom: kb, transition: 'padding-bottom 0.18s ease' }}>
+    <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()} style={{
+      paddingBottom: kb,
+      transition: 'padding-bottom 0.18s ease',
+      // No passo de pesquisa o conteúdo cabe todo: bloqueia o gesto de arrasto
+      // (o iOS arrasta o viewport com o teclado aberto, e isso o overflow não trava)
+      touchAction: (step === 1 && !manualMode) ? 'none' : 'auto',
+      overscrollBehavior: 'contain',
+    }}>
       <div className="bottom-sheet" style={{ maxHeight: '90vh', overflowY: (step === 1 && !manualMode) ? 'hidden' : 'auto' }}>
         <div className="sheet-handle" />
 
