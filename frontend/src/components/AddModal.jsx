@@ -83,6 +83,19 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
     return () => { vv.removeEventListener('resize', onResize); vv.removeEventListener('scroll', onResize) }
   }, [])
 
+  // Trava o arrasto no passo de pesquisa (o conteúdo cabe todo, não precisa de
+  // scroll). O touch-action/overflow não chegam: o iOS arrasta o viewport com o
+  // teclado aberto. Cancelar o touchmove (listener não-passivo) trava mesmo.
+  const overlayRef = useRef(null)
+  const lockDrag = step === 1 && !manualMode
+  useEffect(() => {
+    const el = overlayRef.current
+    if (!el || !lockDrag) return
+    const onTouchMove = (e) => e.preventDefault()
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    return () => el.removeEventListener('touchmove', onTouchMove)
+  }, [lockDrag])
+
   const resetManual = () => {
     setManualTitle(''); setManualSubtitle(''); setManualYear('')
     setManualGenre(''); setManualIsSeries(false)
@@ -177,7 +190,7 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
   const subtitleLabel = cat === 'book' ? t('add.author_placeholder') : cat === 'game' ? t('add.developer_placeholder') : t('add.studio_placeholder')
 
   return (
-    <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()} style={{
+    <div ref={overlayRef} className="overlay" onClick={e => e.target === e.currentTarget && onClose()} style={{
       paddingBottom: kb,
       transition: 'padding-bottom 0.18s ease',
       // No passo de pesquisa o conteúdo cabe todo: bloqueia o gesto de arrasto
