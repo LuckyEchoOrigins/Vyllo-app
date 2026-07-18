@@ -43,7 +43,9 @@ export default function PremiumModal() {
   }
 
   useEffect(() => {
-    const onOpen = (e) => { setFeature(e.detail?.feature || ''); setPlan('annual'); setOpen(true) }
+    // setLoading(false): sem isto, se uma tentativa anterior ficou pendente o
+    // botão fica desativado para sempre (o componente não desmonta ao fechar).
+    const onOpen = (e) => { setFeature(e.detail?.feature || ''); setPlan('annual'); setLoading(false); setOpen(true) }
     window.addEventListener('open-premium', onOpen)
     return () => window.removeEventListener('open-premium', onOpen)
   }, [])
