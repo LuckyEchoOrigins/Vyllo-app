@@ -94,11 +94,18 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
     if (!el) return
     const onTouchMove = (e) => {
       // Passo de pesquisa: cabe tudo → bloqueia sempre o arrasto.
-      // Outros passos (manual/resultados): deixa passar o scroll legítimo dentro
-      // do conteúdo, mas bloqueia o arrasto do viewport em tudo o resto.
+      // Outros passos (manual/resultados): procura, a subir a partir do ponto
+      // tocado, um elemento que realmente possa fazer scroll (pode ser a sheet
+      // ou o conteúdo). Se existir, deixa passar; senão bloqueia o pan do iOS.
       if (!lockDrag) {
-        const sc = contentRef.current
-        if (sc && sc.contains(e.target) && sc.scrollHeight > sc.clientHeight) return
+        let node = e.target
+        while (node && node !== el) {
+          if (node.scrollHeight > node.clientHeight) {
+            const oy = getComputedStyle(node).overflowY
+            if (oy === 'auto' || oy === 'scroll') return
+          }
+          node = node.parentElement
+        }
       }
       e.preventDefault()
     }
