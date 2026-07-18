@@ -3,32 +3,23 @@
 // Estratégia: em vez de verificar a assinatura do JWS localmente (validação da
 // cadeia de certificados da Apple, fácil de fazer mal), perguntamos diretamente
 // à App Store Server API pelo transactionId. A resposta vem por TLS num pedido
-// autenticado com a nossa chave — é autoritativa e é a mesma API que vais
-// precisar depois para renovações/cancelamentos.
+// autenticado com a nossa chave — é autoritativa.
 //
-// Secrets necessários (Supabase → Edge Functions → Secrets):
-//   APPLE_KEY_ID      — Key ID da chave da App Store Connect API
-//   APPLE_ISSUER_ID   — Issuer ID (App Store Connect → Users and Access → Keys)
-//   APPLE_PRIVATE_KEY — conteúdo do ficheiro .p8 (incluindo BEGIN/END)
+// Secrets (Supabase → Edge Functions → Secrets):
+//   APPLE_KEY_ID · APPLE_ISSUER_ID · APPLE_PRIVATE_KEY (conteúdo do .p8)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const BUNDLE_ID = 'com.vyllo-app'
-
-const VALID_PRODUCTS: Record<string, string> = {
-  'com.vyllo.premium.monthly':  'monthly',
-  'com.vyllo.premium.annual':   'annual',
-  'com.vyllo.premium.lifetime': 'lifetime',
-}
+import {
+  BUNDLE_ID,
+  VALID_PRODUCTS,
+  appleToken,
+  fetchTransaction,
+} from '../_shared/apple.ts'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
 )
-
-const KEY_ID = Deno.env.get('APPLE_KEY_ID')!
-const ISSUER_ID = Deno.env.get('APPLE_ISSUER_ID')!
-const PRIVATE_KEY_P8 = Deno.env.get('APPLE_PRIVATE_KEY')!
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -40,82 +31,6 @@ const json = (body: unknown, status = 200) =>
     status,
     headers: { ...cors, 'Content-Type': 'application/json' },
   })
-
-// ── helpers ──────────────────────────────────────────────────────────────────
-
-function b64url(data: ArrayBuffer | Uint8Array | string): string {
-  const bytes = typeof data === 'string'
-    ? new TextEncoder().encode(data)
-    : data instanceof Uint8Array ? data : new Uint8Array(data)
-  let bin = ''
-  bytes.forEach((b) => { bin += String.fromCharCode(b) })
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-}
-
-function pemToDer(pem: string): Uint8Array {
-  const b64 = pem
-    .replace(/-----BEGIN [^-]+-----/, '')
-    .replace(/-----END [^-]+-----/, '')
-    .replace(/\s+/g, '')
-  const bin = atob(b64)
-  return Uint8Array.from(bin, (c) => c.charCodeAt(0))
-}
-
-/** JWT ES256 para autenticar na App Store Server API */
-async function appleToken(): Promise<string> {
-  const key = await crypto.subtle.importKey(
-    'pkcs8',
-    pemToDer(PRIVATE_KEY_P8),
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    false,
-    ['sign'],
-  )
-  const now = Math.floor(Date.now() / 1000)
-  const header = { alg: 'ES256', kid: KEY_ID, typ: 'JWT' }
-  const payload = {
-    iss: ISSUER_ID,
-    iat: now,
-    exp: now + 600,
-    aud: 'appstoreconnect-v1',
-    bid: BUNDLE_ID,
-  }
-  const signingInput = `${b64url(JSON.stringify(header))}.${b64url(JSON.stringify(payload))}`
-  const sig = await crypto.subtle.sign(
-    { name: 'ECDSA', hash: 'SHA-256' },
-    key,
-    new TextEncoder().encode(signingInput),
-  )
-  return `${signingInput}.${b64url(sig)}`
-}
-
-/** Descodifica o payload do JWS. Seguro aqui: veio da API autenticada da Apple. */
-function decodeJwsPayload(jws: string): Record<string, any> {
-  const b64 = jws.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-  const bin = atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4))
-  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0))
-  return JSON.parse(new TextDecoder().decode(bytes))
-}
-
-/** Produção primeiro; sandbox a seguir (TestFlight usa sandbox). */
-async function fetchTransaction(transactionId: string, token: string) {
-  const hosts = [
-    'https://api.storekit.itunes.apple.com',
-    'https://api.storekit-sandbox.itunes.apple.com',
-  ]
-  for (const host of hosts) {
-    const res = await fetch(`${host}/inApps/v1/transactions/${transactionId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    if (res.ok) {
-      const { signedTransactionInfo } = await res.json()
-      return decodeJwsPayload(signedTransactionInfo)
-    }
-    // 404 → tenta o ambiente seguinte; outros erros também caem para sandbox
-  }
-  return null
-}
-
-// ── handler ──────────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
