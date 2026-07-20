@@ -3,6 +3,9 @@
   "target": {
     "namespace": "android_app",
     "package_name": "com.vyllo_app.twa",
-    "sha256_cert_fingerprints": ["CA:45:3A:E4:77:D3:01:F1:3E:AE:A7:88:E0:62:79:EE:AF:29:2F:BA:D2:9C:F9:C9:F9:93:B1:EC:D4:21:F1:AD"]
+    "sha256_cert_fingerprints": [
+      "FD:DA:07:62:C9:89:01:AD:CE:3B:9D:45:67:1B:92:8E:08:0D:86:8B:D5:85:71:29:BC:83:40:94:B3:98:37:48",
+      "CA:45:3A:E4:77:D3:01:F1:3E:AE:A7:88:E0:62:79:EE:AF:29:2F:BA:D2:9C:F9:C9:F9:93:B1:EC:D4:21:F1:AD"
+    ]
   }
 }]
