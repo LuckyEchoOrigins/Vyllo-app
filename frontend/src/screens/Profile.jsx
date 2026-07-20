@@ -322,6 +322,39 @@ export default function Profile({ userName, setUserName, items, onNavigate, enab
     setTimeout(() => window.location.reload(), 800)
   }
 
+  // Eliminação de conta — exigida pela Apple (5.1.1(v)) e pelo Google Play.
+  // Irreversível, por isso pede confirmação explícita antes de avançar.
+  const deleteAccount = async () => {
+    const ok = await confirmDialog({
+      title: t('profile.delete_account_title'),
+      message: t('profile.delete_account_message'),
+      confirmLabel: t('profile.delete_account_confirm'),
+      cancelLabel: t('profile.delete_account_cancel'),
+      danger: true,
+    })
+    if (!ok) return
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session?.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      )
+      const out = await res.json()
+      if (out?.error) throw new Error(out.error)
+      showToast(t('profile.delete_account_done'), 'success')
+      try { localStorage.clear() } catch {}
+      setTimeout(() => window.location.reload(), 1200)
+    } catch (e) {
+      showToast(e.message || t('profile.delete_account_failed'), 'error')
+    }
+  }
+
   const toggleVacation = async () => {
     // Confirma ao ATIVAR — evita ativar acidentalmente
     if (!activeVac) {
@@ -944,6 +977,10 @@ export default function Profile({ userName, setUserName, items, onNavigate, enab
                   👑 Gerir subscrição Premium
                 </button>
               )}
+              <button onClick={deleteAccount}
+                style={{ marginTop: 10, width: '100%', padding: '9px 0', borderRadius: 12, border: '1.5px solid rgba(255,71,87,0.35)', background: 'none', color: '#FF4757', fontSize: 12, fontWeight: 700, fontFamily: 'Nunito', cursor: 'pointer' }}>
+                {t('profile.delete_account')}
+              </button>
             </div>
           ) : (
             <div style={{ padding: '14px 0', borderBottom: '1px solid var(--border)' }}>

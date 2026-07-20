@@ -106,20 +106,13 @@ export default function PremiumModal() {
       // No app iOS a Apple exige In-App Purchase — dispara a compra nativa.
       // O resultado chega por postMessage (IAP_RESULT).
       const nativeIAP = window.webkit?.messageHandlers?.['iap-purchase']
-
-      // DIAGNÓSTICO TEMPORÁRIO — mostra que caminho está a ser seguido
-      showToast(
-        `DIAG wk=${window.webkit ? 1 : 0} iap=${nativeIAP ? 1 : 0} plan=${plan}`,
-        'error',
-      )
-
       if (nativeIAP) {
         setLoading(true)
         nativeIAP.postMessage({ plan })
         // Se o nativo não responder, não deixar o botão preso a carregar
         setTimeout(() => {
           setLoading((l) => {
-            if (l) showToast('DIAG sem resposta do nativo (timeout)', 'error')
+            if (l) showToast(t('premium_modal.purchase_failed'), 'error')
             return false
           })
         }, 20000)
