@@ -5,6 +5,7 @@ import Icon from './Icon'
 import { useLang } from '../i18n'
 import { supabase } from '../supabase'
 import { showToast } from '../feedback'
+import { getPlayBilling, buyWithPlay, restoreFromPlay } from '../playBilling'
 
 export default function PremiumModal() {
   const { t } = useLang()
@@ -118,6 +119,40 @@ export default function PremiumModal() {
         }, 20000)
         return
       }
+      // No Android o Google exige Play Billing — usa a Digital Goods API do TWA.
+      // Ao contrário do iOS este fluxo é todo em promises, sem postMessage.
+      const play = await getPlayBilling()
+      if (play) {
+        setLoading(true)
+        try {
+          await buyWithPlay(plan, async (token, sku) => {
+            const res = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-google-purchase`,
+              {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${session.access_token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ purchaseToken: token, sku }),
+              }
+            )
+            const out = await res.json()
+            if (out?.error) throw new Error(out.error)
+          })
+          setPremium(true)
+          showToast(t('premium_modal.purchase_ok'), 'success')
+          setOpen(false)
+        } catch (err) {
+          // O utilizador fechar a folha de pagamento não é um erro a mostrar.
+          if (err?.name !== 'AbortError') {
+            showToast(err.message || t('premium_modal.purchase_failed'), 'error')
+          }
+        } finally {
+          setLoading(false)
+        }
+        return
+      }
       setLoading(true)
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`,
@@ -139,12 +174,46 @@ export default function PremiumModal() {
     }
   }
 
-  // Restaurar compras — exigido pela Apple. No browser não há nada a restaurar.
-  const restore = () => {
+  // Restaurar compras — exigido pela Apple e pelo Google. No browser (Stripe)
+  // não há nada a restaurar: o premium vem do perfil.
+  const restore = async () => {
     const nativeRestore = window.webkit?.messageHandlers?.['iap-restore']
     if (nativeRestore) {
       setLoading(true)
       nativeRestore.postMessage({})
+      return
+    }
+    const play = await getPlayBilling()
+    if (play) {
+      setLoading(true)
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        await restoreFromPlay(async (token, sku) => {
+          const res = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-google-purchase`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${session?.access_token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ purchaseToken: token, sku }),
+            }
+          )
+          const out = await res.json()
+          if (out?.error) throw new Error(out.error)
+        })
+        setPremium(true)
+        showToast(t('premium_modal.purchase_ok'), 'success')
+        setOpen(false)
+      } catch (err) {
+        const key = err?.message === 'nothing_to_restore'
+          ? 'premium_modal.nothing_to_restore'
+          : 'premium_modal.purchase_failed'
+        showToast(t(key), 'error')
+      } finally {
+        setLoading(false)
+      }
       return
     }
     setOpen(false)
