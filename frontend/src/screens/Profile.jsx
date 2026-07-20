@@ -691,8 +691,8 @@ export default function Profile({ userName, setUserName, items, onNavigate, enab
   // Sub-página de Suporte
   const renderSuporte = () => {
     const rows = [
-      { icon: 'mail', title: t('profile.contact_dev'), desc: t('profile.contact_dev_desc'), href: 'mailto:lucky.echo.origins@gmail.com?subject=Vyllo%20—%20Contact' },
-      { icon: 'bug',  title: t('profile.report_bug'),  desc: t('profile.report_bug_desc'),  href: 'mailto:lucky.echo.origins@gmail.com?subject=Vyllo%20—%20Bug' },
+      { icon: 'mail', title: t('profile.contact_dev'), desc: t('profile.contact_dev_desc'), href: 'mailto:support@vyllo-app.com?subject=Vyllo%20—%20Contact' },
+      { icon: 'bug',  title: t('profile.report_bug'),  desc: t('profile.report_bug_desc'),  href: 'mailto:support@vyllo-app.com?subject=Vyllo%20—%20Bug' },
       { icon: 'star', title: t('profile.rate_app'),    desc: t('profile.rate_app_desc'),    href: 'https://play.google.com/store/apps/details?id=com.vyllo_app.twa' },
     ]
     return (
@@ -712,7 +712,7 @@ export default function Profile({ userName, setUserName, items, onNavigate, enab
           ))}
         </div>
         <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', margin: '14px 30px 0', lineHeight: 1.5 }}>
-          lucky.echo.origins@gmail.com
+          support@vyllo-app.com
         </p>
       </>
     )
