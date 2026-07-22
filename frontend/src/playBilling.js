@@ -24,6 +24,49 @@ export async function getPlayBilling() {
   }
 }
 
+/** Formata um valor da loja na moeda dela, no idioma do dispositivo. */
+export function formatStorePrice(value, currency, locale) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return null
+  try {
+    return new Intl.NumberFormat(locale || navigator.language, {
+      style: 'currency',
+      currency,
+    }).format(n)
+  } catch {
+    return `${n} ${currency}`
+  }
+}
+
+/**
+ * Preços reais do Play, por plano: { monthly: {label, value, currency}, ... }
+ * Devolve {} fora do TWA — aí o chamador usa os valores por omissão.
+ */
+export async function getPlayPrices() {
+  const service = await getPlayBilling()
+  if (!service) return {}
+
+  const skus = Object.values(PLAY_SKUS)
+  let details
+  try {
+    details = await service.getDetails(skus)
+  } catch {
+    return {}
+  }
+  if (!details) return {}
+
+  const bySku = new Map(details.map((d) => [d.itemId, d]))
+  const out = {}
+  for (const [plan, sku] of Object.entries(PLAY_SKUS)) {
+    const item = bySku.get(sku)
+    if (!item?.price) continue
+    const { currency, value } = item.price
+    const label = formatStorePrice(value, currency)
+    if (label) out[plan] = { label, value: Number(value), currency }
+  }
+  return out
+}
+
 /**
  * Compra um plano pelo Play Billing.
  * `verify` recebe (purchaseToken, sku) e deve validar no backend — só depois

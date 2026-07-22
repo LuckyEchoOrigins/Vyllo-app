@@ -5,7 +5,7 @@ import Icon from './Icon'
 import { useLang } from '../i18n'
 import { supabase } from '../supabase'
 import { showToast } from '../feedback'
-import { getPlayBilling, buyWithPlay, restoreFromPlay } from '../playBilling'
+import { getPlayBilling, buyWithPlay, restoreFromPlay, getPlayPrices, formatStorePrice } from '../playBilling'
 
 export default function PremiumModal() {
   const { t } = useLang()
@@ -13,6 +13,9 @@ export default function PremiumModal() {
   const [feature, setFeature] = useState('')
   const [plan, setPlan] = useState('annual')
   const [loading, setLoading] = useState(false)
+  // Preços vindos da loja (Play/StoreKit). Vazio no browser, onde o pagamento
+  // é Stripe e os valores em euros abaixo são os corretos.
+  const [storePrices, setStorePrices] = useState({})
   const root = (typeof document !== 'undefined' && document.getElementById('root')) || null
 
   const PERKS = [
@@ -24,11 +27,22 @@ export default function PremiumModal() {
     { icon: 'palette',    title: t('premium_modal.perk_themes') },
   ]
 
+  // Fora das lojas nativas o pagamento é Stripe, cobrado em euros — por isso os
+  // valores fixos são os certos. Dentro do Play/StoreKit quem manda é a loja:
+  // ela cobra na moeda local, e mostrar euros aqui seria enganador.
   const PLANS = [
     { id: 'monthly',  name: t('premium_modal.monthly'),  price: '2,99 €',  period: t('premium_modal.month_suffix') },
     { id: 'annual',   name: t('premium_modal.annual'),   price: '14,99 €', period: t('premium_modal.year_suffix'), sub: '≈ 1,25 €/mês', badge: t('premium_modal.save_badge'), popular: true },
     { id: 'lifetime', name: t('premium_modal.lifetime'), price: '34,99 €', period: t('premium_modal.one_time') },
-  ]
+  ].map((pl) => {
+    const store = storePrices[pl.id]
+    if (!store) return pl
+    // O "≈ x/mês" do plano anual passa a derivar do preço real da loja.
+    const sub = pl.id === 'annual' && Number.isFinite(store.value)
+      ? `≈ ${formatStorePrice(store.value / 12, store.currency)}${t('premium_modal.month_suffix')}`
+      : undefined
+    return { ...pl, price: store.label, sub }
+  })
 
   const FEATURE_LABEL = {
     year:         t('premium_modal.advanced_stats'),
@@ -46,9 +60,38 @@ export default function PremiumModal() {
   useEffect(() => {
     // setLoading(false): sem isto, se uma tentativa anterior ficou pendente o
     // botão fica desativado para sempre (o componente não desmonta ao fechar).
-    const onOpen = (e) => { setFeature(e.detail?.feature || ''); setPlan('annual'); setLoading(false); setOpen(true) }
+    const onOpen = (e) => {
+      setFeature(e.detail?.feature || '')
+      setPlan('annual')
+      setLoading(false)
+      setOpen(true)
+      loadStorePrices()
+    }
     window.addEventListener('open-premium', onOpen)
     return () => window.removeEventListener('open-premium', onOpen)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Pergunta os preços à loja. Se falhar, ficam os valores por omissão — mais
+  // vale um preço aproximado do que um modal vazio.
+  const loadStorePrices = async () => {
+    const nativePrices = window.webkit?.messageHandlers?.['iap-prices']
+    if (nativePrices) { nativePrices.postMessage({}); return }
+    try {
+      const p = await getPlayPrices()
+      if (Object.keys(p).length) setStorePrices(p)
+    } catch { /* fica o valor por omissão */ }
+  }
+
+  // Preços do StoreKit (iOS), enviados pelo nativo em resposta a iap-prices.
+  useEffect(() => {
+    const onPrices = (e) => {
+      const d = e.data
+      if (!d || d.type !== 'IAP_PRICES' || !d.prices) return
+      setStorePrices(d.prices)
+    }
+    window.addEventListener('message', onPrices)
+    return () => window.removeEventListener('message', onPrices)
   }, [])
 
   // Resultado da compra nativa (iOS). O nativo envia o transactionId, que o
