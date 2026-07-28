@@ -63,9 +63,22 @@ export default function App() {
 
   useEffect(() => {
     if (!user) { setPremium(false); return }
+    // Leitura rápida do estado guardado, para a UI não esperar.
     supabase.from('profiles').select('is_premium').eq('id', user.id).single()
       .then(({ data }) => { setPremium(data?.is_premium === true) })
       .catch(() => {})
+    // Em segundo plano, re-confirma a subscrição no Google (cancelamentos,
+    // reembolsos, expiração). Se mudou, corrige o premium. Não bloqueia a UI.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return
+      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/refresh-premium`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      })
+        .then((r) => r.json())
+        .then((out) => { if (typeof out?.is_premium === 'boolean') setPremium(out.is_premium) })
+        .catch(() => {})
+    })
   }, [user])
 
   useEffect(() => {
