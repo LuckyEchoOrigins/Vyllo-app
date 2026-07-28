@@ -1,50 +1,26 @@
-// Service worker — cache do app shell para funcionar offline
-const CACHE = 'vyllo-v5'
+// Service worker de auto-destruição.
+//
+// As versões antigas (vyllo-v5) cacheavam o app shell e, em dispositivos que já
+// as tinham registado — sobretudo o TWA Android via Chrome —, serviam código
+// obsoleto no arranque, antes de o main.jsx sequer correr. Como o código antigo
+// não sabe cancelar o SW, o dispositivo ficava preso numa versão velha.
+//
+// Este SW não cacheia nada. O browser volta a buscar o sw.js a cada navegação;
+// ao ver que mudou, instala este, que apaga todas as caches, cancela o próprio
+// registo e recarrega as janelas — libertando os dispositivos presos. Fica de
+// pé (em vez de removermos o ficheiro) precisamente para os alcançar; um 404 no
+// sw.js não desregista um SW já instalado.
 
 self.addEventListener('install', () => self.skipWaiting())
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
-      .then(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
-      .then(clients => clients.forEach(c => c.postMessage({ type: 'reload' })))
-  )
+  e.waitUntil((async () => {
+    const keys = await caches.keys()
+    await Promise.all(keys.map((k) => caches.delete(k)))
+    await self.registration.unregister()
+    const clients = await self.clients.matchAll({ type: 'window' })
+    clients.forEach((c) => c.navigate(c.url))
+  })())
 })
 
-self.addEventListener('fetch', (e) => {
-  const req = e.request
-  if (req.method !== 'GET') return
-  const url = new URL(req.url)
-  if (url.origin !== location.origin) return   // ignora origens externas (CDNs, etc.)
-  if (url.pathname.startsWith('/api/')) return  // a API é sempre da rede (dados dinâmicos)
-  if (url.pathname === '/sw.js') return         // nunca cachear o próprio SW
-
-  // Navegações e HTML → NETWORK-FIRST. Garante que a app carrega sempre a versão
-  // mais recente (o index.html aponta para o bundle JS com hash atual). Sem isto,
-  // o stale-while-revalidate deixava o utilizador sempre uma versão atrás.
-  if (req.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
-    e.respondWith(
-      fetch(req)
-        .then(res => {
-          const copy = res.clone()
-          caches.open(CACHE).then(cache => cache.put(req, copy)).catch(() => {})
-          return res
-        })
-        .catch(() => caches.match(req).then(r => r || caches.match('/index.html')))
-    )
-    return
-  }
-
-  // Restante (assets com hash, imagens) → stale-while-revalidate (seguro: têm hash no nome)
-  e.respondWith(
-    caches.open(CACHE).then(async (cache) => {
-      const cached = await cache.match(req)
-      const network = fetch(req)
-        .then(res => { if (res && res.ok) cache.put(req, res.clone()); return res })
-        .catch(() => cached || caches.match('/index.html'))
-      return cached || network
-    })
-  )
-})
+// Sem handler de fetch: todos os pedidos vão à rede, nunca à cache.
