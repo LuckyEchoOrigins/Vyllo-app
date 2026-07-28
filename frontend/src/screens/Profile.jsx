@@ -6,6 +6,7 @@ import StatusIcon from '../components/StatusIcon'
 import CategoryIcon from '../components/CategoryIcon'
 import { addItem } from '../api'
 import { confirmDialog, showToast } from '../feedback'
+import { getPlayBilling } from '../playBilling'
 import { ACCENT_LIST, getAccent, setAccent, applyAccent } from '../theme'
 import { CAT_EMOJI, CAT_COLOR, CAT_LABEL, CATEGORY_IDS, setEnabledCategories, calculateStreak, getVacations, isPremium, setPremium, requirePremium } from '../utils'
 import { useLang } from '../i18n'
@@ -52,6 +53,21 @@ export default function Profile({ userName, setUserName, items, onNavigate, enab
   const togglePremium = () => { const v = !premium; setPremium(v); setPremiumState(v) }
 
   const manageSubscription = async () => {
+    // Cada loja gere a subscrição no seu sítio. Mandar um utilizador do Play
+    // para o portal do Stripe (onde não tem cliente) dava erro — encaminha-se
+    // pela plataforma onde a compra foi mesmo feita.
+
+    // iOS → App Store (folha nativa de gestão de subscrições).
+    const iapManage = window.webkit?.messageHandlers?.['iap-manage']
+    if (iapManage) { iapManage.postMessage({}); return }
+
+    // Android (TWA com Play Billing) → página de subscrições da Play Store.
+    if (await getPlayBilling()) {
+      window.open('https://play.google.com/store/account/subscriptions', '_blank')
+      return
+    }
+
+    // Browser (Stripe) → portal de faturação.
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
