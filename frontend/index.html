@@ -29,6 +29,37 @@
     </script>
   </head>
   <body>
+    <!--
+      Splash animado em HTML. O TWA Android mostra primeiro um splash NATIVO
+      estático (um PNG, não animável — limitação da tecnologia). Este assume a
+      seguir, com o mesmo fundo #0E0E14, dando o pulse "respiração" que o iOS faz
+      em Swift. É inline para pintar antes do bundle carregar; o main.jsx remove-o
+      quando o React monta.
+    -->
+    <div id="boot-splash" aria-hidden="true">
+      <img src="/web-app-manifest-192x192.png" alt="" width="96" height="96" />
+    </div>
+    <style>
+      #boot-splash {
+        position: fixed; inset: 0; z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        background: #0E0E14;
+        transition: opacity .35s ease;
+      }
+      #boot-splash img {
+        width: 96px; height: 96px;
+        border-radius: 21px;                 /* 96 * ~0.22, igual à proporção do iOS */
+        border: .7px solid rgba(255,255,255,.14);
+        animation: bootPulse 1s ease-in-out infinite alternate;
+      }
+      @keyframes bootPulse {
+        from { transform: scale(1); }
+        to   { transform: scale(1.10); }     /* mesma amplitude do startLoadingPulse iOS */
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #boot-splash img { animation: none; }
+      }
+    </style>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

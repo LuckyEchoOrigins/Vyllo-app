@@ -39,3 +39,16 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <App />
   </React.StrictMode>
 )
+
+// Esconde o splash de arranque depois de o React montar (render é síncrono, por
+// isso #root já tem conteúdo aqui). Estilo inline para o fade (vence a folha de
+// estilos) e remoção por setTimeout. Nada de requestAnimationFrame: ele não
+// dispara em separadores ocultos, o que deixaria o splash preso por cima da app.
+{
+  const boot = document.getElementById('boot-splash')
+  if (boot) {
+    boot.style.opacity = '0'
+    boot.style.pointerEvents = 'none'
+    setTimeout(() => boot.remove(), 400)   // > .35s do fade definido no CSS
+  }
+}
