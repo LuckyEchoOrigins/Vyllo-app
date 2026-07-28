@@ -547,6 +547,7 @@ export const translations = {
       restore: 'Restore purchase',
       purchase_ok: 'Premium activated. Thank you!',
       purchase_failed: 'Could not complete the purchase.',
+      billing_unavailable: 'In-app billing isn\'t available. Update Vyllo in the Play Store and try again.',
       nothing_to_restore: 'No previous purchase found.',
     },
 
@@ -1251,6 +1252,7 @@ export const translations = {
       restore: 'Restaurar compra',
       purchase_ok: '¡Premium activado. Gracias!',
       purchase_failed: 'No se pudo completar la compra.',
+      billing_unavailable: 'La facturación integrada no está disponible. Actualiza Vyllo en Play Store e inténtalo de nuevo.',
       nothing_to_restore: 'No se encontró ninguna compra anterior.',
     },
     auth_modal: {
@@ -1935,6 +1937,7 @@ export const translations = {
       restore: 'Restaurer l\'achat',
       purchase_ok: 'Premium activé. Merci !',
       purchase_failed: 'Impossible de finaliser l\'achat.',
+      billing_unavailable: 'La facturation intégrée n\'est pas disponible. Mets à jour Vyllo sur le Play Store et réessaie.',
       nothing_to_restore: 'Aucun achat précédent trouvé.',
     },
     auth_modal: {
@@ -2619,6 +2622,7 @@ export const translations = {
       restore: 'Kauf wiederherstellen',
       purchase_ok: 'Premium aktiviert. Danke!',
       purchase_failed: 'Kauf konnte nicht abgeschlossen werden.',
+      billing_unavailable: 'In-App-Kauf ist nicht verfügbar. Aktualisiere Vyllo im Play Store und versuche es erneut.',
       nothing_to_restore: 'Kein früherer Kauf gefunden.',
     },
     auth_modal: {
@@ -3335,6 +3339,7 @@ export const translations = {
       restore: 'Restaurar compra',
       purchase_ok: 'Premium ativado. Obrigado!',
       purchase_failed: 'Não foi possível concluir a compra.',
+      billing_unavailable: 'A faturação na app não está disponível. Atualiza a Vyllo na Play Store e tenta de novo.',
       nothing_to_restore: 'Não foi encontrada nenhuma compra anterior.',
     },
 

@@ -196,6 +196,14 @@ export default function PremiumModal() {
         }
         return
       }
+      // Estamos dentro do TWA Android (a app foi aberta a partir do pacote), mas
+      // a Digital Goods API não respondeu — falta faturação no pacote instalado,
+      // ou a app foi instalada fora da Play Store. Numa app da loja NÃO podemos
+      // cair para o Stripe (o Google proíbe); mostramos porquê.
+      if (document.referrer.startsWith('android-app://')) {
+        showToast(t('premium_modal.billing_unavailable'), 'error')
+        return
+      }
       setLoading(true)
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`,
