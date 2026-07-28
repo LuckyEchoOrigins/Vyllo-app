@@ -12,6 +12,7 @@ import {
   fetchSubscription,
   fetchProduct,
   acknowledge,
+  readSubscription,
 } from '../_shared/google.ts'
 
 const supabase = createClient(
@@ -29,13 +30,6 @@ const json = (body: unknown, status = 200) =>
     status,
     headers: { ...cors, 'Content-Type': 'application/json' },
   })
-
-// Estados que dão direito a premium. O período de tolerância conta: o
-// pagamento falhou mas o Google ainda está a tentar cobrar.
-const ACTIVE_STATES = [
-  'SUBSCRIPTION_STATE_ACTIVE',
-  'SUBSCRIPTION_STATE_IN_GRACE_PERIOD',
-]
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
@@ -62,11 +56,9 @@ Deno.serve(async (req) => {
       const sub = await fetchSubscription(String(purchaseToken), token)
       if (!sub) return json({ error: 'purchase not found' }, 400)
 
-      if (!ACTIVE_STATES.includes(sub.subscriptionState)) {
-        return json({ error: 'subscription not active' }, 400)
-      }
-      const expiry = sub.lineItems?.[0]?.expiryTime
-      expiresAt = expiry ? new Date(expiry) : null
+      const { active, expiresAt: subExpiry } = readSubscription(sub)
+      if (!active) return json({ error: 'subscription not active' }, 400)
+      expiresAt = subExpiry
       needsAck = sub.acknowledgementState === 'ACKNOWLEDGEMENT_STATE_PENDING'
     } else {
       const purchase = await fetchProduct(String(sku), String(purchaseToken), token)

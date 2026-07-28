@@ -106,6 +106,31 @@ const call = async (path: string, token: string, method = 'GET') => {
 export const fetchSubscription = (purchaseToken: string, token: string) =>
   call(`subscriptionsv2/tokens/${purchaseToken}`, token)
 
+// Estados que dão direito a premium. IN_GRACE_PERIOD conta: o pagamento falhou
+// mas o Google ainda está a tentar cobrar, e o utilizador mantém o acesso.
+export const SUB_ACTIVE_STATES = [
+  'SUBSCRIPTION_STATE_ACTIVE',
+  'SUBSCRIPTION_STATE_IN_GRACE_PERIOD',
+]
+
+/**
+ * Interpreta a resposta do subscriptionsv2: se dá premium e quando expira.
+ * A expiração é a mais recente entre os lineItems (a subscrição pode ter várias
+ * linhas após mudanças de plano; interessa a que se estende mais longe).
+ */
+export function readSubscription(
+  info: { subscriptionState?: string; lineItems?: { expiryTime?: string }[] },
+): { active: boolean; expiresAt: Date | null } {
+  const active = SUB_ACTIVE_STATES.includes(info?.subscriptionState ?? '')
+  let expiresAt: Date | null = null
+  for (const li of info?.lineItems ?? []) {
+    if (!li.expiryTime) continue
+    const d = new Date(li.expiryTime)
+    if (!expiresAt || d > expiresAt) expiresAt = d
+  }
+  return { active, expiresAt }
+}
+
 /** Estado de um produto único (vitalício). */
 export const fetchProduct = (sku: string, purchaseToken: string, token: string) =>
   call(`products/${sku}/tokens/${purchaseToken}`, token)
