@@ -42,16 +42,24 @@ Deno.serve(async (req) => {
     const { signedPayload } = await req.json().catch(() => ({}))
     if (!signedPayload) return new Response('ok')
 
-    // Não confiável — serve só para saber DE QUE transação falar.
-    const payload = decodeJwsPayload(signedPayload)
-    const notificationType = String(payload?.notificationType ?? '')
-    const txInfo = payload?.data?.signedTransactionInfo
-      ? decodeJwsPayload(payload.data.signedTransactionInfo)
-      : null
-
-    const originalTx = txInfo?.originalTransactionId
-      ? String(txInfo.originalTransactionId)
-      : null
+    // Não confiável — serve só para saber DE QUE transação falar. Se nem sequer
+    // dá para descodificar, é lixo: confirmamos (200) para a Apple não repetir.
+    // Um erro mais à frente (ex.: a chamada à Apple falhar) devolve 500, aí sim
+    // queremos que repita.
+    let notificationType: string
+    let originalTx: string | null
+    try {
+      const payload = decodeJwsPayload(signedPayload)
+      notificationType = String(payload?.notificationType ?? '')
+      const txInfo = payload?.data?.signedTransactionInfo
+        ? decodeJwsPayload(payload.data.signedTransactionInfo)
+        : null
+      originalTx = txInfo?.originalTransactionId
+        ? String(txInfo.originalTransactionId)
+        : null
+    } catch {
+      return new Response('ok')
+    }
     if (!originalTx) return new Response('ok')
 
     // Só nos interessa se esta compra estiver associada a alguém.
