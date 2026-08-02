@@ -13,7 +13,7 @@ const GoogleIcon = () => (
 )
 
 
-export default function AuthModal({ onClose, onSignIn, onSignUp, onSignInOAuth }) {
+export default function AuthModal({ onClose, onSignIn, onSignUp, onSignInOAuth, onVerifyOtp, onResend }) {
   const { t } = useLang()
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
@@ -21,7 +21,9 @@ export default function AuthModal({ onClose, onSignIn, onSignUp, onSignInOAuth }
   const [loading, setLoading] = useState(false)
   const [oauthLoading, setOauthLoading] = useState(null)
   const [error, setError] = useState('')
-  const [done, setDone] = useState(false)
+  const [done, setDone] = useState(false)   // registo feito → pedir código
+  const [code, setCode] = useState('')
+  const [resent, setResent] = useState(false)
 
   const submit = async () => {
     setError('')
@@ -36,11 +38,37 @@ export default function AuthModal({ onClose, onSignIn, onSignUp, onSignInOAuth }
       } else {
         const { error: e } = await onSignUp(email, password)
         if (e) { setError(e.message); return }
-        setDone(true)
+        setDone(true)   // mostra o ecrã do código
       }
     } finally {
       setLoading(false)
     }
+  }
+
+  // Validar o código de 6 dígitos. Em caso de sucesso, a sessão fica ativa
+  // (onAuthStateChange) e fechamos o modal.
+  const verify = async () => {
+    setError('')
+    const clean = code.replace(/\D/g, '')
+    if (clean.length !== 6) { setError(t('auth_modal.error_otp')); return }
+    setLoading(true)
+    try {
+      const { error: e } = await onVerifyOtp(email, clean)
+      if (e) { setError(t('auth_modal.error_otp')); return }
+      onClose()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const resend = async () => {
+    setError('')
+    setResent(false)
+    try {
+      const { error: e } = await onResend(email)
+      if (e) { setError(e.message); return }
+      setResent(true)
+    } catch { /* silencioso */ }
   }
 
   const handleOAuth = async (provider) => {
@@ -63,16 +91,31 @@ export default function AuthModal({ onClose, onSignIn, onSignUp, onSignInOAuth }
         <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--surface-2)', margin: '12px auto 0' }} />
 
         {done ? (
-          <div style={{ padding: '32px 24px 48px', textAlign: 'center' }}>
+          <div style={{ padding: '30px 24px 44px', textAlign: 'center' }}>
             <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#2DB87A22', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#2DB87A' }}>
               <Icon name="shield" size={30} strokeWidth={1.8} />
             </div>
-            <h2 style={{ fontSize: 20, marginBottom: 8 }}>{t('auth_modal.confirm_email_title')}</h2>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 24 }}>
-              {t('auth_modal.confirm_email_body', { email })}
+            <h2 style={{ fontSize: 20, marginBottom: 8 }}>{t('auth_modal.otp_title')}</h2>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 20 }}>
+              {t('auth_modal.otp_body', { email })}
             </p>
-            <button onClick={onClose} style={{ width: '100%', padding: '14px 0', borderRadius: 14, border: 'none', background: 'var(--accent)', color: 'white', fontSize: 15, fontWeight: 900, fontFamily: 'Nunito', cursor: 'pointer' }}>
-              OK
+            <input
+              type="text" inputMode="numeric" autoComplete="one-time-code"
+              maxLength={6} placeholder="000000" value={code}
+              onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              onKeyDown={e => e.key === 'Enter' && verify()}
+              autoFocus
+              style={{ width: '100%', padding: '14px 0', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 26, fontWeight: 800, fontFamily: 'Nunito', textAlign: 'center', letterSpacing: '0.4em', outline: 'none', marginBottom: 12 }}
+            />
+            {error && <p style={{ fontSize: 12, color: '#FF4757', marginBottom: 10, fontWeight: 700 }}>{error}</p>}
+            {resent && !error && <p style={{ fontSize: 12, color: '#2DB87A', marginBottom: 10, fontWeight: 700 }}>{t('auth_modal.otp_resent')}</p>}
+            <button onClick={verify} disabled={loading}
+              style={{ width: '100%', padding: '15px 0', borderRadius: 14, border: 'none', cursor: loading ? 'default' : 'pointer', color: 'white', fontSize: 15, fontWeight: 900, fontFamily: 'Nunito', opacity: loading ? 0.7 : 1, background: 'linear-gradient(90deg, var(--brand-1), var(--brand-2), var(--brand-3), var(--brand-2), var(--brand-1))', backgroundSize: '200% 100%', animation: 'premiumFlow 4s linear infinite', marginBottom: 10 }}>
+              {loading ? t('auth_modal.processing') : t('auth_modal.otp_verify')}
+            </button>
+            <button onClick={resend}
+              style={{ width: '100%', padding: '8px 0', background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 13, fontWeight: 700, fontFamily: 'Nunito', cursor: 'pointer' }}>
+              {t('auth_modal.otp_resend')}
             </button>
           </div>
         ) : (

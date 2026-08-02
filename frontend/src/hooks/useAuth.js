@@ -63,6 +63,12 @@ export function useAuth() {
 
   const signIn = (email, password) => supabase.auth.signInWithPassword({ email, password })
   const signUp = (email, password) => supabase.auth.signUp({ email, password })
+  // Confirmação por código de 6 dígitos (em vez do link do email). Ao validar,
+  // o Supabase devolve uma sessão e o onAuthStateChange trata de iniciar sessão.
+  const verifyOtp = (email, token) =>
+    supabase.auth.verifyOtp({ email, token: token.trim(), type: 'signup' })
+  const resendSignup = (email) =>
+    supabase.auth.resend({ type: 'signup', email })
   const signOut = async () => {
     clearUserData()
     try { await supabase.auth.signOut({ scope: 'local' }) } catch {}
@@ -98,5 +104,5 @@ export function useAuth() {
     })
   }
 
-  return { user, authLoading, signIn, signUp, signOut, signInWithOAuth }
+  return { user, authLoading, signIn, signUp, signOut, signInWithOAuth, verifyOtp, resendSignup }
 }
