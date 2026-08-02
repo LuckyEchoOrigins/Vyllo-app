@@ -1,6 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
+import Landing from './Landing.jsx'
+import { isNativeApp, BLOCK_WEB } from './platform'
 import './index.css'
 import { applyAccent, getAccent } from './theme'
 
@@ -34,10 +36,14 @@ if (typeof caches !== 'undefined') {
   caches.keys().then((ks) => ks.forEach((k) => caches.delete(k))).catch(() => {})
 }
 
+// Num browser normal (com BLOCK_WEB ativo) mostra-se a página de download; as
+// apps nativas passam sempre em isNativeApp() e veem a app completa.
+const showLanding = BLOCK_WEB && !isNativeApp()
+
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  showLanding
+    ? <Landing />
+    : <React.StrictMode><App /></React.StrictMode>
 )
 
 // Esconde o splash de arranque depois de o React montar (render é síncrono, por
