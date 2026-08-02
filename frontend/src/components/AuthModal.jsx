@@ -50,7 +50,9 @@ export default function AuthModal({ onClose, onSignIn, onSignUp, onSignInOAuth, 
   const verify = async () => {
     setError('')
     const clean = code.replace(/\D/g, '')
-    if (clean.length !== 6) { setError(t('auth_modal.error_otp')); return }
+    // O comprimento do OTP é configurável no Supabase (6–8). Exigimos o mínimo
+    // e deixamos o verifyOtp validar o valor exato.
+    if (clean.length < 6) { setError(t('auth_modal.error_otp')); return }
     setLoading(true)
     try {
       const { error: e } = await onVerifyOtp(email, clean)
@@ -101,11 +103,11 @@ export default function AuthModal({ onClose, onSignIn, onSignUp, onSignInOAuth, 
             </p>
             <input
               type="text" inputMode="numeric" autoComplete="one-time-code"
-              maxLength={6} placeholder="000000" value={code}
-              onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              maxLength={8} placeholder="00000000" value={code}
+              onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
               onKeyDown={e => e.key === 'Enter' && verify()}
               autoFocus
-              style={{ width: '100%', padding: '14px 0', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 26, fontWeight: 800, fontFamily: 'Nunito', textAlign: 'center', letterSpacing: '0.4em', outline: 'none', marginBottom: 12 }}
+              style={{ width: '100%', padding: '14px 0', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 24, fontWeight: 800, fontFamily: 'Nunito', textAlign: 'center', letterSpacing: '0.3em', outline: 'none', marginBottom: 12 }}
             />
             {error && <p style={{ fontSize: 12, color: '#FF4757', marginBottom: 10, fontWeight: 700 }}>{error}</p>}
             {resent && !error && <p style={{ fontSize: 12, color: '#2DB87A', marginBottom: 10, fontWeight: 700 }}>{t('auth_modal.otp_resent')}</p>}
