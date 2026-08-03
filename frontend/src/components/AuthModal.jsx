@@ -13,15 +13,23 @@ const GoogleIcon = () => (
 )
 
 
+// Email de um registo cuja confirmação ficou a meio. Guardado para que, se o
+// utilizador fechar a app para ir buscar o código, ao reabrir volte direto ao
+// ecrã do código (o código é válido 1 hora).
+const readPending = () => { try { return localStorage.getItem('pendingOtpEmail') || '' } catch { return '' } }
+const savePending = (e) => { try { localStorage.setItem('pendingOtpEmail', e) } catch {} }
+const clearPending = () => { try { localStorage.removeItem('pendingOtpEmail') } catch {} }
+
 export default function AuthModal({ onClose, onSignIn, onSignUp, onSignInOAuth, onVerifyOtp, onResend }) {
   const { t } = useLang()
+  const pending = readPending()
   const [mode, setMode] = useState('login')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(pending)
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [oauthLoading, setOauthLoading] = useState(null)
   const [error, setError] = useState('')
-  const [done, setDone] = useState(false)   // registo feito → pedir código
+  const [done, setDone] = useState(!!pending)   // retoma o ecrã do código se ficou pendente
   const [code, setCode] = useState('')
   const [resent, setResent] = useState(false)
 
@@ -38,7 +46,8 @@ export default function AuthModal({ onClose, onSignIn, onSignUp, onSignInOAuth, 
       } else {
         const { error: e } = await onSignUp(email, password)
         if (e) { setError(e.message); return }
-        setDone(true)   // mostra o ecrã do código
+        savePending(email)   // sobrevive a fechar a app
+        setDone(true)        // mostra o ecrã do código
       }
     } finally {
       setLoading(false)
@@ -57,6 +66,7 @@ export default function AuthModal({ onClose, onSignIn, onSignUp, onSignInOAuth, 
     try {
       const { error: e } = await onVerifyOtp(email, clean)
       if (e) { setError(t('auth_modal.error_otp')); return }
+      clearPending()
       onClose()
     } finally {
       setLoading(false)
@@ -118,6 +128,10 @@ export default function AuthModal({ onClose, onSignIn, onSignUp, onSignInOAuth, 
             <button onClick={resend}
               style={{ width: '100%', padding: '8px 0', background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 13, fontWeight: 700, fontFamily: 'Nunito', cursor: 'pointer' }}>
               {t('auth_modal.otp_resend')}
+            </button>
+            <button onClick={() => { clearPending(); setDone(false); setCode(''); setError(''); setResent(false) }}
+              style={{ width: '100%', padding: '6px 0 0', background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, fontFamily: 'Nunito', cursor: 'pointer', opacity: 0.6 }}>
+              {t('auth_modal.otp_back')}
             </button>
           </div>
         ) : (

@@ -33,6 +33,8 @@ export function useAuth() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const newUser = session?.user ?? null
       const newId = newUser?.id ?? null
+      // Sessão ativa → já não há confirmação pendente a retomar.
+      if (newUser) { try { localStorage.removeItem('pendingOtpEmail') } catch {} }
       if (prevUserIdRef.current && newId !== prevUserIdRef.current) {
         clearUserData()
         prevUserIdRef.current = newId

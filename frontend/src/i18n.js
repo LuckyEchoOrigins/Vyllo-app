@@ -581,6 +581,7 @@ export const translations = {
       otp_verify: 'Confirm',
       otp_resend: 'Resend code',
       otp_resent: 'New code sent.',
+      otp_back: 'Use a different email',
       error_otp: 'Invalid or expired code. Check it and try again.',
     },
 
@@ -1290,6 +1291,7 @@ export const translations = {
       otp_verify: 'Confirmar',
       otp_resend: 'Reenviar código',
       otp_resent: 'Nuevo código enviado.',
+      otp_back: 'Usar otro correo',
       error_otp: 'Código no válido o caducado. Compruébalo e inténtalo de nuevo.',
     },
     share_shelf: {
@@ -1981,6 +1983,7 @@ export const translations = {
       otp_verify: 'Confirmer',
       otp_resend: 'Renvoyer le code',
       otp_resent: 'Nouveau code envoyé.',
+      otp_back: 'Utiliser un autre e-mail',
       error_otp: 'Code invalide ou expiré. Vérifie-le et réessaie.',
     },
     share_shelf: {
@@ -2672,6 +2675,7 @@ export const translations = {
       otp_verify: 'Bestätigen',
       otp_resend: 'Code erneut senden',
       otp_resent: 'Neuer Code gesendet.',
+      otp_back: 'Andere E-Mail verwenden',
       error_otp: 'Ungültiger oder abgelaufener Code. Bitte prüfen und erneut versuchen.',
     },
     share_shelf: {
@@ -3397,6 +3401,7 @@ export const translations = {
       otp_verify: 'Confirmar',
       otp_resend: 'Reenviar código',
       otp_resent: 'Novo código enviado.',
+      otp_back: 'Usar outro email',
       error_otp: 'Código inválido ou expirado. Verifica e tenta de novo.',
     },
 
