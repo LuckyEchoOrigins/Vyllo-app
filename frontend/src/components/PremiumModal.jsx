@@ -374,6 +374,18 @@ export default function PremiumModal() {
             style={{ width: '100%', padding: '4px 0 2px', background: 'none', color: 'var(--text-muted)', fontSize: 11, fontFamily: 'Nunito', cursor: 'pointer', opacity: 0.55 }}>
             {t('premium_modal.restore')}
           </button>
+          {/* Exigido pela Apple (3.1.2) para subscrições: links funcionais para
+              Termos de Utilização e Política de Privacidade no ecrã de compra. */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 8 }}>
+            <a href="https://vyllo-app.com/terms.html" target="_blank" rel="noopener noreferrer"
+              style={{ color: 'var(--text-muted)', fontSize: 10.5, fontFamily: 'Nunito', textDecoration: 'underline', opacity: 0.7 }}>
+              {t('premium_modal.terms')}
+            </a>
+            <a href="https://vyllo-app.com/privacy.html" target="_blank" rel="noopener noreferrer"
+              style={{ color: 'var(--text-muted)', fontSize: 10.5, fontFamily: 'Nunito', textDecoration: 'underline', opacity: 0.7 }}>
+              {t('premium_modal.privacy')}
+            </a>
+          </div>
         </div>
       </div>
     </div>

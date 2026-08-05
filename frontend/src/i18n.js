@@ -549,6 +549,8 @@ export const translations = {
       purchase_failed: 'Could not complete the purchase.',
       billing_unavailable: 'In-app billing isn\'t available. Update Vyllo in the Play Store and try again.',
       nothing_to_restore: 'No previous purchase found.',
+      terms: 'Terms of Use',
+      privacy: 'Privacy Policy',
     },
 
     // AuthModal
@@ -1261,6 +1263,8 @@ export const translations = {
       purchase_failed: 'No se pudo completar la compra.',
       billing_unavailable: 'La facturación integrada no está disponible. Actualiza Vyllo en Play Store e inténtalo de nuevo.',
       nothing_to_restore: 'No se encontró ninguna compra anterior.',
+      terms: 'Términos de uso',
+      privacy: 'Política de privacidad',
     },
     auth_modal: {
       confirm_email_title: 'Confirma tu correo',
@@ -1953,6 +1957,8 @@ export const translations = {
       purchase_failed: 'Impossible de finaliser l\'achat.',
       billing_unavailable: 'La facturation intégrée n\'est pas disponible. Mets à jour Vyllo sur le Play Store et réessaie.',
       nothing_to_restore: 'Aucun achat précédent trouvé.',
+      terms: 'Conditions d\'utilisation',
+      privacy: 'Politique de confidentialité',
     },
     auth_modal: {
       confirm_email_title: 'Confirme ton e-mail',
@@ -2645,6 +2651,8 @@ export const translations = {
       purchase_failed: 'Kauf konnte nicht abgeschlossen werden.',
       billing_unavailable: 'In-App-Kauf ist nicht verfügbar. Aktualisiere Vyllo im Play Store und versuche es erneut.',
       nothing_to_restore: 'Kein früherer Kauf gefunden.',
+      terms: 'Nutzungsbedingungen',
+      privacy: 'Datenschutz',
     },
     auth_modal: {
       confirm_email_title: 'Bestätige deine E-Mail',
@@ -3369,6 +3377,8 @@ export const translations = {
       purchase_failed: 'Não foi possível concluir a compra.',
       billing_unavailable: 'A faturação na app não está disponível. Atualiza a Vyllo na Play Store e tenta de novo.',
       nothing_to_restore: 'Não foi encontrada nenhuma compra anterior.',
+      terms: 'Termos de Utilização',
+      privacy: 'Política de Privacidade',
     },
 
     // AuthModal
