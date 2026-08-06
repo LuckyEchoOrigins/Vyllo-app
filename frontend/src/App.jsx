@@ -39,7 +39,7 @@ export default function App() {
   const [celebration, setCelebration] = useState(null)
   const [accentKey, setAccentKey] = useState(0)
   const [showAuth, setShowAuth] = useState(false)
-  const { user, authLoading, signIn, signUp, signOut, signInWithOAuth, verifyOtp, resendSignup } = useAuth()
+  const { user, authLoading, signIn, signUp, signOut, signInWithOAuth, signInWithApple, verifyOtp, resendSignup } = useAuth()
 
   useEffect(() => {
     const onAccent = () => setAccentKey(k => k + 1)
@@ -243,7 +243,7 @@ export default function App() {
         >
           Sign in / Register
         </button>
-        {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSignIn={signIn} onSignUp={signUp} onSignInOAuth={signInWithOAuth} onVerifyOtp={verifyOtp} onResend={resendSignup} />}
+        {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSignIn={signIn} onSignUp={signUp} onSignInOAuth={signInWithOAuth} onSignInApple={signInWithApple} onVerifyOtp={verifyOtp} onResend={resendSignup} />}
       </div>
     )
   }
@@ -293,7 +293,7 @@ export default function App() {
       {showLimitPop && <LimitPop limit={FREE_ITEM_LIMIT} onClose={() => setShowLimitPop(false)} />}
       {showGoalSetup && <GoalSetup enabledCats={enabledCats} onClose={() => setShowGoalSetup(false)} onSave={g => setGoals(g)} />}
       {celebration && <GoalCelebration cat={celebration.cat} done={celebration.done} goal={celebration.goal} onClose={() => setCelebration(null)} />}
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSignIn={signIn} onSignUp={signUp} onSignInOAuth={signInWithOAuth} onVerifyOtp={verifyOtp} onResend={resendSignup} />}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSignIn={signIn} onSignUp={signUp} onSignInOAuth={signInWithOAuth} onSignInApple={signInWithApple} onVerifyOtp={verifyOtp} onResend={resendSignup} />}
       {showFeaturePop && <FeaturePop onClose={() => {
         setShowFeaturePop(false)
         try { localStorage.setItem('featuresShown', '1') } catch {}

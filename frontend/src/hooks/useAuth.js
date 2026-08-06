@@ -58,6 +58,11 @@ export function useAuth() {
         supabase.auth.signInWithIdToken({ provider: 'google', token: data.idToken })
           .catch(() => {})
       }
+      // Sign in with Apple nativo (iOS): o Swift devolve o identityToken.
+      if (data && data.type === 'APPLE_SIGN_IN' && data.idToken) {
+        supabase.auth.signInWithIdToken({ provider: 'apple', token: data.idToken })
+          .catch(() => {})
+      }
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
@@ -106,5 +111,23 @@ export function useAuth() {
     })
   }
 
-  return { user, authLoading, signIn, signUp, signOut, signInWithOAuth, verifyOtp, resendSignup }
+  // Sign in with Apple. No app iOS dispara o fluxo NATIVO (ASAuthorization), que
+  // devolve o idToken por postMessage (APPLE_SIGN_IN). No browser usa o OAuth web.
+  const signInWithApple = () => {
+    const nativeApple = window.webkit?.messageHandlers?.['apple-signin']
+    if (nativeApple) {
+      nativeApple.postMessage({})
+      return Promise.resolve({ error: null })
+    }
+    // Estamos na app iOS mas sem o handler (build antiga): não cair no OAuth web.
+    if (/PWAShell/i.test(navigator.userAgent)) {
+      return Promise.resolve({ error: { message: 'Atualiza a app para a versão mais recente para entrares com a Apple.' } })
+    }
+    return supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: { redirectTo: window.location.origin },
+    })
+  }
+
+  return { user, authLoading, signIn, signUp, signOut, signInWithOAuth, signInWithApple, verifyOtp, resendSignup }
 }

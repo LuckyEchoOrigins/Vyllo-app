@@ -12,6 +12,12 @@ const GoogleIcon = () => (
   </svg>
 )
 
+const AppleIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M16.5 1.5c.1 1-.3 2-1 2.8-.7.8-1.8 1.4-2.8 1.3-.1-1 .4-2 1-2.7.7-.8 1.9-1.3 2.8-1.4zM19.9 17c-.5 1.2-.8 1.7-1.5 2.7-1 1.5-2.4 3.3-4.1 3.3-1.5 0-1.9-1-4-1-2 0-2.5 1-4 1-1.7 0-3-1.6-4-3.1-2.8-4.2-3.1-9.1-1.4-11.7 1.2-1.9 3.1-3 4.9-3 1.8 0 3 1 4.5 1 1.5 0 2.4-1 4.5-1 1.6 0 3.3.9 4.5 2.4-4 2.2-3.3 7.9.6 9.4z" />
+  </svg>
+)
+
 
 // Email de um registo cuja confirmação ficou a meio. Guardado para que, se o
 // utilizador fechar a app para ir buscar o código, ao reabrir volte direto ao
@@ -20,7 +26,7 @@ const readPending = () => { try { return localStorage.getItem('pendingOtpEmail')
 const savePending = (e) => { try { localStorage.setItem('pendingOtpEmail', e) } catch {} }
 const clearPending = () => { try { localStorage.removeItem('pendingOtpEmail') } catch {} }
 
-export default function AuthModal({ onClose, onSignIn, onSignUp, onSignInOAuth, onVerifyOtp, onResend }) {
+export default function AuthModal({ onClose, onSignIn, onSignUp, onSignInOAuth, onSignInApple, onVerifyOtp, onResend }) {
   const { t } = useLang()
   const pending = readPending()
   const [mode, setMode] = useState('login')
@@ -93,6 +99,22 @@ export default function AuthModal({ onClose, onSignIn, onSignUp, onSignInOAuth, 
     }
   }
 
+  const handleApple = async () => {
+    setOauthLoading('apple')
+    try {
+      const { error: e } = await onSignInApple()
+      if (e) setError(e.message)
+    } finally {
+      setOauthLoading(null)
+    }
+  }
+
+  // O Sign in with Apple só faz sentido no ecossistema Apple. Mostra-se dentro
+  // da app iOS (tem o handler nativo) — exigido pela Guideline 4.8 quando há
+  // login de terceiros como o Google.
+  const showApple = typeof window !== 'undefined' &&
+    (!!window.webkit?.messageHandlers?.['apple-signin'] || /iPhone|iPad|Macintosh/i.test(navigator.userAgent))
+
   const content = (
     <div style={{ position: 'absolute', inset: 0, zIndex: 400, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', animation: 'fadeIn 0.22s ease both' }} />
@@ -159,6 +181,16 @@ export default function AuthModal({ onClose, onSignIn, onSignUp, onSignInOAuth, 
                 <GoogleIcon />
                 {oauthLoading === 'google' ? t('auth_modal.redirecting') : t('auth_modal.google_btn')}
               </button>
+              {showApple && (
+                <button
+                  onClick={handleApple}
+                  disabled={!!oauthLoading}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '12px 0', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 14, fontWeight: 700, fontFamily: 'Nunito', cursor: 'pointer', opacity: oauthLoading === 'apple' ? 0.6 : 1 }}
+                >
+                  <AppleIcon />
+                  {oauthLoading === 'apple' ? t('auth_modal.redirecting') : t('auth_modal.apple_btn')}
+                </button>
+              )}
             </div>
 
             {/* Divider */}
