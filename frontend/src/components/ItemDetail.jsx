@@ -365,6 +365,7 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
         <BookCoverPicker
           item={item}
           onClose={() => setShowCoverPicker(false)}
+          onManualUpload={() => { setShowCoverPicker(false); setShowManualCover(true) }}
           onUpdate={(updated) => { onUpdate(updated); setShowCoverPicker(false) }}
         />
       )}

@@ -77,6 +77,7 @@ export default function BookCoverPicker({
   initialTitle,  // título para pesquisa (modo 2)
   initialAuthor, // autor para pesquisa (modo 2)
   currentCover,  // capa atual a marcar como selecionada (modo 2)
+  onManualUpload,// fallback: abrir upload manual (Open Library em baixo / sem capas)
   onClose,
 }) {
   const { t } = useLang()
@@ -224,7 +225,15 @@ export default function BookCoverPicker({
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '12px 20px 24px', borderTop: '1px solid #F0F0F5', display: 'flex', gap: 10 }}>
+        <div style={{ padding: '12px 20px 24px', borderTop: '1px solid #F0F0F5' }}>
+          {onManualUpload && (
+            <button onClick={onManualUpload}
+              style={{ width: '100%', padding: '10px 12px', marginBottom: 10, borderRadius: 12, background: 'var(--surface-2)', color: 'var(--text-muted)', fontSize: 13, fontWeight: 700, fontFamily: 'Nunito', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, cursor: 'pointer' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+              {t('cover_picker.upload_manual')}
+            </button>
+          )}
+          <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={onClose}
             style={{ flex: 1, padding: 12, borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', color: 'var(--text-muted)', fontSize: 14, fontWeight: 700, fontFamily: 'Nunito' }}>
             {t('cover_picker.cancel')}
@@ -241,6 +250,7 @@ export default function BookCoverPicker({
           >
             {saving ? t('cover_picker.saving') : t('cover_picker.use_cover')}
           </button>
+          </div>
         </div>
       </div>
     </div>

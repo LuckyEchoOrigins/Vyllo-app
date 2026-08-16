@@ -665,6 +665,7 @@ export const translations = {
       cancel: 'Cancel',
       saving: 'Saving…',
       use_cover: 'Use this cover',
+      upload_manual: 'Upload from device',
     },
 
     // ManualCoverPicker
@@ -1367,6 +1368,7 @@ export const translations = {
       cancel: 'Cancelar',
       saving: 'Guardando…',
       use_cover: 'Usar esta portada',
+      upload_manual: 'Subir desde el dispositivo',
     },
     manual_cover: {
       title: 'Imagen de portada',
@@ -2061,6 +2063,7 @@ export const translations = {
       cancel: 'Annuler',
       saving: 'Enregistrement…',
       use_cover: 'Utiliser cette couverture',
+      upload_manual: 'Importer depuis l\'appareil',
     },
     manual_cover: {
       title: 'Image de couverture',
@@ -2755,6 +2758,7 @@ export const translations = {
       cancel: 'Abbrechen',
       saving: 'Speichern…',
       use_cover: 'Dieses Cover verwenden',
+      upload_manual: 'Vom Gerät hochladen',
     },
     manual_cover: {
       title: 'Cover-Bild',
@@ -3493,6 +3497,7 @@ export const translations = {
       cancel: 'Cancelar',
       saving: 'A guardar…',
       use_cover: 'Usar esta capa',
+      upload_manual: 'Carregar do dispositivo',
     },
 
     // ManualCoverPicker
