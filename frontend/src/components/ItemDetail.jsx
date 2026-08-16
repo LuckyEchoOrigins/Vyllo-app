@@ -460,8 +460,8 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
               </div>
 
 
-              {/* Ícone editar capa — canto inferior direito (livros: Open Library · filmes: manual) */}
-              {(item.category === 'book' || item.category === 'film') && (
+              {/* Ícone editar capa — canto inferior direito (livros: Open Library · filmes/jogos: manual) */}
+              {(item.category === 'book' || item.category === 'film' || item.category === 'game') && (
                 <button
                   onClick={() => item.category === 'book' ? setShowCoverPicker(true) : setShowManualCover(true)}
                   title="Edit cover"
