@@ -22,6 +22,24 @@ import { supabase } from './supabase'
 
 const FREE_ITEM_LIMIT = 40
 
+// Nome amigável para saudar o utilizador. Google traz full_name/name; Apple (via
+// idToken) e email/password não trazem nada, por isso derivamos do email quando dá.
+// Apple private-relay não tem nome utilizável → devolve null e fica o default.
+function friendlyNameFromUser(user) {
+  const meta = user?.user_metadata || {}
+  const metaName = (
+    meta.full_name ||
+    meta.name ||
+    [meta.given_name, meta.family_name].filter(Boolean).join(' ')
+  ).trim?.() || ''
+  if (metaName) return metaName
+  const email = user?.email || ''
+  if (!email || /privaterelay\.appleid\.com$/i.test(email)) return null
+  const first = email.split('@')[0].split(/[.\-_+]/)[0].replace(/\d+$/, '')
+  if (first.length < 2) return null
+  return first.charAt(0).toUpperCase() + first.slice(1)
+}
+
 export default function App() {
   const [tab, setTab] = useState(0)
   const [showAdd, setShowAdd] = useState(false)
@@ -48,11 +66,9 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (!user) return
-    const googleName = user.user_metadata?.full_name || user.user_metadata?.name
-    if (googleName && !localStorage.getItem('userName')) {
-      setUserName(googleName)
-    }
+    if (!user || localStorage.getItem('userName')) return
+    const name = friendlyNameFromUser(user)
+    if (name) setUserName(name)
   }, [user])
 
   // Fecha o modal de login assim que a sessão é iniciada (ex.: login Google nativo

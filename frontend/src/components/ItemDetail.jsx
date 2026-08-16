@@ -1073,7 +1073,7 @@ function DetailRow({ label, value }) {
 
 function DateField({ label, value, onChange, color }) {
   return (
-    <div style={{ flex: 1 }}>
+    <div style={{ flex: 1, minWidth: 0 }}>
       <p style={{ fontSize: 11, color: 'var(--item-label)', fontWeight: 800, marginBottom: 6 }}>{label}</p>
       <input
         type="date"
@@ -1081,7 +1081,9 @@ function DateField({ label, value, onChange, color }) {
         max={new Date().toISOString().slice(0, 10)}
         onChange={e => { if (e.target.value) onChange(e.target.value) }}
         style={{
-          width: '100%', fontSize: 13, padding: '9px 10px',
+          width: '100%', minWidth: 0, boxSizing: 'border-box',
+          WebkitAppearance: 'none', appearance: 'none',
+          fontSize: 13, padding: '9px 10px',
           border: 'none',
           borderRadius: 10, color: value ? 'var(--text)' : 'var(--text-muted)',
           fontFamily: 'Nunito', background: 'var(--item-input-bg)',
