@@ -8,6 +8,7 @@
 // só consegue apagar a própria conta.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { revokeAppleToken } from '../_shared/apple.ts'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -33,6 +34,19 @@ Deno.serve(async (req) => {
     const jwt = (req.headers.get('Authorization') ?? '').replace('Bearer ', '')
     const { data: { user }, error: authErr } = await supabase.auth.getUser(jwt)
     if (authErr || !user) return json({ error: 'unauthorized' }, 401)
+
+    // 0. Revogar o token do Sign in with Apple, se existir (Apple 5.1.1(v)).
+    //    Best-effort: a eliminação da conta NUNCA pode falhar por causa disto.
+    try {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('apple_refresh_token')
+        .eq('id', user.id)
+        .single()
+      if (prof?.apple_refresh_token) {
+        await revokeAppleToken(prof.apple_refresh_token)
+      }
+    } catch (_e) { /* ignora: revogação é best-effort */ }
 
     // 1. Conteúdo do utilizador
     const { error: itemsErr } = await supabase
