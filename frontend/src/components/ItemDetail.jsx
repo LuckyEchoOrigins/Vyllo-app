@@ -1083,8 +1083,8 @@ function DateField({ label, value, onChange, color }) {
         onChange={e => { if (e.target.value) onChange(e.target.value) }}
         style={{
           width: '100%', minWidth: 0, boxSizing: 'border-box',
-          WebkitAppearance: 'none', appearance: 'none',
-          fontSize: 13, padding: '9px 10px',
+          minHeight: 40, display: 'block',
+          fontSize: 13, padding: '9px 10px', lineHeight: '20px',
           border: 'none',
           borderRadius: 10, color: value ? 'var(--text)' : 'var(--text-muted)',
           fontFamily: 'Nunito', background: 'var(--item-input-bg)',
