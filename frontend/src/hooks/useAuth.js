@@ -58,9 +58,15 @@ export function useAuth() {
         supabase.auth.signInWithIdToken({ provider: 'google', token: data.idToken })
           .catch(() => {})
       }
-      // Sign in with Apple nativo (iOS): o Swift devolve o identityToken.
+      // Sign in with Apple nativo (iOS): o Swift devolve o identityToken e, só na
+      // primeira autorização, o nome. Persistimos no perfil (full_name) para a
+      // saudação o mostrar — o idToken da Apple não traz o nome.
       if (data && data.type === 'APPLE_SIGN_IN' && data.idToken) {
         supabase.auth.signInWithIdToken({ provider: 'apple', token: data.idToken })
+          .then(() => {
+            const name = (data.name || '').trim()
+            if (name) supabase.auth.updateUser({ data: { full_name: name } }).catch(() => {})
+          })
           .catch(() => {})
       }
     }
