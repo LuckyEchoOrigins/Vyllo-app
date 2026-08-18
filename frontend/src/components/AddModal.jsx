@@ -384,7 +384,7 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
               {/* Capa + Título (lado a lado) */}
               <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                 <button
-                  onClick={() => cat === 'book' ? setShowCoverPicker(true) : setShowManualCover(true)}
+                  onClick={() => setShowManualCover(true)}
                   style={{
                     flexShrink: 0, width: 72, height: 96, borderRadius: 10,
                     border: `2px dashed ${customCover ? color : 'var(--border)'}`,
@@ -421,16 +421,8 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
                 </div>
               </div>
 
-              {/* Capa pickers inline */}
-              {showCoverPicker && cat === 'book' && (
-                <BookCoverPicker
-                  initialTitle={manualTitle} initialAuthor={manualSubtitle}
-                  currentCover={customCover || ''}
-                  onSelectUrl={url => { setCustomCover(url); setShowCoverPicker(false) }}
-                  onClose={() => setShowCoverPicker(false)}
-                />
-              )}
-              {showManualCover && cat !== 'book' && (
+              {/* Capa — upload manual do dispositivo (todas as categorias no modo manual) */}
+              {showManualCover && (
                 <ManualCoverPicker
                   category={cat} initialCover={customCover || ''}
                   onSelectUrl={url => { setCustomCover(url); setShowManualCover(false) }}
@@ -638,9 +630,9 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
                 <div style={{ background: `linear-gradient(135deg, ${color}22, ${color}11)`, padding: 20, display: 'flex', gap: 16 }}>
                   <div style={{ position: 'relative', flexShrink: 0 }}>
                     <CoverImage src={customCover || selected.cover} category={cat} size={70} radius={12} isMovie={cat === 'film' && !selected.isSeries} />
-                    {(cat === 'book' || cat === 'film') && (
+                    {(cat === 'book' || cat === 'film' || manualMode) && (
                       <button
-                        onClick={() => cat === 'book' ? setShowCoverPicker(true) : setShowManualCover(true)}
+                        onClick={() => (cat === 'book' && !manualMode) ? setShowCoverPicker(true) : setShowManualCover(true)}
                         style={{
                           position: 'absolute', bottom: -6, right: -6,
                           background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', borderRadius: '50%',
@@ -719,7 +711,7 @@ export default function AddModal({ onClose, onAdd, enabledCats = ['book', 'game'
               )}
               {showManualCover && (
                 <ManualCoverPicker
-                  category="film" initialCover={customCover || ''}
+                  category={cat} initialCover={customCover || ''}
                   onSelectUrl={(url) => setCustomCover(url)}
                   onClose={() => setShowManualCover(false)}
                 />
