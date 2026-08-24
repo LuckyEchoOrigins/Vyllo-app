@@ -1,95 +1,120 @@
-// Sign in with Apple — geração do client secret (JWT ES256) e chamadas às APIs
-// de token/revoke da Apple. Usado por apple-token (guardar refresh_token) e por
-// delete-account (revogar na eliminação da conta, Guideline 5.1.1(v)).
-//
-// Secrets necessários (Supabase → Edge Functions → Secrets):
-//   APPLE_TEAM_ID             — Team ID de 10 caracteres (Apple Developer)
-//   APPLE_SIGNIN_KEY_ID       — Key ID de uma chave com "Sign in with Apple"
-//   APPLE_SIGNIN_PRIVATE_KEY  — conteúdo do .p8 (com ou sem cabeçalhos PEM)
-//   APPLE_BUNDLE_ID           — opcional; default com.vyllo-app
+// Helpers partilhados para a App Store Server API.
+// Usados por verify-apple-purchase e apple-notifications.
 
-const TEAM_ID = Deno.env.get('APPLE_TEAM_ID') ?? ''
-const KEY_ID = Deno.env.get('APPLE_SIGNIN_KEY_ID') ?? ''
-const CLIENT_ID = Deno.env.get('APPLE_BUNDLE_ID') ?? 'com.vyllo-app'
-const PRIVATE_KEY = Deno.env.get('APPLE_SIGNIN_PRIVATE_KEY') ?? ''
+export const BUNDLE_ID = 'com.vyllo-app'
 
-function b64url(data: Uint8Array | string): string {
-  const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data
+export const VALID_PRODUCTS: Record<string, string> = {
+  'com.vyllo.premium.monthly': 'monthly',
+  'com.vyllo.premium.annual': 'annual',
+  'com.vyllo.premium.lifetime': 'lifetime',
+}
+
+export const LIFETIME_PRODUCT = 'com.vyllo.premium.lifetime'
+
+const KEY_ID = Deno.env.get('APPLE_KEY_ID')!
+const ISSUER_ID = Deno.env.get('APPLE_ISSUER_ID')!
+const PRIVATE_KEY_P8 = Deno.env.get('APPLE_PRIVATE_KEY')!
+
+const HOSTS = [
+  'https://api.storekit.itunes.apple.com',
+  'https://api.storekit-sandbox.itunes.apple.com',
+]
+
+function b64url(data: ArrayBuffer | Uint8Array | string): string {
+  const bytes = typeof data === 'string'
+    ? new TextEncoder().encode(data)
+    : data instanceof Uint8Array ? data : new Uint8Array(data)
   let bin = ''
-  for (const b of bytes) bin += String.fromCharCode(b)
+  bytes.forEach((b) => { bin += String.fromCharCode(b) })
   return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
-// .p8 → bytes PKCS#8. Tolera cabeçalhos PEM e quebras de linha (reais ou "\n").
-function pkcs8Bytes(pem: string): Uint8Array {
-  const body = pem
-    .replace(/-----BEGIN PRIVATE KEY-----/g, '')
-    .replace(/-----END PRIVATE KEY-----/g, '')
-    .replace(/\\n/g, '')
+function pemToDer(pem: string): Uint8Array {
+  const b64 = pem
+    .replace(/-----BEGIN [^-]+-----/, '')
+    .replace(/-----END [^-]+-----/, '')
     .replace(/\s+/g, '')
-  const bin = atob(body)
-  const out = new Uint8Array(bin.length)
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i)
-  return out
+  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
 }
 
-async function clientSecret(): Promise<string> {
-  const now = Math.floor(Date.now() / 1000)
-  const header = { alg: 'ES256', kid: KEY_ID }
-  const payload = {
-    iss: TEAM_ID,
-    iat: now,
-    exp: now + 3600,          // 1h chega para um pedido pontual
-    aud: 'https://appleid.apple.com',
-    sub: CLIENT_ID,
-  }
-  const input = `${b64url(JSON.stringify(header))}.${b64url(JSON.stringify(payload))}`
+/** JWT ES256 para autenticar na App Store Server API */
+export async function appleToken(): Promise<string> {
   const key = await crypto.subtle.importKey(
     'pkcs8',
-    pkcs8Bytes(PRIVATE_KEY),
+    pemToDer(PRIVATE_KEY_P8),
     { name: 'ECDSA', namedCurve: 'P-256' },
     false,
     ['sign'],
   )
-  const sig = new Uint8Array(await crypto.subtle.sign(
+  const now = Math.floor(Date.now() / 1000)
+  const header = { alg: 'ES256', kid: KEY_ID, typ: 'JWT' }
+  const payload = {
+    iss: ISSUER_ID,
+    iat: now,
+    exp: now + 600,
+    aud: 'appstoreconnect-v1',
+    bid: BUNDLE_ID,
+  }
+  const input = `${b64url(JSON.stringify(header))}.${b64url(JSON.stringify(payload))}`
+  const sig = await crypto.subtle.sign(
     { name: 'ECDSA', hash: 'SHA-256' },
     key,
     new TextEncoder().encode(input),
-  ))
-  // Web Crypto devolve r||s (64 bytes) — exatamente o formato do ES256 do JWT.
+  )
   return `${input}.${b64url(sig)}`
 }
 
-// Troca o authorization code (do login nativo) pelo refresh_token.
-export async function exchangeAppleCode(code: string): Promise<string | null> {
-  const body = new URLSearchParams({
-    client_id: CLIENT_ID,
-    client_secret: await clientSecret(),
-    code,
-    grant_type: 'authorization_code',
-  })
-  const r = await fetch('https://appleid.apple.com/auth/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  })
-  if (!r.ok) return null
-  const d = await r.json().catch(() => ({}))
-  return d.refresh_token ?? null
+/**
+ * Descodifica o payload de um JWS SEM verificar a assinatura.
+ * Só é seguro quando (a) a resposta veio da API autenticada da Apple, ou
+ * (b) o valor é usado apenas como pista, e o estado real é confirmado a seguir.
+ */
+export function decodeJwsPayload(jws: string): Record<string, any> {
+  const b64 = jws.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+  const bin = atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4))
+  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0))
+  return JSON.parse(new TextDecoder().decode(bytes))
 }
 
-// Revoga o refresh_token (na eliminação da conta).
-export async function revokeAppleToken(refreshToken: string): Promise<boolean> {
-  const body = new URLSearchParams({
-    client_id: CLIENT_ID,
-    client_secret: await clientSecret(),
-    token: refreshToken,
-    token_type_hint: 'refresh_token',
-  })
-  const r = await fetch('https://appleid.apple.com/auth/revoke', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  })
-  return r.ok
+/** Detalhe de uma transação. Produção primeiro, sandbox a seguir (TestFlight). */
+export async function fetchTransaction(transactionId: string, token: string) {
+  for (const host of HOSTS) {
+    const res = await fetch(`${host}/inApps/v1/transactions/${transactionId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (res.ok) {
+      const { signedTransactionInfo } = await res.json()
+      return decodeJwsPayload(signedTransactionInfo)
+    }
+  }
+  return null
+}
+
+/**
+ * Estado atual da subscrição (autoritativo).
+ * status: 1=ativa, 2=expirada, 3=retry de pagamento, 4=período de tolerância, 5=revogada
+ */
+export async function fetchSubscriptionStatus(originalTransactionId: string, token: string) {
+  for (const host of HOSTS) {
+    const res = await fetch(`${host}/inApps/v1/subscriptions/${originalTransactionId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (res.ok) {
+      const body = await res.json()
+      const last = body?.data?.[0]?.lastTransactions?.[0]
+      if (!last) return null
+      return {
+        status: last.status as number,
+        transaction: last.signedTransactionInfo
+          ? decodeJwsPayload(last.signedTransactionInfo)
+          : null,
+      }
+    }
+  }
+  return null
+}
+
+/** Só estas mantêm o acesso: ativa (1) e período de tolerância (4). */
+export function statusGrantsPremium(status: number): boolean {
+  return status === 1 || status === 4
 }

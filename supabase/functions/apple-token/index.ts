@@ -6,7 +6,7 @@
 // já está autenticado (o signInWithIdToken corre no cliente antes disto).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { exchangeAppleCode } from '../_shared/apple.ts'
+import { exchangeAppleCode } from '../_shared/apple-signin.ts'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,

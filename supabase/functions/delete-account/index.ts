@@ -8,7 +8,7 @@
 // só consegue apagar a própria conta.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { revokeAppleToken } from '../_shared/apple.ts'
+import { revokeAppleToken } from '../_shared/apple-signin.ts'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
