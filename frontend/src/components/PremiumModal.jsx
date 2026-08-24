@@ -16,6 +16,10 @@ export default function PremiumModal() {
   // Preços vindos da loja (Play/StoreKit). Vazio no browser, onde o pagamento
   // é Stripe e os valores em euros abaixo são os corretos.
   const [storePrices, setStorePrices] = useState({})
+  // True quando a compra passa por uma loja nativa (Play/StoreKit). Só aí a conta
+  // de pagamento (Google/PayPal/Apple ID) pode diferir da conta Vyllo — mostramos
+  // uma nota para o utilizador não estranhar e desistir da compra.
+  const [isStore, setIsStore] = useState(false)
   const root = (typeof document !== 'undefined' && document.getElementById('root')) || null
 
   const PERKS = [
@@ -70,6 +74,15 @@ export default function PremiumModal() {
     window.addEventListener('open-premium', onOpen)
     return () => window.removeEventListener('open-premium', onOpen)
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Deteta se a compra vai passar por uma loja nativa (iOS StoreKit ou Play Billing).
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.webkit?.messageHandlers?.['iap-purchase']) {
+      setIsStore(true)
+      return
+    }
+    getPlayBilling().then((p) => { if (p) setIsStore(true) }).catch(() => {})
   }, [])
 
   // Pergunta os preços à loja. Se falhar, ficam os valores por omissão — mais
@@ -366,6 +379,12 @@ export default function PremiumModal() {
           <p style={{ textAlign: 'center', fontSize: 10.5, color: 'var(--text-muted)', marginTop: 8 }}>
             {plan === 'lifetime' ? t('premium_modal.no_renewal') : t('premium_modal.cancel_anytime')}
           </p>
+          {isStore && (
+            <p style={{ textAlign: 'center', fontSize: 10.5, color: 'var(--text-muted)', marginTop: 6, lineHeight: 1.4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+              <span style={{ flexShrink: 0 }}>🔒</span>
+              <span>{t('premium_modal.payment_account_note')}</span>
+            </p>
+          )}
           <button onClick={() => setOpen(false)}
             style={{ width: '100%', marginTop: 6, padding: 8, background: 'none', color: 'var(--text-muted)', fontSize: 13, fontWeight: 700, fontFamily: 'Nunito', cursor: 'pointer' }}>
             {t('premium_modal.not_now')}

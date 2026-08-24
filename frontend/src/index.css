@@ -100,6 +100,11 @@ body {
   overflow: hidden;
   position: relative;
   width: 100%;
+  /* Limita a largura em ecrãs grandes (dobrável desdobrado, tablet, desktop) —
+     a app fica como uma coluna de telemóvel centrada, com a moldura (--frame) à
+     volta, em vez de esticar de ponta a ponta. Em telemóveis normais a media
+     query abaixo (≤430px) põe width:100% e isto não tem efeito. */
+  max-width: 430px;
   padding-top: 0;
   margin-top: 0;
 }
