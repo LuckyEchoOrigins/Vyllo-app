@@ -201,7 +201,12 @@ export default function PremiumModal() {
           setOpen(false)
         } catch (err) {
           // O utilizador fechar a folha de pagamento não é um erro a mostrar.
-          if (err?.name !== 'AbortError') {
+          if (err?.name === 'AbortError') { /* cancelado pelo utilizador */ }
+          else if (/ClientAppUnavailable/i.test(String(err?.message || err?.name || ''))) {
+            // A ligação nativa ao Play ficou presa (sair a meio / trocar de conta).
+            // O web não a consegue repor — orientamos o utilizador a reabrir a app.
+            showToast(t('premium_modal.billing_unavailable'), 'error')
+          } else {
             showToast(err.message || t('premium_modal.purchase_failed'), 'error')
           }
         } finally {
