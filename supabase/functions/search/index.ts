@@ -60,7 +60,56 @@ async function fetchBookData(title: string, author: string | null) {
   return { cover: null, pages: null }
 }
 
-// ── Steam game cover ──────────────────────────────────────────────────────────
+// ── IGDB (via Twitch) — fonte primária de capas de jogos ─────────────────────
+// Cobre consolas + PC (resolve exclusivos que não estão no Steam). O token de app
+// (client credentials) é cacheado por instância; dura ~60 dias. Uso comercial
+// autorizado pelo IGDB (parceria em curso, acordo DocuSign a caminho).
+let igdbToken: { value: string; exp: number } | null = null
+
+async function igdbAccessToken(): Promise<string | null> {
+  const id = Deno.env.get('TWITCH_CLIENT_ID')
+  const secret = Deno.env.get('TWITCH_CLIENT_SECRET')
+  if (!id || !secret) return null
+  if (igdbToken && igdbToken.exp > Date.now() + 60_000) return igdbToken.value
+  try {
+    const r = await fetch(
+      `https://id.twitch.tv/oauth2/token?client_id=${id}&client_secret=${secret}&grant_type=client_credentials`,
+      { method: 'POST', signal: AbortSignal.timeout(5000) },
+    )
+    if (!r.ok) return null
+    const d = await r.json()
+    if (!d.access_token) return null
+    igdbToken = { value: d.access_token, exp: Date.now() + (d.expires_in ?? 3600) * 1000 }
+    return igdbToken.value
+  } catch { return null }
+}
+
+async function fetchIgdbCover(title: string): Promise<string | null> {
+  const id = Deno.env.get('TWITCH_CLIENT_ID')
+  const token = await igdbAccessToken()
+  if (!id || !token) return null
+  try {
+    const q = title.replace(/["\\]/g, '')
+    const body = `search "${q}"; fields name,cover.image_id; limit 8;`
+    const r = await fetch('https://api.igdb.com/v4/games', {
+      method: 'POST',
+      headers: { 'Client-ID': id, 'Authorization': `Bearer ${token}` },
+      body,
+      signal: AbortSignal.timeout(5000),
+    })
+    if (!r.ok) return null
+    const games = await r.json()
+    if (!Array.isArray(games)) return null
+    const want = normGame(title)
+    // Preferir nome exato; senão o primeiro resultado que tenha capa.
+    const exact = games.find((g) => g?.cover?.image_id && normGame(g.name) === want)
+    const best = exact || games.find((g) => g?.cover?.image_id)
+    if (!best?.cover?.image_id) return null
+    return `https://images.igdb.com/igdb/image/upload/t_cover_big_2x/${best.cover.image_id}.jpg`
+  } catch { return null }
+}
+
+// ── Game cover: IGDB (primário) → Steam → RAWG → Wikipedia ───────────────────
 async function fetchGameCover(title: string): Promise<{ appid: number | null; cover: string | null }> {
   const headers = { 'User-Agent': UA, 'Accept-Language': 'pt-PT,pt;q=0.9,en;q=0.8' }
   let appid: number | null = null
@@ -95,6 +144,11 @@ async function fetchGameCover(title: string): Promise<{ appid: number | null; co
     } catch { /* ignore */ }
   }
 
+  // IGDB — fonte primária da capa (cobre consolas + PC; resolve exclusivos).
+  const igdb = await fetchIgdbCover(title)
+  if (igdb) return { appid, cover: igdb }
+
+  // Fallback: capa do Steam
   if (appid) {
     const portraitUrl = `https://cdn.akamai.steamstatic.com/steam/apps/${appid}/library_600x900.jpg`
     const headerUrl = `https://cdn.akamai.steamstatic.com/steam/apps/${appid}/header.jpg`
@@ -103,9 +157,10 @@ async function fetchGameCover(title: string): Promise<{ appid: number | null; co
     if (await exists(headerUrl)) return { appid, cover: headerUrl }
   }
 
+  // Fallback: RAWG → Wikipedia (preserva o appid para os achievements)
   const rawg = await fetchRawgCover(title)
-  if (rawg) return { appid: null, cover: rawg }
-  return { appid: null, cover: await fetchWikiCover(title, null, 'game') }
+  if (rawg) return { appid, cover: rawg }
+  return { appid, cover: await fetchWikiCover(title, null, 'game') }
 }
 
 // ── RAWG cover ────────────────────────────────────────────────────────────────
