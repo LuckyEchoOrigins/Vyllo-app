@@ -853,6 +853,14 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
             </button>
           )}
         </div>
+
+        {/* Atribuição IGDB — condição da parceria (dados de jogos vêm do IGDB) */}
+        {item.category === 'game' && (
+          <a href="https://www.igdb.com" target="_blank" rel="noopener noreferrer"
+            style={{ display: 'block', textAlign: 'center', fontSize: 10, color: 'var(--text-muted)', marginTop: 2, marginBottom: 10, textDecoration: 'none', fontWeight: 600 }}>
+            {t('detail.igdb_credit')}
+          </a>
+        )}
       </div>
     </div>
   )
