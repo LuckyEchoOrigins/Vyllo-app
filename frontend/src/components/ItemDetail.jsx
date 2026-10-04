@@ -140,7 +140,8 @@ export default function ItemDetail({ item, onClose, onUpdate, onDelete, user }) 
         if (!appid || cancelled) return
 
         const d = await steamPlaytime(appid, steamId)
-        if (cancelled || d.error) return
+        // Perfil privado ou jogo fora da conta: nao e "0 horas", nao apaga nada.
+        if (cancelled || d.error || d.owned === false) return
         const hours = d.hours || 0
         setSteamHours(hours)
 

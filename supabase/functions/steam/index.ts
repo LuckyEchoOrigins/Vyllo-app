@@ -163,15 +163,32 @@ Deno.serve(async (req) => {
       if (!key) return json({ error: 'STEAM_API_KEY not configured' }, 500)
       const { appid, steamid } = body
       if (!appid || !steamid) return json({ error: 'appid e steamid obrigatórios' }, 400)
-      const r = await fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${key}&steamid=${steamid}&appids_filter[0]=${appid}&include_appinfo=1&format=json`, { signal: AbortSignal.timeout(6000) })
-      if (!r.ok) return json({ error: 'steam_unavailable' })
-      const d = await r.json()
+      const id = Number(appid)
+      const owned = async (filter: boolean) => {
+        const r = await fetch(
+          `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${key}&steamid=${steamid}&include_played_free_games=1&format=json` +
+            (filter ? `&appids_filter[0]=${id}` : ''),
+          { signal: AbortSignal.timeout(8000) },
+        )
+        return r.ok ? await r.json() : null
+      }
+      let d = await owned(true)
+      if (!d) return json({ error: 'steam_unavailable' })
       // Com os detalhes de jogo privados a Steam devolve "response": {} (sem
       // game_count). Nao e o mesmo que 0 horas: as apps nao devem apagar nada.
       if (typeof d.response?.game_count !== 'number') return json({ error: 'private' })
-      const game = d.response.games?.[0]
+      type Owned = { appid: number; playtime_forever?: number }
+      const find = (data: typeof d) => (data.response?.games as Owned[] | undefined)?.find((g) => g.appid === id)
+      // O jogo procura-se pelo AppID (nunca o primeiro da lista); se o filtro
+      // falhar, procura-se na biblioteca inteira.
+      let game = find(d)
+      if (!game) {
+        d = await owned(false)
+        game = d ? find(d) : undefined
+      }
+      // Jogo fora desta conta (ex.: emprestado pela Partilha Familiar).
       if (!game) return json({ hours: 0, owned: false })
-      return json({ hours: parseFloat(((game.playtime_forever || 0) / 60).toFixed(1)) })
+      return json({ hours: parseFloat(((game.playtime_forever || 0) / 60).toFixed(1)), owned: true })
     }
 
     // ── achievements ──────────────────────────────────────────────────────────
