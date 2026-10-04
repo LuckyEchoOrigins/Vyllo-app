@@ -164,9 +164,13 @@ Deno.serve(async (req) => {
       const { appid, steamid } = body
       if (!appid || !steamid) return json({ error: 'appid e steamid obrigatórios' }, 400)
       const r = await fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${key}&steamid=${steamid}&appids_filter[0]=${appid}&include_appinfo=1&format=json`, { signal: AbortSignal.timeout(6000) })
+      if (!r.ok) return json({ error: 'steam_unavailable' })
       const d = await r.json()
-      const game = d.response?.games?.[0]
-      if (!game) return json({ hours: 0 })
+      // Com os detalhes de jogo privados a Steam devolve "response": {} (sem
+      // game_count). Nao e o mesmo que 0 horas: as apps nao devem apagar nada.
+      if (typeof d.response?.game_count !== 'number') return json({ error: 'private' })
+      const game = d.response.games?.[0]
+      if (!game) return json({ hours: 0, owned: false })
       return json({ hours: parseFloat(((game.playtime_forever || 0) / 60).toFixed(1)) })
     }
 
