@@ -158,6 +158,29 @@ Deno.serve(async (req) => {
       return json({ error: 'Perfil não encontrado' }, 404)
     }
 
+    // ── profile ───────────────────────────────────────────────────────────────
+    // Confirma a conta ligada: nome, se o perfil e publico e quantos jogos a
+    // Steam deixa ver (null com os detalhes de jogo privados).
+    if (action === 'profile') {
+      if (!key) return json({ error: 'STEAM_API_KEY not configured' }, 500)
+      const { steamid } = body
+      if (!steamid) return json({ error: 'steamid obrigatório' }, 400)
+      const [summary, library] = await Promise.all([
+        fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${key}&steamids=${steamid}`, { signal: AbortSignal.timeout(8000) }),
+        fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${key}&steamid=${steamid}&include_played_free_games=1&format=json`, { signal: AbortSignal.timeout(8000) }),
+      ])
+      if (!summary.ok) return json({ error: 'steam_unavailable', status: summary.status })
+      const player = (await summary.json()).response?.players?.[0]
+      if (!player) return json({ error: 'not_found' })
+      const owned = library.ok ? await library.json() : null
+      const count = owned?.response?.game_count
+      return json({
+        name: player.personaname ?? '',
+        public: player.communityvisibilitystate === 3,
+        games: typeof count === 'number' ? count : null,
+      })
+    }
+
     // ── playtime ──────────────────────────────────────────────────────────────
     if (action === 'playtime') {
       if (!key) return json({ error: 'STEAM_API_KEY not configured' }, 500)
