@@ -77,6 +77,16 @@ async function fetchRawgAchievements(title: string) {
   } catch { return null }
 }
 
+/** Igual ao normalizeGameTitle da app: sem maiusculas, ™ ® nem pontuacao. */
+function normalizeTitle(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/['’™®©]/g, '')
+    .replace(/[:\-–—.,!?]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 async function verifyAuth(req: Request): Promise<boolean> {
   const auth = req.headers.get('Authorization')
   if (!auth?.startsWith('Bearer ')) return false
@@ -184,13 +194,13 @@ Deno.serve(async (req) => {
     // ── playtime ──────────────────────────────────────────────────────────────
     if (action === 'playtime') {
       if (!key) return json({ error: 'STEAM_API_KEY not configured' }, 500)
-      const { appid, steamid } = body
+      const { appid, steamid, title } = body
       if (!appid || !steamid) return json({ error: 'appid e steamid obrigatórios' }, 400)
       const id = Number(appid)
       const owned = async (filter: boolean) => {
         const r = await fetch(
           `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${key}&steamid=${steamid}&include_played_free_games=1&format=json` +
-            (filter ? `&appids_filter[0]=${id}` : ''),
+            (filter ? `&appids_filter[0]=${id}` : '&include_appinfo=1'),
           { signal: AbortSignal.timeout(8000) },
         )
         return r.ok ? await r.json() : null
@@ -200,18 +210,35 @@ Deno.serve(async (req) => {
       // Com os detalhes de jogo privados a Steam devolve "response": {} (sem
       // game_count). Nao e o mesmo que 0 horas: as apps nao devem apagar nada.
       if (typeof d.response?.game_count !== 'number') return json({ error: 'private' })
-      type Owned = { appid: number; playtime_forever?: number }
-      const find = (data: typeof d) => (data.response?.games as Owned[] | undefined)?.find((g) => g.appid === id)
+      type Owned = { appid: number; name?: string; playtime_forever?: number }
+      const games = (data: typeof d) => (data?.response?.games as Owned[] | undefined) ?? []
       // O jogo procura-se pelo AppID (nunca o primeiro da lista); se o filtro
       // falhar, procura-se na biblioteca inteira.
-      let game = find(d)
+      let game = games(d).find((g) => g.appid === id)
       if (!game) {
         d = await owned(false)
-        game = d ? find(d) : undefined
+        const library = games(d)
+        game = library.find((g) => g.appid === id)
+        // Outra edicao do mesmo jogo na biblioteca (ex.: "Ori and the Blind
+        // Forest: Definitive Edition" em vez do original): mesmo nome, ou o
+        // nome seguido de ":"/"-" e do nome da edicao. Ganha a mais jogada.
+        const wanted = normalizeTitle(String(title ?? ''))
+        if (!game && wanted) {
+          game = library
+            .filter((g) => {
+              const name = normalizeTitle(g.name ?? '')
+              return name === wanted || name.startsWith(`${wanted} `)
+            })
+            .sort((a, b) => (b.playtime_forever ?? 0) - (a.playtime_forever ?? 0))[0]
+        }
       }
       // Jogo fora desta conta (ex.: emprestado pela Partilha Familiar).
       if (!game) return json({ hours: 0, owned: false })
-      return json({ hours: parseFloat(((game.playtime_forever || 0) / 60).toFixed(1)), owned: true })
+      return json({
+        hours: parseFloat(((game.playtime_forever || 0) / 60).toFixed(1)),
+        owned: true,
+        appid: game.appid,
+      })
     }
 
     // ── achievements ──────────────────────────────────────────────────────────
