@@ -191,6 +191,29 @@ Deno.serve(async (req) => {
       })
     }
 
+    // ── library ───────────────────────────────────────────────────────────────
+    // Biblioteca da conta (para a app perguntar pelos jogos novos).
+    if (action === 'library') {
+      if (!key) return json({ error: 'STEAM_API_KEY not configured' }, 500)
+      const { steamid } = body
+      if (!steamid) return json({ error: 'steamid obrigatório' }, 400)
+      const r = await fetch(
+        `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${key}&steamid=${steamid}&include_appinfo=1&include_played_free_games=1&format=json`,
+        { signal: AbortSignal.timeout(8000) },
+      )
+      if (!r.ok) return json({ error: 'steam_unavailable' })
+      const d = await r.json()
+      if (typeof d.response?.game_count !== 'number') return json({ error: 'private' })
+      type Owned = { appid: number; name?: string; playtime_forever?: number }
+      return json({
+        games: ((d.response.games as Owned[] | undefined) ?? []).map((g) => ({
+          appid: g.appid,
+          name: g.name ?? '',
+          hours: parseFloat(((g.playtime_forever || 0) / 60).toFixed(1)),
+        })),
+      })
+    }
+
     // ── playtime ──────────────────────────────────────────────────────────────
     if (action === 'playtime') {
       if (!key) return json({ error: 'STEAM_API_KEY not configured' }, 500)
