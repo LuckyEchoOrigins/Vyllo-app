@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { steamResolve } from '../api'
+import { steamLink, steamResolve } from '../api'
 import PremiumButton from '../components/PremiumButton'
 import Icon from '../components/Icon'
 import StatusIcon from '../components/StatusIcon'
@@ -397,6 +397,7 @@ export default function Profile({ userName, setUserName, items, onNavigate, enab
     // Se parecer um SteamID64 (17 dígitos numéricos) guarda directamente
     if (/^\d{17}$/.test(val)) {
       localStorage.setItem(`steamId_${user?.id}`, val)
+      steamLink(val)
       setSteamId(val)
       setEditingSteam(false)
       return
@@ -410,6 +411,7 @@ export default function Profile({ userName, setUserName, items, onNavigate, enab
       const d = await steamResolve(slug)
       if (d.error) throw new Error(d.error)
       localStorage.setItem(`steamId_${user?.id}`, d.steamid)
+      steamLink(d.steamid)
       setSteamId(d.steamid)
       setSteamDraft(d.steamid)
       setEditingSteam(false)
@@ -800,7 +802,7 @@ export default function Profile({ userName, setUserName, items, onNavigate, enab
       <LegalText>
         {`Last updated: June 2026\n\n`}
         <b>1. Who we are</b>{`\nVyllo is a personal collection tracker for books, games, and films/series. The data controller is the entity operating Vyllo (contact: support@vyllo-app.com).\n\n`}
-        <b>2. What data we collect</b>{`\n• Your collection content: titles, status, progress, ratings, notes and completion dates.\n• Preferences and settings: theme, language, active categories, annual goals — stored locally on your device.\n• SteamID (optional), only if you choose to connect your Steam account for achievement sync.\n• Anonymous, aggregated usage data to improve the app, not linked to your identity.\nWe do not collect your real name, address, phone number, or payment details within the app.\n\n`}
+        <b>2. What data we collect</b>{`\n• Your collection content: titles, status, progress, ratings, notes and completion dates.\n• Preferences and settings: theme, language, active categories, annual goals — stored locally on your device.\n• SteamID (optional), only if you choose to connect your Steam account. It is stored with your account so your Steam hours and achievements can sync, including in the background while the app is closed. Disconnecting Steam deletes it.\n• Anonymous, aggregated usage data to improve the app, not linked to your identity.\nWe do not collect your real name, address, phone number, or payment details within the app.\n\n`}
         <b>3. How and where we store your data</b>{`\nYour collection, settings, and goals are stored locally (on your device or the app's private server). We do not sell, share, or rent your personal data to third parties for advertising or commercial purposes.\n\n`}
         <b>4. Third-party services</b>{`\nTo fetch covers, titles, and metadata, the app queries third-party services: TVmaze, RAWG, Steam (Valve Corporation), Open Library, Wikipedia (CC BY-SA), and optionally TMDB. When you use AI search, an external service receives only the search term — never your account data. These services have their own privacy policies.\n\n`}
         <b>5. Premium subscription</b>{`\nIf you purchase Vyllo Premium, payment is processed by the app store (App Store / Google Play). Vyllo does not store credit card data. Subscription status is verified locally.\n\n`}
@@ -1030,7 +1032,7 @@ export default function Profile({ userName, setUserName, items, onNavigate, enab
                 </p>
               </div>
               {steamId ? (
-                <button onClick={() => { setSteamId(''); setSteamDraft(''); setEditingSteam(false); setSteamErr(''); localStorage.removeItem(`steamId_${user?.id}`) }}
+                <button onClick={() => { setSteamId(''); setSteamDraft(''); setEditingSteam(false); setSteamErr(''); localStorage.removeItem(`steamId_${user?.id}`); steamLink(null) }}
                   style={{ padding: '6px 12px', borderRadius: 10, border: '1.5px solid #FF4757', background: 'none', color: '#FF4757', fontSize: 12, fontWeight: 700, fontFamily: 'Nunito', cursor: 'pointer', flexShrink: 0 }}>
                   {t('profile.disconnect')}
                 </button>

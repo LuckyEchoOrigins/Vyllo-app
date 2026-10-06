@@ -87,16 +87,19 @@ function normalizeTitle(value: string): string {
     .trim()
 }
 
-async function verifyAuth(req: Request): Promise<boolean> {
+/** Id do utilizador autenticado, ou null. */
+async function verifyAuth(req: Request): Promise<string | null> {
   const auth = req.headers.get('Authorization')
-  if (!auth?.startsWith('Bearer ')) return false
+  if (!auth?.startsWith('Bearer ')) return null
   try {
     const r = await fetch(`${Deno.env.get('SUPABASE_URL')}/auth/v1/user`, {
       headers: { Authorization: auth, apikey: Deno.env.get('SUPABASE_ANON_KEY') ?? '' },
       signal: AbortSignal.timeout(3000),
     })
-    return r.ok
-  } catch { return false }
+    if (!r.ok) return null
+    const user = await r.json()
+    return typeof user?.id === 'string' ? user.id : null
+  } catch { return null }
 }
 
 Deno.serve(async (req) => {
@@ -105,7 +108,8 @@ Deno.serve(async (req) => {
   const json = (data: unknown, status = 200) =>
     new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
-  if (!await verifyAuth(req)) return json({ error: 'Unauthorized' }, 401)
+  const userId = await verifyAuth(req)
+  if (!userId) return json({ error: 'Unauthorized' }, 401)
 
   try {
     const body = await req.json()
@@ -189,6 +193,31 @@ Deno.serve(async (req) => {
         public: player.communityvisibilitystate === 3,
         games: typeof count === 'number' ? count : null,
       })
+    }
+
+    // ── link ──────────────────────────────────────────────────────────────────
+    // Guarda (ou apaga, com steamid null) o SteamID no perfil, para a
+    // sincronizacao de hora a hora (steam-cron) funcionar sem abrir a app.
+    // Os utilizadores so leem o perfil: escreve-se com a chave de servico.
+    if (action === 'link') {
+      const steamid = body.steamid == null ? null : String(body.steamid)
+      if (steamid !== null && !/^\d{17}$/.test(steamid)) return json({ error: 'steamid inválido' }, 400)
+      const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      const r = await fetch(`${Deno.env.get('SUPABASE_URL')}/rest/v1/profiles?id=eq.${userId}`, {
+        method: 'PATCH',
+        headers: {
+          apikey: service,
+          Authorization: `Bearer ${service}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal',
+        },
+        // Conta nova (ou trocada): a proxima sincronizacao trata as horas
+        // como historico, nao como jogadas nesse dia.
+        body: JSON.stringify({ steam_id: steamid, steam_synced_at: null }),
+        signal: AbortSignal.timeout(6000),
+      })
+      if (!r.ok) return json({ error: 'save_failed' }, 500)
+      return json({ ok: true })
     }
 
     // ── library ───────────────────────────────────────────────────────────────

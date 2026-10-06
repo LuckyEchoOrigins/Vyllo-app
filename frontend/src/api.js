@@ -266,5 +266,7 @@ export const generateSynopsis = (title, cat, lang) => invoke('search', { action:
 export const steamSearch = (q) => invoke('steam', { action: 'search', q })
 export const steamDefinitions = (appid, q) => invoke('steam', { action: 'definitions', appid, q })
 export const steamResolve = (vanity) => invoke('steam', { action: 'resolve', vanity })
+// Guarda (ou apaga, com null) o SteamID no servidor, para a sincronizacao de hora a hora.
+export const steamLink = (steamid) => invoke('steam', { action: 'link', steamid }).catch(() => null)
 export const steamPlaytime = (appid, steamid) => invoke('steam', { action: 'playtime', appid, steamid })
 export const steamAchievements = (appid, steamid) => invoke('steam', { action: 'achievements', appid, steamid })
