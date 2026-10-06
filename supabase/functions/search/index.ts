@@ -353,6 +353,41 @@ Deno.serve(async (req) => {
     const body = await req.json()
     const { action, query, cat, lang = 'pt' } = body
 
+    // ── Time to beat (IGDB) ───────────────────────────────────────────────────
+    // Tempo medio para terminar um jogo, em horas: so a historia (hastily),
+    // normal (normally) e a 100% (completely). Serve de barra de progresso
+    // aos jogos sem Steam nem conquistas. null quando o IGDB nao sabe.
+    if (action === 'timeToBeat') {
+      const title = String(body.title ?? '').trim()
+      if (!title) return json({ error: 'title required' }, 400)
+      const id = Deno.env.get('TWITCH_CLIENT_ID')
+      const token = await igdbAccessToken()
+      if (!id || !token) return json({ normally: null })
+      const igdb = (path: string, query: string) =>
+        fetch(`https://api.igdb.com/v4/${path}`, {
+          method: 'POST',
+          headers: { 'Client-ID': id, 'Authorization': `Bearer ${token}` },
+          body: query,
+          signal: AbortSignal.timeout(5000),
+        }).then((r) => (r.ok ? r.json() : []))
+      try {
+        const games = await igdb('games', `search "${title.replace(/["\\]/g, '')}"; fields id,name; limit 8;`)
+        if (!Array.isArray(games) || !games.length) return json({ normally: null })
+        const want = normGame(title)
+        const game = games.find((g) => normGame(g?.name ?? '') === want) ?? games[0]
+        const times = await igdb('game_time_to_beats', `fields hastily,normally,completely; where game_id = ${Number(game.id)};`)
+        const t = Array.isArray(times) ? times[0] : null
+        const hours = (s: unknown) => (typeof s === 'number' && s > 0 ? Math.round((s / 3600) * 10) / 10 : null)
+        return json({
+          hastily: hours(t?.hastily),
+          normally: hours(t?.normally),
+          completely: hours(t?.completely),
+        })
+      } catch {
+        return json({ normally: null })
+      }
+    }
+
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
     if (!anthropicKey) return json({ error: 'ANTHROPIC_API_KEY não configurada' }, 500)
 
