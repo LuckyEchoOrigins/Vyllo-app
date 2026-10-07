@@ -344,6 +344,170 @@ async function fetchWikiCover(title: string, year: number | null, cat: string): 
 const LANG_LABEL: Record<string, string> = { en: 'English', pt: 'Portuguese', es: 'Spanish', fr: 'French', de: 'German' }
 
 // ── Claude prompt ─────────────────────────────────────────────────────────────
+// ── Resultados das bases de dados ────────────────────────────────────────────
+// O Claude so conhece o que existia quando foi treinado: um filme, livro ou
+// jogo deste ano nao aparece. Por isso pesquisa-se tambem nas bases reais
+// (TVDB para filmes e series, Google Books para livros, IGDB para jogos) e
+// o que o Claude nao trouxe junta-se a lista, ja com capa e dados.
+
+type LiveResult = {
+  title: string
+  subtitle?: string | null
+  author?: string | null
+  genre?: string | null
+  synopsis?: string | null
+  year?: number | null
+  isSeries?: boolean
+  totalPages?: number | null
+  totalEps?: number | null
+  totalSeasons?: number | null
+  episodesPerSeason?: number[] | null
+  runtime?: number | null
+  cover?: string | null
+  steam_app_id?: number | null
+}
+
+/** O resultado e mesmo sobre o que se procurou (o nome contem a pesquisa)? */
+function matchesQuery(name: string, wanted: string): boolean {
+  const n = normGame(name)
+  const w = normGame(wanted)
+  return !!w && (n === w || n.includes(w))
+}
+
+async function liveFilms(title: string, lang: string): Promise<LiveResult[]> {
+  const q = encodeURIComponent(title)
+  const [movies, series] = await Promise.all([
+    tvdbGet(`/search?query=${q}&type=movie&limit=8`).catch(() => null),
+    tvdbGet(`/search?query=${q}&type=series&limit=5`).catch(() => null),
+  ])
+  type Hit = {
+    name?: string; translations?: Record<string, string>; year?: string; type?: string; image_url?: string
+    overviews?: Record<string, string>; overview?: string; director?: string; network?: string; tvdb_id?: string
+  }
+  const hits = ([...(Array.isArray(movies) ? movies : []), ...(Array.isArray(series) ? series : [])] as Hit[])
+    .map((h) => ({ ...h, name: h.translations?.eng || h.name || '' }))
+    .filter((h) => h.name && matchesQuery(h.name, title))
+  return await Promise.all(hits.slice(0, 6).map(async (h) => {
+    const isSeries = h.type === 'series'
+    const year = parseInt(h.year ?? '') || null
+    const out: LiveResult = {
+      title: h.name,
+      subtitle: h.director || h.network || null,
+      synopsis: h.overviews?.[TVDB_LANG[lang] ?? 'eng'] || h.overviews?.eng || h.overview || null,
+      year,
+      isSeries,
+      cover: h.image_url || null,
+      runtime: null,
+      totalEps: null,
+      totalSeasons: null,
+      episodesPerSeason: null,
+    }
+    try {
+      if (isSeries) {
+        const tv = await fetchTVmazeData(h.name, year)
+        if (tv) {
+          out.episodesPerSeason = tv.episodesPerSeason ?? null
+          out.totalSeasons = tv.totalSeasons ?? null
+          out.totalEps = tv.totalEps ?? null
+          if (!out.cover) out.cover = tv.cover ?? null
+        }
+      } else if (h.tvdb_id) {
+        const ext = await tvdbGet(`/movies/${encodeURIComponent(h.tvdb_id)}/extended?short=true`)
+        if (Number.isFinite(ext?.runtime) && ext.runtime > 0) out.runtime = ext.runtime
+      }
+    } catch { /* fica sem episodios/duracao */ }
+    return out
+  }))
+}
+
+async function liveBooks(title: string): Promise<LiveResult[]> {
+  const key = Deno.env.get('GOOGLE_BOOKS_KEY')
+  if (!key) return []
+  try {
+    const r = await fetch(
+      `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(`intitle:"${title}"`)}&maxResults=12&printType=books&key=${key}`,
+      { signal: AbortSignal.timeout(5000) },
+    )
+    const d = await r.json()
+    type Volume = { volumeInfo?: { title?: string; authors?: string[]; publishedDate?: string; pageCount?: number; imageLinks?: Record<string, string>; description?: string; categories?: string[] } }
+    const seen = new Set<string>()
+    const out: LiveResult[] = []
+    for (const item of (d.items ?? []) as Volume[]) {
+      const v = item.volumeInfo
+      if (!v?.title || !matchesQuery(v.title, title)) continue
+      const author = v.authors?.[0] ?? null
+      // A mesma obra aparece em varias edicoes: fica uma por titulo + autor.
+      const key = `${normGame(v.title)}::${normGame(author ?? '')}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      out.push({
+        title: v.title,
+        subtitle: author,
+        author,
+        genre: v.categories?.[0] ?? null,
+        synopsis: v.description ?? null,
+        year: parseInt(v.publishedDate ?? '') || null,
+        totalPages: v.pageCount || null,
+        cover: gbCoverUrl(v.imageLinks) ?? null,
+      })
+      if (out.length >= 6) break
+    }
+    return out
+  } catch { return [] }
+}
+
+async function liveGames(title: string): Promise<LiveResult[]> {
+  const id = Deno.env.get('TWITCH_CLIENT_ID')
+  const token = await igdbAccessToken()
+  if (!id || !token) return []
+  try {
+    const r = await fetch('https://api.igdb.com/v4/games', {
+      method: 'POST',
+      headers: { 'Client-ID': id, 'Authorization': `Bearer ${token}` },
+      body: `search "${title.replace(/["\\]/g, '')}"; fields name,first_release_date,cover.image_id,summary,genres.name,involved_companies.developer,involved_companies.company.name; where version_parent = null; limit 10;`,
+      signal: AbortSignal.timeout(5000),
+    })
+    if (!r.ok) return []
+    type Game = {
+      name?: string; first_release_date?: number; cover?: { image_id?: string }; summary?: string
+      genres?: { name?: string }[]; involved_companies?: { developer?: boolean; company?: { name?: string } }[]
+    }
+    const games = (await r.json()) as Game[]
+    return games
+      .filter((g) => g.name && matchesQuery(g.name, title))
+      .slice(0, 6)
+      .map((g) => ({
+        title: g.name!,
+        subtitle: g.involved_companies?.find((c) => c.developer)?.company?.name ?? null,
+        genre: g.genres?.[0]?.name ?? null,
+        synopsis: g.summary ?? null,
+        year: g.first_release_date ? new Date(g.first_release_date * 1000).getUTCFullYear() : null,
+        cover: g.cover?.image_id ? `https://images.igdb.com/igdb/image/upload/t_cover_big_2x/${g.cover.image_id}.jpg` : null,
+      }))
+  } catch { return [] }
+}
+
+function liveResults(cat: string, title: string, lang: string): Promise<LiveResult[]> {
+  const run = cat === 'book' ? liveBooks(title) : cat === 'game' ? liveGames(title) : liveFilms(title, lang)
+  return run.catch(() => [])
+}
+
+/**
+ * Junta aos resultados do Claude os das bases de dados que ele nao trouxe
+ * (mesmo titulo com o ano a um de distancia conta como a mesma obra).
+ */
+function mergeLive<T extends { title?: string; year?: number | null }>(results: T[], live: LiveResult[], max = 10): (T | LiveResult)[] {
+  const merged: (T | LiveResult)[] = [...results]
+  for (const extra of live) {
+    if (merged.length >= max) break
+    const same = merged.some((r) =>
+      normGame(String(r.title ?? '')) === normGame(extra.title) &&
+      (r.year == null || extra.year == null || Math.abs(Number(r.year) - extra.year) <= 1))
+    if (!same) merged.push(extra)
+  }
+  return merged
+}
+
 /**
  * Ano escrito no fim da pesquisa: "Superman 2025" -> titulo "Superman", ano
  * 2025. So conta um ano plausivel (1900 ate daqui a 3 anos), para "Blade
@@ -518,6 +682,9 @@ Deno.serve(async (req) => {
     const cached = SEARCH_CACHE.get(cacheKey)
     if (cached && Date.now() - cached.t < CACHE_TTL) return json(cached.data)
 
+    // 0. Bases de dados em paralelo (o que saiu depois do treino do Claude).
+    const livePromise = liveResults(cat, splitYear(query).title, lang)
+
     // 1. Claude returns metadata
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -525,15 +692,20 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 2200, messages: [{ role: 'user', content: buildPrompt(query, cat, lang) }] }),
     })
     const anthropicData = await anthropicRes.json()
+    // Sem resposta util do Claude ficam so os resultados das bases de dados.
+    const liveOnly = async () => json(orderByYear(await livePromise, splitYear(query).year))
     if (!anthropicRes.ok) {
       console.error('Anthropic error:', JSON.stringify(anthropicData))
+      const live = await livePromise
+      if (live.length) return json(orderByYear(live, splitYear(query).year))
       return json({ error: `Anthropic API error: ${anthropicData.error?.message || anthropicRes.status}` }, 500)
     }
     const text = anthropicData.content?.[0]?.text || ''
     const match = text.match(/\[[\s\S]*\]/)
-    if (!match) return json([])
-    let results = JSON.parse(match[0])
-    if (!Array.isArray(results)) return json([])
+    if (!match) return liveOnly()
+    let results
+    try { results = JSON.parse(match[0]) } catch { return liveOnly() }
+    if (!Array.isArray(results)) return liveOnly()
     results = results.slice(0, 8)
 
     // 2. Enrich with covers in parallel
@@ -586,7 +758,7 @@ Deno.serve(async (req) => {
     }))
 
     // Do mais recente para o mais antigo; com um ano na pesquisa, essa obra primeiro.
-    const ordered = orderByYear(enriched, splitYear(query).year)
+    const ordered = orderByYear(mergeLive(enriched, await livePromise), splitYear(query).year)
     if (SEARCH_CACHE.size >= CACHE_MAX) SEARCH_CACHE.delete(SEARCH_CACHE.keys().next().value)
     SEARCH_CACHE.set(cacheKey, { t: Date.now(), data: ordered })
     return json(ordered)
