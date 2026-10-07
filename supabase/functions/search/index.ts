@@ -344,7 +344,29 @@ async function fetchWikiCover(title: string, year: number | null, cat: string): 
 const LANG_LABEL: Record<string, string> = { en: 'English', pt: 'Portuguese', es: 'Spanish', fr: 'French', de: 'German' }
 
 // ── Claude prompt ─────────────────────────────────────────────────────────────
+/**
+ * Ano escrito no fim da pesquisa: "Superman 2025" -> titulo "Superman", ano
+ * 2025. So conta um ano plausivel (1900 ate daqui a 3 anos), para "Blade
+ * Runner 2049" ou "Cyberpunk 2077" continuarem a ser titulos.
+ */
+function splitYear(query: string): { title: string; year: number | null } {
+  const trimmed = query.trim()
+  const m = trimmed.match(/^(.+?)[\s,]+\(?((?:19|20)\d{2})\)?$/)
+  if (!m) return { title: trimmed, year: null }
+  const year = parseInt(m[2])
+  if (year > new Date().getFullYear() + 3) return { title: trimmed, year: null }
+  return { title: m[1].trim(), year }
+}
+
+/** Mais recente primeiro (sem ano no fim); com [year], as obras desse ano a frente. */
+function orderByYear<T extends { title?: string; year?: number | null }>(items: T[], year: number | null): T[] {
+  const y = (item: T) => (typeof item.year === 'number' ? item.year : -Infinity)
+  const pinned = (item: T) => year != null && (item.year === year || String(item.title ?? '').includes(String(year)))
+  return [...items].sort((a, b) => Number(pinned(b)) - Number(pinned(a)) || y(b) - y(a))
+}
+
 function buildPrompt(query: string, cat: string, lang = 'pt'): string {
+  const { title: wanted, year: wantedYear } = splitYear(query)
   const label = cat === 'book' ? 'livro' : cat === 'game' ? 'videojogo' : 'filme ou série'
   const synopsisLang = LANG_LABEL[lang] || 'Portuguese'
   const gameExtra = cat === 'game' ? `
@@ -359,15 +381,20 @@ function buildPrompt(query: string, cat: string, lang = 'pt'): string {
 - Para series, indica episodesPerSeason: array com o numero de episodios de CADA temporada
 - O comprimento de episodesPerSeason deve ser igual a totalSeasons` : ''
   const subtitleHint = cat === 'book' ? 'Nome do autor' : cat === 'game' ? 'Estúdio/editora do jogo — NÃO as plataformas' : 'Realizador (filme) ou criador/estúdio (série)'
+  const yearRule = wantedYear
+    ? `
+- O utilizador indicou o ano ${wantedYear}: procura "${wanted}" e inclui OBRIGATORIAMENTE a obra desse ano (ou com esse número no título)`
+    : ''
   return `Pesquisa: "${query}" (${label}).
 
 Regras:
-- O 1.º resultado DEVE ser o match mais próximo/exacto da pesquisa${gameExtra}${filmExtra}
+- Se o nome corresponder a várias obras (versões de anos diferentes, remakes, reboots, filme e série com o mesmo nome), inclui-as TODAS, até 8${yearRule}${gameExtra}${filmExtra}
 - Usa SEMPRE o título em INGLÊS (título original). Se a pesquisa for em português ou outro idioma, encontra a obra e usa o título em inglês
 - NUNCA incluas a mesma obra duas vezes — mesmo que exista em português e inglês, inclui apenas UMA entrada com o título inglês
 - Cada obra deve aparecer UMA única vez na lista
 - Só resultados reais e conhecidos
-- Ordena por relevância para a pesquisa
+- Ordena do MAIS RECENTE para o MAIS ANTIGO (ano decrescente)
+- O campo year é o ano de lançamento real da obra
 
 Responde APENAS com JSON array válido (sem markdown, sem texto extra):
 [
@@ -495,7 +522,7 @@ Deno.serve(async (req) => {
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1400, messages: [{ role: 'user', content: buildPrompt(query, cat, lang) }] }),
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 2200, messages: [{ role: 'user', content: buildPrompt(query, cat, lang) }] }),
     })
     const anthropicData = await anthropicRes.json()
     if (!anthropicRes.ok) {
@@ -507,7 +534,7 @@ Deno.serve(async (req) => {
     if (!match) return json([])
     let results = JSON.parse(match[0])
     if (!Array.isArray(results)) return json([])
-    results = results.slice(0, 5)
+    results = results.slice(0, 8)
 
     // 2. Enrich with covers in parallel
     const enriched = await Promise.all(results.map(async (item: {
@@ -558,9 +585,11 @@ Deno.serve(async (req) => {
       return { ...item, ...extra, cover: cover || null, steam_app_id: steam_app_id || null }
     }))
 
+    // Do mais recente para o mais antigo; com um ano na pesquisa, essa obra primeiro.
+    const ordered = orderByYear(enriched, splitYear(query).year)
     if (SEARCH_CACHE.size >= CACHE_MAX) SEARCH_CACHE.delete(SEARCH_CACHE.keys().next().value)
-    SEARCH_CACHE.set(cacheKey, { t: Date.now(), data: enriched })
-    return json(enriched)
+    SEARCH_CACHE.set(cacheKey, { t: Date.now(), data: ordered })
+    return json(ordered)
   } catch (e) {
     return new Response(JSON.stringify({ error: (e as Error).message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   }
