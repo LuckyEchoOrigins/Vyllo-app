@@ -350,6 +350,9 @@ const LANG_LABEL: Record<string, string> = { en: 'English', pt: 'Portuguese', es
 // (TVDB para filmes e series, Google Books para livros, IGDB para jogos) e
 // o que o Claude nao trouxe junta-se a lista, ja com capa e dados.
 
+/** Resultados que a pesquisa devolve, no total (Claude + bases de dados). */
+const MAX_RESULTS = 5
+
 type LiveResult = {
   title: string
   subtitle?: string | null
@@ -552,7 +555,7 @@ function buildPrompt(query: string, cat: string, lang = 'pt'): string {
   return `Pesquisa: "${query}" (${label}).
 
 Regras:
-- Se o nome corresponder a várias obras (versões de anos diferentes, remakes, reboots, filme e série com o mesmo nome), inclui-as TODAS, até 8${yearRule}${gameExtra}${filmExtra}
+- Se o nome corresponder a várias obras (versões de anos diferentes, remakes, reboots, filme e série com o mesmo nome), inclui-as TODAS, até 5${yearRule}${gameExtra}${filmExtra}
 - Usa SEMPRE o título em INGLÊS (título original). Se a pesquisa for em português ou outro idioma, encontra a obra e usa o título em inglês
 - NUNCA incluas a mesma obra duas vezes — mesmo que exista em português e inglês, inclui apenas UMA entrada com o título inglês
 - Cada obra deve aparecer UMA única vez na lista
@@ -689,15 +692,15 @@ Deno.serve(async (req) => {
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 2200, messages: [{ role: 'user', content: buildPrompt(query, cat, lang) }] }),
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1400, messages: [{ role: 'user', content: buildPrompt(query, cat, lang) }] }),
     })
     const anthropicData = await anthropicRes.json()
     // Sem resposta util do Claude ficam so os resultados das bases de dados.
-    const liveOnly = async () => json(orderByYear(await livePromise, splitYear(query).year))
+    const liveOnly = async () => json(orderByYear(await livePromise, splitYear(query).year).slice(0, MAX_RESULTS))
     if (!anthropicRes.ok) {
       console.error('Anthropic error:', JSON.stringify(anthropicData))
       const live = await livePromise
-      if (live.length) return json(orderByYear(live, splitYear(query).year))
+      if (live.length) return json(orderByYear(live, splitYear(query).year).slice(0, MAX_RESULTS))
       return json({ error: `Anthropic API error: ${anthropicData.error?.message || anthropicRes.status}` }, 500)
     }
     const text = anthropicData.content?.[0]?.text || ''
@@ -706,7 +709,7 @@ Deno.serve(async (req) => {
     let results
     try { results = JSON.parse(match[0]) } catch { return liveOnly() }
     if (!Array.isArray(results)) return liveOnly()
-    results = results.slice(0, 8)
+    results = results.slice(0, MAX_RESULTS)
 
     // 2. Enrich with covers in parallel
     const enriched = await Promise.all(results.map(async (item: {
@@ -758,7 +761,8 @@ Deno.serve(async (req) => {
     }))
 
     // Do mais recente para o mais antigo; com um ano na pesquisa, essa obra primeiro.
-    const ordered = orderByYear(mergeLive(enriched, await livePromise), splitYear(query).year)
+    // No maximo MAX_RESULTS, contados ja depois de juntar as bases de dados.
+    const ordered = orderByYear(mergeLive(enriched, await livePromise), splitYear(query).year).slice(0, MAX_RESULTS)
     if (SEARCH_CACHE.size >= CACHE_MAX) SEARCH_CACHE.delete(SEARCH_CACHE.keys().next().value)
     SEARCH_CACHE.set(cacheKey, { t: Date.now(), data: ordered })
     return json(ordered)
