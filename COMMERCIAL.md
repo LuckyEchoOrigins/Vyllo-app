@@ -59,7 +59,8 @@ Este documento lista o que **já foi tratado no código** e o que **só tu podes
 | OMDb / IMDb | ❌ Removido | — |
 | TVmaze (séries/episódios) | 🟢 Grátis c/ atribuição | Confirmar volume; atribuição já feita |
 | Wikipedia (capas filmes) | 🟢 Grátis (CC) | Atribuição já feita |
-| TMDB | 🟡 Opcional, 💸 $149/mês comercial | Só se quiseres melhores capas |
+| TheTVDB (filmes) | 🟢 Grátis abaixo de $50k/ano de receita, c/ atribuição (link direto) | Rever escalão anualmente; acima de $50k passa a $1.000/ano |
+| TMDB | 🟡 Ainda ativo como recurso, 💸 $149/mês comercial | Remover `TMDB_KEY` depois de o TVDB estar em produção |
 | "Onde ver" (JustWatch) | ❌ Removido | Reativar só com TMDB pago |
 | RAWG | 🔴 Comercial precisa acordo | Plano comercial **ou** migrar p/ IGDB |
 | Steam (store scraping) | 🔴 Contra ToS | Migrar p/ IGDB / API oficial |

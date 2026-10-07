@@ -209,6 +209,71 @@ async function fetchTmdbMovieData(title: string, year: number | null, lang = 'pt
   } catch { return null }
 }
 
+// ── TheTVDB — fonte primária de dados de filmes ──────────────────────────────
+// Licença gratuita com uso comercial abaixo de $50k/ano de receita, com
+// atribuição obrigatória (link direto no ecrã de atribuições). Acima disso,
+// $1.000/ano. O token dura ~1 mês; é cacheado por instância como o do IGDB.
+const TVDB_API = 'https://api4.thetvdb.com/v4'
+const TVDB_LANG: Record<string, string> = { en: 'eng', pt: 'por', es: 'spa', fr: 'fra', de: 'deu' }
+let tvdbToken: { value: string; exp: number } | null = null
+
+async function tvdbAccessToken(): Promise<string | null> {
+  const apikey = Deno.env.get('TVDB_KEY')
+  if (!apikey) return null
+  if (tvdbToken && tvdbToken.exp > Date.now()) return tvdbToken.value
+  try {
+    const r = await fetch(`${TVDB_API}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apikey }),
+      signal: AbortSignal.timeout(5000),
+    })
+    if (!r.ok) return null
+    const d = await r.json()
+    const token = d?.data?.token
+    if (!token) return null
+    tvdbToken = { value: token, exp: Date.now() + 25 * 24 * 3600 * 1000 }
+    return token
+  } catch { return null }
+}
+
+async function tvdbGet(path: string) {
+  const token = await tvdbAccessToken()
+  if (!token) return null
+  const r = await fetch(`${TVDB_API}${path}`, { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(5000) })
+  if (r.status === 401) { tvdbToken = null; return null }
+  if (!r.ok) return null
+  const d = await r.json()
+  return d?.data ?? null
+}
+
+async function fetchTvdbMovieData(title: string, year: number | null, lang = 'pt') {
+  try {
+    const q = `/search?query=${encodeURIComponent(title)}&type=movie&limit=8`
+    // O ano do Claude pode falhar por um; se filtrar tudo, repete sem ano.
+    let hits = year ? await tvdbGet(`${q}&year=${year}`) : null
+    if (!Array.isArray(hits) || !hits.length) hits = await tvdbGet(q)
+    if (!Array.isArray(hits) || !hits.length) return null
+    const want = normGame(title)
+    const hit = hits.find((h) => normGame(h?.name ?? '') === want || normGame(h?.translations?.eng ?? '') === want) ?? hits[0]
+    const out: { cover: string | null; year: number | null; genre: string | null; runtime: number | null; synopsis: string | null } = {
+      cover: hit.image_url || null,
+      year: parseInt(hit.year) || null,
+      // Os géneros do TVDB vêm só em inglês; mantém-se o do Claude, já no idioma do utilizador.
+      genre: null,
+      runtime: null,
+      synopsis: hit.overviews?.[TVDB_LANG[lang] ?? 'eng'] || null,
+    }
+    if (hit.tvdb_id) {
+      try {
+        const ext = await tvdbGet(`/movies/${encodeURIComponent(hit.tvdb_id)}/extended?short=true`)
+        if (Number.isFinite(ext?.runtime) && ext.runtime > 0) out.runtime = ext.runtime
+      } catch { /* ignore */ }
+    }
+    return out
+  } catch { return null }
+}
+
 // ── TVmaze series data ────────────────────────────────────────────────────────
 async function fetchTVmazeData(title: string, year: number | null) {
   try {
@@ -477,7 +542,9 @@ Deno.serve(async (req) => {
             cover = tmdbCover
           }
         } else {
-          const tm = await fetchTmdbMovieData(item.title, item.year || null, lang)
+          // TVDB → TMDB (só enquanto a TMDB_KEY existir) → Wikipedia
+          const tvdb = await fetchTvdbMovieData(item.title, item.year || null, lang)
+          const tm = tvdb?.cover ? tvdb : (await fetchTmdbMovieData(item.title, item.year || null, lang)) ?? tvdb
           if (tm) {
             if (tm.cover) cover = tm.cover
             if (tm.genre) extra.genre = tm.genre

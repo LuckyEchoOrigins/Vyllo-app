@@ -765,7 +765,7 @@ export default function Profile({ userName, setUserName, items, onNavigate, enab
             Films & series
           </p>
           <p style={{ fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 12 }}>
-            Series information and episode dates by TVmaze. When enabled, data and images by TMDB (this app uses the TMDB API but is not endorsed or certified by TMDB).
+            Film data and images by <a href="https://thetvdb.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', fontWeight: 700 }}>TheTVDB</a>. Series information and episode dates by TVmaze. When enabled, additional data and images by TMDB (this app uses the TMDB API but is not endorsed or certified by TMDB).
           </p>
           <p style={{ fontSize: 12, color: 'var(--text)', fontWeight: 700, lineHeight: 1.6, marginBottom: 6 }}>
             Games
@@ -784,7 +784,7 @@ export default function Profile({ userName, setUserName, items, onNavigate, enab
         <CatLabel>{t('profile.technology')}</CatLabel>
         <div style={{ margin: '8px 20px 0', background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', borderRadius: 16, padding: '16px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {['React', 'Vite', 'Node/Express', 'sql.js', 'TVmaze', 'TMDB', 'RAWG', 'Steam', 'Open Library', 'Wikipedia'].map(l => (
+            {['React', 'Vite', 'Node/Express', 'sql.js', 'TheTVDB', 'TVmaze', 'TMDB', 'RAWG', 'Steam', 'Open Library', 'Wikipedia'].map(l => (
               <span key={l} style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)', background: 'var(--purple-light)', padding: '5px 12px', borderRadius: 20 }}>{l}</span>
             ))}
           </div>
@@ -804,7 +804,7 @@ export default function Profile({ userName, setUserName, items, onNavigate, enab
         <b>1. Who we are</b>{`\nVyllo is a personal collection tracker for books, games, and films/series. The data controller is the entity operating Vyllo (contact: support@vyllo-app.com).\n\n`}
         <b>2. What data we collect</b>{`\n• Your collection content: titles, status, progress, ratings, notes and completion dates.\n• Preferences and settings: theme, language, active categories, annual goals — stored locally on your device.\n• SteamID (optional), only if you choose to connect your Steam account. It is stored with your account so your Steam hours and achievements can sync, including in the background while the app is closed. Disconnecting Steam deletes it.\n• Anonymous, aggregated usage data to improve the app, not linked to your identity.\nWe do not collect your real name, address, phone number, or payment details within the app.\n\n`}
         <b>3. How and where we store your data</b>{`\nYour collection, settings, and goals are stored locally (on your device or the app's private server). We do not sell, share, or rent your personal data to third parties for advertising or commercial purposes.\n\n`}
-        <b>4. Third-party services</b>{`\nTo fetch covers, titles, and metadata, the app queries third-party services: TVmaze, RAWG, Steam (Valve Corporation), Open Library, Wikipedia (CC BY-SA), and optionally TMDB. When you use AI search, an external service receives only the search term — never your account data. These services have their own privacy policies.\n\n`}
+        <b>4. Third-party services</b>{`\nTo fetch covers, titles, and metadata, the app queries third-party services: TheTVDB, TVmaze, RAWG, Steam (Valve Corporation), Open Library, Wikipedia (CC BY-SA), and optionally TMDB. When you use AI search, an external service receives only the search term — never your account data. These services have their own privacy policies.\n\n`}
         <b>5. Premium subscription</b>{`\nIf you purchase Vyllo Premium, payment is processed by the app store (App Store / Google Play). Vyllo does not store credit card data. Subscription status is verified locally.\n\n`}
         <b>6. Your rights (GDPR)</b>{`\nIf you reside in the European Economic Area, you have the right to access, rectify, export, and delete your data. You can export your entire collection at Settings → Data & Cloud, and delete items individually at any time. For full deletion requests or other GDPR matters, contact support@vyllo-app.com.\n\n`}
         <b>7. Children</b>{`\nVyllo is not intended for children under 13. We do not knowingly collect data from children.\n\n`}
