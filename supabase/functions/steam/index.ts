@@ -233,12 +233,15 @@ Deno.serve(async (req) => {
       if (!r.ok) return json({ error: 'steam_unavailable' })
       const d = await r.json()
       if (typeof d.response?.game_count !== 'number') return json({ error: 'private' })
-      type Owned = { appid: number; name?: string; playtime_forever?: number }
+      type Owned = { appid: number; name?: string; playtime_forever?: number; playtime_2weeks?: number }
       return json({
         games: ((d.response.games as Owned[] | undefined) ?? []).map((g) => ({
           appid: g.appid,
           name: g.name ?? '',
           hours: parseFloat(((g.playtime_forever || 0) / 60).toFixed(1)),
+          // Jogado nas ultimas 2 semanas (para a app perguntar por jogos que
+          // estas a jogar e ainda nao estao na colecao).
+          recent: parseFloat(((g.playtime_2weeks || 0) / 60).toFixed(1)),
         })),
       })
     }
