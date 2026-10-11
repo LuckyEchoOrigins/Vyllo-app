@@ -211,6 +211,7 @@ type Candidate = {
     epic_catalog_item_id?: unknown
     epic_app_name?: unknown
     manual_key?: unknown
+    battlenet_uid?: unknown
   }
   // Jogos manuais: o nome da pasta e do exe e o ProductName (nunca o caminho).
   hints?: {
@@ -250,7 +251,41 @@ function launcherKey(c: Candidate): string | null {
     return ns && item ? `${ns}:${item}` : null
   }
   if (c.source === 'manual') return text(c.ids?.manual_key, 300)?.toLowerCase() ?? null
+  if (c.source === 'battlenet') {
+    const uid = text(c.ids?.battlenet_uid, 100)?.toLowerCase()
+    return uid ? battlenetProduct(uid) : null
+  }
   return null
+}
+
+// Produtos da Battle.net (uid do desinstalador, sem a língua) → título oficial no
+// IGDB (DESIGN.md, secção 8). Por validar numa máquina com a Battle.net; corrige-se
+// aqui sem lançar uma versão nova do PC. O Call of Duty fica de fora: uma
+// instalação do CoD HQ tem vários jogos, e o utilizador escolhe.
+const BATTLENET_TITLES: Record<string, string> = {
+  prometheus: 'Overwatch 2',
+  fenris: 'Diablo IV',
+  wow: 'World of Warcraft',
+  wow_classic: 'World of Warcraft Classic',
+  wow_classic_era: 'World of Warcraft Classic',
+  hs_beta: 'Hearthstone',
+  heroes: 'Heroes of the Storm',
+  s2: 'StarCraft II: Wings of Liberty',
+  s1: 'StarCraft: Remastered',
+  osi: 'Diablo II: Resurrected',
+  diablo3: 'Diablo III',
+  w3: 'Warcraft III: Reforged',
+  anbs: 'Diablo Immortal',
+  gryphon: 'Warcraft Rumble',
+}
+
+// "wow_enus" → "wow"; "wow_classic_era" → "wow_classic_era"; um uid fora da
+// tabela fica como está.
+function battlenetProduct(uid: string): string {
+  const known = Object.keys(BATTLENET_TITLES)
+    .filter((key) => uid === key || uid.startsWith(key + '_'))
+    .sort((a, b) => b.length - a.length)[0]
+  return known ?? uid
 }
 
 // ProductNames que dizem o motor ou a empresa, não o jogo.
@@ -481,10 +516,45 @@ async function resolveGames(req: Request, device: Device): Promise<Response> {
     }
   }
 
+  // 3b. Battle.net: o produto na tabela → o título oficial, exato e único no IGDB.
+  //     A identificação fica na cache partilhada (o uid é público), com 97.
+  const bnet = open().filter((it) => it.source === 'battlenet')
+  if (bnet.length > 0) {
+    const { data: known } = await supabase
+      .from('game_external_ids')
+      .select(`external_id, method, confidence, games(${GAME_COLUMNS})`)
+      .eq('source', 'battlenet')
+      .in('external_id', bnet.map((it) => it.key as string))
+    for (const row of (known ?? []) as unknown as { external_id: string; method: string; confidence: number; games: GameRow }[]) {
+      for (const it of bnet) {
+        if (row.games && it.key === row.external_id) {
+          decisions.set(it.i, { decision: 'auto', confidence: row.confidence, method: row.method, game: row.games })
+        }
+      }
+    }
+    for (const it of open().filter((it) => it.source === 'battlenet')) {
+      const title = BATTLENET_TITLES[it.key as string]
+      if (!title) continue
+      const found = await searchGames(title, true, 50)
+      if (found === null) break // IGDB indisponível: fica para a próxima procura
+      const exact = found.filter((g) => sameTitle(g.title, title))
+      if (exact.length !== 1) continue
+      const game = (await saveIgdbGames(exact))?.get(exact[0].igdbId)
+      if (!game) continue
+      decisions.set(it.i, { decision: 'auto', confidence: 97, method: 'static_table', game })
+      await supabase.from('game_external_ids').upsert(
+        { source: 'battlenet', external_id: it.key, game_id: game.id, method: 'static_table', confidence: 97 },
+        { onConflict: 'source,external_id' },
+      )
+    }
+  }
+
   // 4. Pelo título. Não para a Steam: uma app da Steam que o IGDB não conhece
   //    pelo AppID não é um jogo (ex.: Wallpaper Engine).
   //    Num jogo manual experimenta os nomes que o PC mandou (pasta, exe, produto),
   //    e o resultado nunca vai para a cache partilhada: "pasta/exe" é só deste PC.
+  //    Um produto da Battle.net fora da tabela nunca é identificado sozinho (o
+  //    "Call of Duty" do CoD HQ tem vários jogos): no máximo, uma sugestão.
   for (const it of items) {
     if (decisions.has(it.i) || it.source === 'steam' || !it.name) continue
     let decision: Decision | null = null
@@ -495,6 +565,9 @@ async function resolveGames(req: Request, device: Device): Promise<Response> {
       if (decision.decision !== 'unknown') break
     }
     if (decision === null) continue
+    if (it.source === 'battlenet' && decision.decision === 'auto') {
+      decision = { ...decision, decision: 'ask', confidence: Math.min(decision.confidence, 84), method: 'battlenet_title' }
+    }
     decisions.set(it.i, decision)
     if (decision.decision === 'auto' && it.key && it.source !== 'manual' && decision.game && 'id' in decision.game) {
       await supabase.from('game_external_ids').upsert(
@@ -529,6 +602,9 @@ async function searchCatalog(req: Request, device: Device): Promise<Response> {
   if (found === null) return fail('server_error', 503)
   return json({ results: rankByTitle(found, q).slice(0, 10).map(gameJson) })
 }
+
+const storedKey = (source: string, key: string) =>
+  source === 'battlenet' ? battlenetProduct(key.toLowerCase()) : source === 'manual' ? key.toLowerCase() : key
 
 // "É este jogo": guarda a escolha do utilizador (por igdb_id ou id da Vyllo).
 async function saveMappings(req: Request, device: Device): Promise<Response> {
@@ -568,7 +644,9 @@ async function saveMappings(req: Request, device: Device): Promise<Response> {
       continue
     }
     const { error } = await supabase.from('playtime_user_mappings').upsert(
-      { user_id: device.user_id, source, match_key: matchKey, game_id: game.id },
+      // Guardada com a mesma chave que a identificação procura (o produto da
+      // Battle.net sem a língua, "wow_enus" → "wow"); a resposta devolve a do PC.
+      { user_id: device.user_id, source, match_key: storedKey(source, matchKey), game_id: game.id },
       { onConflict: 'user_id,source,match_key' },
     )
     if (error) {
