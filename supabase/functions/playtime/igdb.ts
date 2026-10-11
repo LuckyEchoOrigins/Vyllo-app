@@ -103,7 +103,12 @@ export const gamesByEpicIds = (ids: string[]) => gamesByExternalUid(EPIC_SOURCE,
 export async function searchGames(title: string, pcOnly: boolean, limit = 10): Promise<IgdbGame[] | null> {
   const text = title.replace(/["\\]/g, '').trim()
   if (!text) return []
-  const where = pcOnly ? 'where platforms = (6) & version_parent = null;' : 'where version_parent = null;'
+  // Só jogos: nem edições (version_parent) nem DLC, expansões ou temporadas
+  // (parent_game). O Rainbow Six Siege tem dezenas de temporadas no IGDB, e
+  // enchiam os resultados sem o jogo.
+  const where = pcOnly
+    ? 'where platforms = (6) & version_parent = null & parent_game = null;'
+    : 'where version_parent = null & parent_game = null;'
   const games = await query<Game>('games', `search "${text}"; fields ${GAME_FIELDS}; ${where} limit ${limit};`)
   return games === null ? null : games.filter((g) => g.name).map(toGame)
 }

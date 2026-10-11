@@ -12,6 +12,8 @@
 //   POST   /playtime/games/resolve   → jogos instalados → jogos da Vyllo (Premium)
 //   GET    /playtime/games/search    → pesquisa por título ("Choose another") (Premium)
 //   PUT    /playtime/mappings        → "é este jogo": escolha do utilizador (Premium)
+//   POST   /playtime/games/custom    → "Criar «X»": jogo só deste utilizador (Premium)
+//   POST   /playtime/jobs/merge-suggestions → pg_cron: jogos do utilizador com ficha oficial
 //   POST   /playtime/sessions/batch  → sessões de jogo acabadas (Premium)
 //
 // Desenho: repositório "Vyllo Playtime", DESIGN.md (secções 5, 11, 13 e 14).
@@ -171,8 +173,8 @@ async function withDevice(req: Request, handler: (device: Device) => Promise<Res
   return handler(device)
 }
 
-const config = (device: Device) =>
-  Promise.resolve(json({
+const config = async (device: Device) =>
+  json({
     device: {
       id: device.id,
       name: device.name,
@@ -180,9 +182,10 @@ const config = (device: Device) =>
       tracking_enabled: device.tracking_enabled,
       tracking_changed_at: device.tracking_changed_at,
     },
+    game_remaps: await gameRemaps(device.user_id),
     min_client_version: MIN_CLIENT_VERSION,
     server_time: new Date().toISOString(),
-  }))
+  })
 
 async function unlink(device: Device): Promise<Response> {
   const { error } = await supabase
@@ -207,6 +210,13 @@ type Candidate = {
     epic_namespace?: unknown
     epic_catalog_item_id?: unknown
     epic_app_name?: unknown
+    manual_key?: unknown
+  }
+  // Jogos manuais: o nome da pasta e do exe e o ProductName (nunca o caminho).
+  hints?: {
+    folder?: unknown
+    exe?: unknown
+    product_name?: unknown
   }
 }
 type GameRow = { id: string; igdb_id: number | null; title: string; cover_url: string | null; release_year: number | null }
@@ -227,7 +237,8 @@ const gameJson = (g: GameRow | IgdbGame) =>
     ? { igdb_id: g.igdbId, title: g.title, cover_url: g.coverUrl, release_year: g.releaseYear }
     : { id: g.id, igdb_id: g.igdb_id, title: g.title, cover_url: g.cover_url, release_year: g.release_year }
 
-// O id do jogo no launcher: o AppID na Steam; namespace:catalogItemId na Epic.
+// O id do jogo no launcher: o AppID na Steam; namespace:catalogItemId na Epic;
+// "pasta/exe" num jogo manual (só serve para as escolhas deste utilizador).
 function launcherKey(c: Candidate): string | null {
   if (c.source === 'steam') {
     const id = String(c.ids?.steam_app_id ?? '').replace(/[^0-9]/g, '')
@@ -238,7 +249,30 @@ function launcherKey(c: Candidate): string | null {
     const item = text(c.ids?.epic_catalog_item_id, 100)
     return ns && item ? `${ns}:${item}` : null
   }
+  if (c.source === 'manual') return text(c.ids?.manual_key, 300)?.toLowerCase() ?? null
   return null
+}
+
+// ProductNames que dizem o motor ou a empresa, não o jogo.
+const GENERIC_PRODUCT = /^(unity|unreal engine|ue4|ue5|game|godot engine|gamemaker|launcher)$/i
+
+// Os nomes a experimentar no IGDB, por ordem: o que o PC mostra, o ProductName
+// do exe, a pasta e o nome do exe ("ProjectZeta.exe" → "Project Zeta").
+function titleGuesses(c: Candidate, name: string): string[] {
+  const product = text(c.hints?.product_name, 200)
+  const exe = text(c.hints?.exe, 200)
+    ?.replace(/\.exe$/i, '')
+    .replace(/[-_](win64|win32|shipping|x64|dx1[12])/gi, '')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+  const guesses = [name, product && !GENERIC_PRODUCT.test(product) ? product : null, text(c.hints?.folder, 200), exe]
+  const seen = new Set<string>()
+  return guesses.filter((g): g is string => {
+    if (!g) return false
+    const key = normalizeTitle(g)
+    if (!key || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
 
 // Os ids que o IGDB pode ter para o jogo nessa loja.
@@ -270,6 +304,14 @@ function normalizeTitle(title: string): string {
     .join(' ')
 }
 
+// O mesmo título, com ou sem espaços: as pastas e os exes juntam as palavras
+// ("ForHonor" é "For Honor"; "ShiftAtMidnight" é "Shift at Midnight").
+function sameTitle(a: string, b: string): boolean {
+  const na = normalizeTitle(a)
+  const nb = normalizeTitle(b)
+  return na === nb || (na.length > 0 && na.replace(/ /g, '') === nb.replace(/ /g, ''))
+}
+
 // Títulos parecidos: um contém o outro, ou partilham a maior parte das palavras.
 function similar(a: string, b: string): boolean {
   if (!a || !b) return false
@@ -287,7 +329,7 @@ function rankByTitle(games: IgdbGame[], query: string): IgdbGame[] {
   const wanted = normalizeTitle(query)
   const score = (g: IgdbGame) => {
     const title = normalizeTitle(g.title)
-    if (title === wanted) return 0
+    if (sameTitle(g.title, query)) return 0
     if (title.startsWith(wanted)) return 1
     return similar(title, wanted) ? 2 : 3
   }
@@ -326,7 +368,7 @@ async function byTitle(name: string): Promise<Decision | null> {
   if (results === null) return null
   const found = rankByTitle(results, name)
   const wanted = normalizeTitle(name)
-  const exact = found.filter((g) => normalizeTitle(g.title) === wanted)
+  const exact = found.filter((g) => sameTitle(g.title, name))
   const others = (picked: IgdbGame[]) => found.filter((g) => !picked.includes(g))
 
   if (exact.length === 1) {
@@ -344,7 +386,13 @@ async function byTitle(name: string): Promise<Decision | null> {
       alternatives: [...exact.slice(1), ...others(exact)].slice(0, 5),
     }
   }
-  const close = found.find((g) => similar(normalizeTitle(g.title), wanted))
+  // Entre os parecidos, o de tamanho mais próximo: "Tom Clancy's Rainbow Six
+  // Siege" está mais perto de "... Siege X" do que de "... Siege: North Star".
+  const close = found
+    .filter((g) => similar(normalizeTitle(g.title), wanted))
+    .sort((a, b) =>
+      Math.abs(normalizeTitle(a.title).length - wanted.length) - Math.abs(normalizeTitle(b.title).length - wanted.length)
+    )[0]
   if (close) {
     return { decision: 'ask', confidence: 70, method: 'title_similar', game: close, alternatives: others([close]).slice(0, 5) }
   }
@@ -435,12 +483,20 @@ async function resolveGames(req: Request, device: Device): Promise<Response> {
 
   // 4. Pelo título. Não para a Steam: uma app da Steam que o IGDB não conhece
   //    pelo AppID não é um jogo (ex.: Wallpaper Engine).
+  //    Num jogo manual experimenta os nomes que o PC mandou (pasta, exe, produto),
+  //    e o resultado nunca vai para a cache partilhada: "pasta/exe" é só deste PC.
   for (const it of items) {
     if (decisions.has(it.i) || it.source === 'steam' || !it.name) continue
-    const decision = await byTitle(it.name)
+    let decision: Decision | null = null
+    for (const guess of it.source === 'manual' ? titleGuesses(it.c, it.name) : [it.name]) {
+      const attempt = await byTitle(guess)
+      if (attempt === null) break // IGDB indisponível
+      if (decision === null || (decision.decision === 'unknown' && attempt.decision !== 'unknown')) decision = attempt
+      if (decision.decision !== 'unknown') break
+    }
     if (decision === null) continue
     decisions.set(it.i, decision)
-    if (decision.decision === 'auto' && it.key && decision.game && 'id' in decision.game) {
+    if (decision.decision === 'auto' && it.key && it.source !== 'manual' && decision.game && 'id' in decision.game) {
       await supabase.from('game_external_ids').upsert(
         { source: it.source, external_id: it.key, game_id: decision.game.id, method: decision.method, confidence: decision.confidence },
         { onConflict: 'source,external_id' },
@@ -524,6 +580,101 @@ async function saveMappings(req: Request, device: Device): Promise<Response> {
   return json({ results })
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// "Criar «X»": um jogo que não está no catálogo, só deste utilizador (DESIGN.md,
+// secção 12.2). O client_ref vem do PC: repetir o pedido devolve o mesmo jogo.
+async function createCustomGame(req: Request, device: Device): Promise<Response> {
+  if (!device.premium) return fail('premium_required', 402)
+  const body = await req.json().catch(() => null)
+  const clientRef = text(body?.client_ref, 36)
+  const title = text(body?.title, 200)
+  if (!clientRef || !UUID.test(clientRef) || !title) return fail('bad_request', 400)
+
+  const { error } = await supabase.from('games').upsert(
+    { kind: 'user_created', created_by: device.user_id, client_ref: clientRef.toLowerCase(), title },
+    { onConflict: 'created_by,client_ref', ignoreDuplicates: true },
+  )
+  if (error) {
+    console.error('playtime custom game', error.message)
+    return fail('server_error', 500)
+  }
+  const { data: game, error: readError } = await supabase
+    .from('games')
+    .select(GAME_COLUMNS)
+    .eq('created_by', device.user_id)
+    .eq('client_ref', clientRef.toLowerCase())
+    .single()
+  if (readError || !game) {
+    console.error('playtime custom game read', readError?.message)
+    return fail('server_error', 500)
+  }
+  return json({ game: gameJson(game as GameRow) }, 201)
+}
+
+// Uma vez por dia (pg_cron): jogos criados pelos utilizadores que entretanto
+// apareceram no catálogo oficial. Só sugere com título exato e único entre os
+// jogos de PC (90); o utilizador decide na app (secção 12.3). Cada chamada vê no
+// máximo 50 jogos, e cada jogo uma vez por semana: chamar mais vezes não custa.
+async function mergeSuggestionsJob(): Promise<Response> {
+  const { data: pending, error } = await supabase
+    .from('games')
+    .select('id, title, created_by')
+    .eq('kind', 'user_created')
+    .is('merged_into', null)
+    .or(`merge_checked_at.is.null,merge_checked_at.lt.${new Date(Date.now() - 7 * DAY_MS).toISOString()}`)
+    .limit(50)
+  if (error) {
+    console.error('playtime merge job', error.message)
+    return fail('server_error', 500)
+  }
+  let suggested = 0
+  for (const game of (pending ?? []) as { id: string; title: string; created_by: string }[]) {
+    // Um jogo que nenhum PC nem nenhuma sessão usa (o utilizador escolheu outro
+    // entretanto) não precisa de ser juntado a nada.
+    const [{ data: mapped }, { data: played }] = await Promise.all([
+      supabase.from('playtime_user_mappings').select('game_id').eq('game_id', game.id).limit(1),
+      supabase.from('playtime_sessions').select('id').eq('game_id', game.id).limit(1),
+    ])
+    const inUse = (mapped?.length ?? 0) > 0 || (played?.length ?? 0) > 0
+    const found = inUse ? await searchGames(game.title, true, 50) : []
+    if (found === null) break // IGDB indisponível: fica para amanhã
+    const exact = found.filter((g) => sameTitle(g.title, game.title))
+    if (exact.length === 1) {
+      const official = (await saveIgdbGames(exact))?.get(exact[0].igdbId)
+      if (official) {
+        const { error: insertError } = await supabase.from('game_merge_suggestions').upsert(
+          { user_id: game.created_by, from_game: game.id, to_game: official.id, confidence: 90 },
+          { onConflict: 'from_game,to_game', ignoreDuplicates: true },
+        )
+        if (!insertError) suggested++
+      }
+    }
+    await supabase.from('games').update({ merge_checked_at: new Date().toISOString() }).eq('id', game.id)
+  }
+  return json({ checked: pending?.length ?? 0, suggested })
+}
+
+// Jogos do utilizador que passaram a ter ficha oficial: o PC troca o id (secção 12.3).
+async function gameRemaps(userId: string): Promise<{ from: string; to: string }[]> {
+  const { data, error } = await supabase
+    .from('games')
+    .select('id, merged_into')
+    .eq('created_by', userId)
+    .not('merged_into', 'is', null)
+  if (error) {
+    console.error('playtime remaps', error.message)
+    return []
+  }
+  const rows = (data ?? []) as { id: string; merged_into: string }[]
+  const next = new Map<string, string>(rows.map((g) => [g.id, g.merged_into]))
+  return [...next.keys()].map((from) => {
+    let to = next.get(from)!
+    for (let hops = 0; next.has(to) && hops < 10; hops++) to = next.get(to)!
+    return { from, to }
+  })
+}
+
 // ── Sessões ─────────────────────────────────────────────────────────────────
 
 async function ingestSessions(req: Request, device: Device): Promise<Response> {
@@ -566,6 +717,10 @@ Deno.serve(async (req) => {
     if (req.method === 'PUT' && path === '/mappings') {
       return await withDevice(req, (device) => saveMappings(req, device))
     }
+    if (req.method === 'POST' && path === '/games/custom') {
+      return await withDevice(req, (device) => createCustomGame(req, device))
+    }
+    if (req.method === 'POST' && path === '/jobs/merge-suggestions') return await mergeSuggestionsJob()
     if (req.method === 'POST' && path === '/sessions/batch') {
       return await withDevice(req, (device) => ingestSessions(req, device))
     }
