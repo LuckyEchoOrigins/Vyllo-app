@@ -5,15 +5,18 @@
 // esta função é publicada com --no-verify-jwt e o token é verificado aqui
 // (só o hash sha256 está guardado na base de dados).
 //
-//   POST   /playtime/pairings       → código para introduzir na app Vyllo
-//   POST   /playtime/pairings/poll  → o PC espera pela aprovação e recebe o token
-//   GET    /playtime/config         → estado do PC (Premium, tracking ligado)
-//   DELETE /playtime/device         → desligar este PC ("Sign out" no PC)
+//   POST   /playtime/pairings        → código para introduzir na app Vyllo
+//   POST   /playtime/pairings/poll   → o PC espera pela aprovação e recebe o token
+//   GET    /playtime/config          → estado do PC (Premium, tracking ligado)
+//   DELETE /playtime/device          → desligar este PC ("Sign out" no PC)
+//   POST   /playtime/games/resolve   → jogos instalados → jogos da Vyllo (Premium)
+//   POST   /playtime/sessions/batch  → sessões de jogo acabadas (Premium)
 //
-// Desenho: repositório "Vyllo Playtime", DESIGN.md (secções 5 e 14).
-// Publicar: supabase functions deploy playtime --no-verify-jwt
+// Desenho: repositório "Vyllo Playtime", DESIGN.md (secções 5, 11, 13 e 14).
+// Publicar: supabase functions deploy playtime --no-verify-jwt --use-api
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { gamesBySteamAppId } from './igdb.ts'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -191,6 +194,130 @@ async function unlink(device: Device): Promise<Response> {
   return new Response(null, { status: 204 })
 }
 
+// ── Jogos ───────────────────────────────────────────────────────────────────
+
+type Candidate = { ref?: unknown; source?: unknown; ids?: { steam_app_id?: unknown } }
+type GameRow = { id: string; igdb_id: number | null; title: string; cover_url: string | null; release_year: number | null }
+
+const gameJson = (g: GameRow) => ({
+  id: g.id,
+  title: g.title,
+  cover_url: g.cover_url,
+  release_year: g.release_year,
+  igdb_id: g.igdb_id,
+})
+
+// Fase 1: jogos da Steam, pelo AppID (IGDB external_games). Os que o IGDB não
+// conhece ficam "unknown" (ex.: Wallpaper Engine) e não são medidos. A
+// correspondência por título, com confirmação do utilizador, vem na Fase 2.
+async function resolveGames(req: Request, device: Device): Promise<Response> {
+  if (!device.premium) return fail('premium_required', 402)
+  const body = await req.json().catch(() => null)
+  const candidates: Candidate[] = Array.isArray(body?.candidates) ? body.candidates : []
+  if (candidates.length === 0 || candidates.length > 100) return fail('bad_request', 400)
+
+  const steamIds = [...new Set(candidates
+    .filter((c) => c.source === 'steam')
+    .map((c) => String(c.ids?.steam_app_id ?? '').replace(/[^0-9]/g, ''))
+    .filter((id) => id.length > 0))]
+  const found = new Map<string, GameRow>()
+
+  if (steamIds.length > 0) {
+    // 1. O que já está no catálogo.
+    const { data: known } = await supabase
+      .from('game_external_ids')
+      .select('external_id, games(id, igdb_id, title, cover_url, release_year)')
+      .eq('source', 'steam')
+      .in('external_id', steamIds)
+    for (const row of (known ?? []) as unknown as { external_id: string; games: GameRow }[]) {
+      if (row.games) found.set(row.external_id, row.games)
+    }
+
+    // 2. O resto ao IGDB, exceto o que falhou há menos de um dia.
+    const { data: misses } = await supabase
+      .from('game_resolve_misses')
+      .select('external_id')
+      .eq('source', 'steam')
+      .in('external_id', steamIds)
+      .gt('checked_at', new Date(Date.now() - 86_400_000).toISOString())
+    const skip = new Set((misses ?? []).map((m: { external_id: string }) => m.external_id))
+    const ask = steamIds.filter((id) => !found.has(id) && !skip.has(id))
+    if (ask.length > 0) {
+      const igdb = await gamesBySteamAppId(ask)
+      if (igdb !== null) {
+        if (igdb.size > 0) {
+          const { data: games, error } = await supabase
+            .from('games')
+            .upsert(
+              [...new Map([...igdb.values()].map((g) => [g.igdbId, g])).values()].map((g) => ({
+                igdb_id: g.igdbId,
+                title: g.title,
+                cover_url: g.coverUrl,
+                release_year: g.releaseYear,
+              })),
+              { onConflict: 'igdb_id' },
+            )
+            .select('id, igdb_id, title, cover_url, release_year')
+          if (error) {
+            console.error('playtime games upsert', error.message)
+            return fail('server_error', 500)
+          }
+          const byIgdb = new Map((games as GameRow[]).map((g) => [g.igdb_id, g]))
+          const links = []
+          for (const [appId, g] of igdb) {
+            const game = byIgdb.get(g.igdbId)
+            if (!game) continue
+            found.set(appId, game)
+            links.push({ source: 'steam', external_id: appId, game_id: game.id, method: 'igdb_external', confidence: 97 })
+          }
+          await supabase.from('game_external_ids').upsert(links, { onConflict: 'source,external_id' })
+        }
+        const missed = ask.filter((id) => !igdb.has(id))
+        if (missed.length > 0) {
+          await supabase.from('game_resolve_misses').upsert(
+            missed.map((id) => ({ source: 'steam', external_id: id, checked_at: new Date().toISOString() })),
+            { onConflict: 'source,external_id' },
+          )
+        }
+      }
+    }
+  }
+
+  const results = candidates.map((c) => {
+    const appId = String(c.ids?.steam_app_id ?? '').replace(/[^0-9]/g, '')
+    const game = c.source === 'steam' ? found.get(appId) : undefined
+    return game
+      ? { ref: c.ref, decision: 'auto', confidence: 97, method: 'igdb_external', game: gameJson(game) }
+      : { ref: c.ref, decision: 'unknown', confidence: 0 }
+  })
+  return json({ results })
+}
+
+// ── Sessões ─────────────────────────────────────────────────────────────────
+
+async function ingestSessions(req: Request, device: Device): Promise<Response> {
+  if (!device.premium) return fail('premium_required', 402)
+  const body = await req.json().catch(() => null)
+  const sessions = Array.isArray(body?.sessions) ? body.sessions : null
+  if (!sessions || sessions.length === 0 || sessions.length > 100) return fail('bad_request', 400)
+
+  // Relógio do PC muito desacertado (mais de 2 min): corrige as horas das sessões.
+  const sentAt = Date.parse(String(body?.sent_at ?? ''))
+  const skew = Number.isNaN(sentAt) ? 0 : Math.round((Date.now() - sentAt) / 1000)
+  const { data, error } = await supabase.rpc('playtime_ingest_sessions', {
+    p_device_id: device.id,
+    p_sessions: sessions,
+    p_skew_seconds: Math.abs(skew) > 120 ? skew : 0,
+  })
+  if (error) {
+    if (error.message.includes('premium_required')) return fail('premium_required', 402)
+    if (error.message.includes('device_revoked')) return fail('device_revoked', 401)
+    console.error('playtime ingest', error.message)
+    return fail('server_error', 500)
+  }
+  return json({ results: data ?? [], server_time: new Date().toISOString() })
+}
+
 Deno.serve(async (req) => {
   // '/functions/v1/playtime/pairings' ou '/playtime/pairings' → '/pairings'
   const path = new URL(req.url).pathname.replace(/^.*?\/playtime(?=\/|$)/, '') || '/'
@@ -199,6 +326,12 @@ Deno.serve(async (req) => {
     if (req.method === 'POST' && path === '/pairings/poll') return await pollPairing(req)
     if (req.method === 'GET' && path === '/config') return await withDevice(req, config)
     if (req.method === 'DELETE' && path === '/device') return await withDevice(req, unlink)
+    if (req.method === 'POST' && path === '/games/resolve') {
+      return await withDevice(req, (device) => resolveGames(req, device))
+    }
+    if (req.method === 'POST' && path === '/sessions/batch') {
+      return await withDevice(req, (device) => ingestSessions(req, device))
+    }
     return fail('not_found', 404)
   } catch (e) {
     console.error('playtime', (e as Error).message)

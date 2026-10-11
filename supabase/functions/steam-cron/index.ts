@@ -104,15 +104,24 @@ async function syncUser(profile: Profile, now: number): Promise<number> {
     const delta = Math.round((hours - before) * 100) / 100
     if (delta > 0) {
       const plausible = elapsedHours != null && delta <= 24 && delta <= elapsedHours + 0.25
-      logs.push({
-        user_id: profile.id,
-        item_id: game.id,
-        category: 'game',
-        title: game.title,
-        field: 'hours',
-        delta,
-        note: plausible ? 'steam' : 'steam_import',
-      })
+      if (plausible) {
+        // Horas jogadas agora: a função desconta o que o Vyllo Playtime (PC) já
+        // registou destas mesmas horas, para não contarem duas vezes.
+        await db('rpc/steam_log_hours', {
+          method: 'POST',
+          body: JSON.stringify({ p_item_id: game.id, p_delta: delta, p_note: 'steam' }),
+        })
+      } else {
+        logs.push({
+          user_id: profile.id,
+          item_id: game.id,
+          category: 'game',
+          title: game.title,
+          field: 'hours',
+          delta,
+          note: 'steam_import',
+        })
+      }
     }
     if (started) {
       logs.push({
