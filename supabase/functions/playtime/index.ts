@@ -10,13 +10,15 @@
 //   GET    /playtime/config          → estado do PC (Premium, tracking ligado)
 //   DELETE /playtime/device          → desligar este PC ("Sign out" no PC)
 //   POST   /playtime/games/resolve   → jogos instalados → jogos da Vyllo (Premium)
+//   GET    /playtime/games/search    → pesquisa por título ("Choose another") (Premium)
+//   PUT    /playtime/mappings        → "é este jogo": escolha do utilizador (Premium)
 //   POST   /playtime/sessions/batch  → sessões de jogo acabadas (Premium)
 //
 // Desenho: repositório "Vyllo Playtime", DESIGN.md (secções 5, 11, 13 e 14).
 // Publicar: supabase functions deploy playtime --no-verify-jwt --use-api
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { gamesBySteamAppId } from './igdb.ts'
+import { gameById, gamesByEpicIds, gamesBySteamAppId, type IgdbGame, searchGames } from './igdb.ts'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -196,100 +198,329 @@ async function unlink(device: Device): Promise<Response> {
 
 // ── Jogos ───────────────────────────────────────────────────────────────────
 
-type Candidate = { ref?: unknown; source?: unknown; ids?: { steam_app_id?: unknown } }
+type Candidate = {
+  ref?: unknown
+  source?: unknown
+  name?: unknown
+  ids?: {
+    steam_app_id?: unknown
+    epic_namespace?: unknown
+    epic_catalog_item_id?: unknown
+    epic_app_name?: unknown
+  }
+}
 type GameRow = { id: string; igdb_id: number | null; title: string; cover_url: string | null; release_year: number | null }
+type Decision = {
+  decision: 'auto' | 'ask' | 'unknown'
+  confidence: number
+  method: string
+  // auto: o jogo da Vyllo (com id); ask: a sugestão (do IGDB, ainda sem id da Vyllo)
+  game?: GameRow | IgdbGame
+  alternatives?: IgdbGame[]
+}
 
-const gameJson = (g: GameRow) => ({
-  id: g.id,
-  title: g.title,
-  cover_url: g.cover_url,
-  release_year: g.release_year,
-  igdb_id: g.igdb_id,
-})
+const GAME_COLUMNS = 'id, igdb_id, title, cover_url, release_year'
+const DAY_MS = 86_400_000
 
-// Fase 1: jogos da Steam, pelo AppID (IGDB external_games). Os que o IGDB não
-// conhece ficam "unknown" (ex.: Wallpaper Engine) e não são medidos. A
-// correspondência por título, com confirmação do utilizador, vem na Fase 2.
+const gameJson = (g: GameRow | IgdbGame) =>
+  'igdbId' in g
+    ? { igdb_id: g.igdbId, title: g.title, cover_url: g.coverUrl, release_year: g.releaseYear }
+    : { id: g.id, igdb_id: g.igdb_id, title: g.title, cover_url: g.cover_url, release_year: g.release_year }
+
+// O id do jogo no launcher: o AppID na Steam; namespace:catalogItemId na Epic.
+function launcherKey(c: Candidate): string | null {
+  if (c.source === 'steam') {
+    const id = String(c.ids?.steam_app_id ?? '').replace(/[^0-9]/g, '')
+    return id || null
+  }
+  if (c.source === 'epic') {
+    const ns = text(c.ids?.epic_namespace, 100)
+    const item = text(c.ids?.epic_catalog_item_id, 100)
+    return ns && item ? `${ns}:${item}` : null
+  }
+  return null
+}
+
+// Os ids que o IGDB pode ter para o jogo nessa loja.
+function storeUids(c: Candidate): string[] {
+  if (c.source === 'steam') return [launcherKey(c)].filter((v): v is string => !!v)
+  return [c.ids?.epic_catalog_item_id, c.ids?.epic_namespace, c.ids?.epic_app_name]
+    .map((v) => text(v, 100))
+    .filter((v): v is string => !!v)
+}
+
+// Para comparar títulos: minúsculas, sem acentos nem símbolos, numerais romanos
+// em árabes, sem sufixos de edição ("Control Ultimate Edition" = "Control").
+const EDITION =
+  /\b(game of the year|goty|deluxe|definitive|ultimate|complete|standard|digital|enhanced|anniversary|director'?s cut)\b|\bedition\b/g
+const ROMAN: Record<string, string> = { ii: '2', iii: '3', iv: '4', vi: '6', vii: '7', viii: '8', ix: '9', x: '10' }
+
+function normalizeTitle(title: string): string {
+  return title
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[™®©]/g, '')
+    .replace(/&/g, ' and ')
+    .replace(EDITION, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => ROMAN[word] ?? word)
+    .join(' ')
+}
+
+// Títulos parecidos: um contém o outro, ou partilham a maior parte das palavras.
+function similar(a: string, b: string): boolean {
+  if (!a || !b) return false
+  if (a.startsWith(b) || b.startsWith(a)) return true
+  const wa = new Set(a.split(' '))
+  const wb = new Set(b.split(' '))
+  const common = [...wa].filter((w) => wb.has(w)).length
+  return common / new Set([...wa, ...wb]).size >= 0.6
+}
+
+// O IGDB ordena a pesquisa à sua maneira ("Control" não vem em primeiro para
+// "Control"): o título exato primeiro, depois os que começam por ele, depois os
+// parecidos; dentro de cada grupo fica a ordem do IGDB.
+function rankByTitle(games: IgdbGame[], query: string): IgdbGame[] {
+  const wanted = normalizeTitle(query)
+  const score = (g: IgdbGame) => {
+    const title = normalizeTitle(g.title)
+    if (title === wanted) return 0
+    if (title.startsWith(wanted)) return 1
+    return similar(title, wanted) ? 2 : 3
+  }
+  return games
+    .map((g, i) => ({ g, i, s: score(g) }))
+    .sort((a, b) => a.s - b.s || a.i - b.i)
+    .map((x) => x.g)
+}
+
+/** Grava jogos do IGDB no catálogo (o id da Vyllo nasce aqui). null = erro. */
+async function saveIgdbGames(games: IgdbGame[]): Promise<Map<number, GameRow> | null> {
+  const unique = [...new Map(games.map((g) => [g.igdbId, g])).values()]
+  if (unique.length === 0) return new Map()
+  const { data, error } = await supabase
+    .from('games')
+    .upsert(
+      unique.map((g) => ({ igdb_id: g.igdbId, title: g.title, cover_url: g.coverUrl, release_year: g.releaseYear })),
+      { onConflict: 'igdb_id' },
+    )
+    .select(GAME_COLUMNS)
+  if (error) {
+    console.error('playtime games upsert', error.message)
+    return null
+  }
+  return new Map((data as GameRow[]).map((g) => [g.igdb_id as number, g]))
+}
+
+/**
+ * Pelo título (DESIGN.md, secção 11): exato e único entre os jogos de PC do
+ * IGDB → auto (o launcher já garante que é um jogo com esse nome); exato mas
+ * com homónimos, ou só parecido → ask; nada → unknown, com sugestões para a
+ * pesquisa. null = IGDB indisponível.
+ */
+async function byTitle(name: string): Promise<Decision | null> {
+  const results = await searchGames(name, true, 50)
+  if (results === null) return null
+  const found = rankByTitle(results, name)
+  const wanted = normalizeTitle(name)
+  const exact = found.filter((g) => normalizeTitle(g.title) === wanted)
+  const others = (picked: IgdbGame[]) => found.filter((g) => !picked.includes(g))
+
+  if (exact.length === 1) {
+    const saved = await saveIgdbGames(exact)
+    const game = saved?.get(exact[0].igdbId)
+    if (!game) return null
+    return { decision: 'auto', confidence: 90, method: 'title_unique', game, alternatives: others(exact).slice(0, 4) }
+  }
+  if (exact.length > 1) {
+    return {
+      decision: 'ask',
+      confidence: 84,
+      method: 'title_ambiguous',
+      game: exact[0],
+      alternatives: [...exact.slice(1), ...others(exact)].slice(0, 5),
+    }
+  }
+  const close = found.find((g) => similar(normalizeTitle(g.title), wanted))
+  if (close) {
+    return { decision: 'ask', confidence: 70, method: 'title_similar', game: close, alternatives: others([close]).slice(0, 5) }
+  }
+  return { decision: 'unknown', confidence: 0, method: 'title_none', alternatives: found.slice(0, 5) }
+}
+
 async function resolveGames(req: Request, device: Device): Promise<Response> {
   if (!device.premium) return fail('premium_required', 402)
   const body = await req.json().catch(() => null)
   const candidates: Candidate[] = Array.isArray(body?.candidates) ? body.candidates : []
   if (candidates.length === 0 || candidates.length > 100) return fail('bad_request', 400)
 
-  const steamIds = [...new Set(candidates
-    .filter((c) => c.source === 'steam')
-    .map((c) => String(c.ids?.steam_app_id ?? '').replace(/[^0-9]/g, ''))
-    .filter((id) => id.length > 0))]
-  const found = new Map<string, GameRow>()
+  const items = candidates.map((c, i) => ({ c, i, source: String(c.source ?? ''), key: launcherKey(c), name: text(c.name, 200) }))
+  const decisions = new Map<number, Decision>()
+  const open = () => items.filter((it) => it.key && !decisions.has(it.i))
 
-  if (steamIds.length > 0) {
-    // 1. O que já está no catálogo.
-    const { data: known } = await supabase
-      .from('game_external_ids')
-      .select('external_id, games(id, igdb_id, title, cover_url, release_year)')
-      .eq('source', 'steam')
-      .in('external_id', steamIds)
-    for (const row of (known ?? []) as unknown as { external_id: string; games: GameRow }[]) {
-      if (row.games) found.set(row.external_id, row.games)
-    }
-
-    // 2. O resto ao IGDB, exceto o que falhou há menos de um dia.
-    const { data: misses } = await supabase
-      .from('game_resolve_misses')
-      .select('external_id')
-      .eq('source', 'steam')
-      .in('external_id', steamIds)
-      .gt('checked_at', new Date(Date.now() - 86_400_000).toISOString())
-    const skip = new Set((misses ?? []).map((m: { external_id: string }) => m.external_id))
-    const ask = steamIds.filter((id) => !found.has(id) && !skip.has(id))
-    if (ask.length > 0) {
-      const igdb = await gamesBySteamAppId(ask)
-      if (igdb !== null) {
-        if (igdb.size > 0) {
-          const { data: games, error } = await supabase
-            .from('games')
-            .upsert(
-              [...new Map([...igdb.values()].map((g) => [g.igdbId, g])).values()].map((g) => ({
-                igdb_id: g.igdbId,
-                title: g.title,
-                cover_url: g.coverUrl,
-                release_year: g.releaseYear,
-              })),
-              { onConflict: 'igdb_id' },
-            )
-            .select('id, igdb_id, title, cover_url, release_year')
-          if (error) {
-            console.error('playtime games upsert', error.message)
-            return fail('server_error', 500)
-          }
-          const byIgdb = new Map((games as GameRow[]).map((g) => [g.igdb_id, g]))
-          const links = []
-          for (const [appId, g] of igdb) {
-            const game = byIgdb.get(g.igdbId)
-            if (!game) continue
-            found.set(appId, game)
-            links.push({ source: 'steam', external_id: appId, game_id: game.id, method: 'igdb_external', confidence: 97 })
-          }
-          await supabase.from('game_external_ids').upsert(links, { onConflict: 'source,external_id' })
-        }
-        const missed = ask.filter((id) => !igdb.has(id))
-        if (missed.length > 0) {
-          await supabase.from('game_resolve_misses').upsert(
-            missed.map((id) => ({ source: 'steam', external_id: id, checked_at: new Date().toISOString() })),
-            { onConflict: 'source,external_id' },
-          )
+  // 1. O que este utilizador já confirmou ("é este jogo").
+  if (open().length > 0) {
+    const { data } = await supabase
+      .from('playtime_user_mappings')
+      .select(`source, match_key, games(${GAME_COLUMNS})`)
+      .eq('user_id', device.user_id)
+      .in('match_key', open().map((it) => it.key as string))
+    for (const row of (data ?? []) as unknown as { source: string; match_key: string; games: GameRow }[]) {
+      for (const it of open()) {
+        if (row.games && it.source === row.source && it.key === row.match_key) {
+          decisions.set(it.i, { decision: 'auto', confidence: 100, method: 'user', game: row.games })
         }
       }
     }
   }
 
-  const results = candidates.map((c) => {
-    const appId = String(c.ids?.steam_app_id ?? '').replace(/[^0-9]/g, '')
-    const game = c.source === 'steam' ? found.get(appId) : undefined
-    return game
-      ? { ref: c.ref, decision: 'auto', confidence: 97, method: 'igdb_external', game: gameJson(game) }
-      : { ref: c.ref, decision: 'unknown', confidence: 0 }
+  for (const source of ['steam', 'epic']) {
+    // 2. O catálogo partilhado (só identificações feitas pelo servidor).
+    const keys = open().filter((it) => it.source === source).map((it) => it.key as string)
+    if (keys.length === 0) continue
+    const { data: known } = await supabase
+      .from('game_external_ids')
+      .select(`external_id, method, confidence, games(${GAME_COLUMNS})`)
+      .eq('source', source)
+      .in('external_id', keys)
+    for (const row of (known ?? []) as unknown as { external_id: string; method: string; confidence: number; games: GameRow }[]) {
+      for (const it of open()) {
+        if (row.games && it.source === source && it.key === row.external_id) {
+          decisions.set(it.i, { decision: 'auto', confidence: row.confidence, method: row.method, game: row.games })
+        }
+      }
+    }
+
+    // 3. O IGDB pelo id da loja, exceto o que falhou há menos de um dia.
+    const pending = open().filter((it) => it.source === source)
+    if (pending.length === 0) continue
+    const { data: misses } = await supabase
+      .from('game_resolve_misses')
+      .select('external_id')
+      .eq('source', source)
+      .in('external_id', pending.map((it) => it.key as string))
+      .gt('checked_at', new Date(Date.now() - DAY_MS).toISOString())
+    const skip = new Set((misses ?? []).map((m: { external_id: string }) => m.external_id))
+    const ask = pending.filter((it) => !skip.has(it.key as string))
+    if (ask.length === 0) continue
+    const byUid = source === 'steam'
+      ? await gamesBySteamAppId(ask.map((it) => it.key as string))
+      : await gamesByEpicIds([...new Set(ask.flatMap((it) => storeUids(it.c)))])
+    if (byUid === null) continue // IGDB indisponível: fica para a próxima procura
+    const saved = await saveIgdbGames([...byUid.values()])
+    if (saved === null) return fail('server_error', 500)
+    const links = []
+    const missed = []
+    for (const it of ask) {
+      const hit = storeUids(it.c).map((uid) => byUid.get(uid)).find((g) => g !== undefined)
+      const game = hit ? saved.get(hit.igdbId) : undefined
+      if (game) {
+        decisions.set(it.i, { decision: 'auto', confidence: 97, method: 'igdb_external', game })
+        links.push({ source, external_id: it.key, game_id: game.id, method: 'igdb_external', confidence: 97 })
+      } else {
+        missed.push(it.key as string)
+      }
+    }
+    if (links.length > 0) await supabase.from('game_external_ids').upsert(links, { onConflict: 'source,external_id' })
+    if (missed.length > 0) {
+      await supabase.from('game_resolve_misses').upsert(
+        missed.map((id) => ({ source, external_id: id, checked_at: new Date().toISOString() })),
+        { onConflict: 'source,external_id' },
+      )
+    }
+  }
+
+  // 4. Pelo título. Não para a Steam: uma app da Steam que o IGDB não conhece
+  //    pelo AppID não é um jogo (ex.: Wallpaper Engine).
+  for (const it of items) {
+    if (decisions.has(it.i) || it.source === 'steam' || !it.name) continue
+    const decision = await byTitle(it.name)
+    if (decision === null) continue
+    decisions.set(it.i, decision)
+    if (decision.decision === 'auto' && it.key && decision.game && 'id' in decision.game) {
+      await supabase.from('game_external_ids').upsert(
+        { source: it.source, external_id: it.key, game_id: decision.game.id, method: decision.method, confidence: decision.confidence },
+        { onConflict: 'source,external_id' },
+      )
+    }
+  }
+
+  const results = items.map((it) => {
+    const d = decisions.get(it.i)
+    return d
+      ? {
+        ref: it.c.ref,
+        decision: d.decision,
+        confidence: d.confidence,
+        method: d.method,
+        game: d.game ? gameJson(d.game) : undefined,
+        alternatives: (d.alternatives ?? []).map(gameJson),
+      }
+      : { ref: it.c.ref, decision: 'unknown', confidence: 0, alternatives: [] }
   })
+  return json({ results })
+}
+
+// "Choose another" / "Search Vyllo": jogos do IGDB por título (todas as plataformas).
+async function searchCatalog(req: Request, device: Device): Promise<Response> {
+  if (!device.premium) return fail('premium_required', 402)
+  const q = text(new URL(req.url).searchParams.get('q'), 100)
+  if (!q || q.length < 2) return fail('bad_request', 400)
+  const found = await searchGames(q, false, 50)
+  if (found === null) return fail('server_error', 503)
+  return json({ results: rankByTitle(found, q).slice(0, 10).map(gameJson) })
+}
+
+// "É este jogo": guarda a escolha do utilizador (por igdb_id ou id da Vyllo).
+async function saveMappings(req: Request, device: Device): Promise<Response> {
+  if (!device.premium) return fail('premium_required', 402)
+  const body = await req.json().catch(() => null)
+  const mappings = Array.isArray(body?.mappings) ? body.mappings : null
+  if (!mappings || mappings.length === 0 || mappings.length > 100) return fail('bad_request', 400)
+
+  const results = []
+  for (const m of mappings) {
+    const source = text(m?.source, 20)
+    const matchKey = text(m?.match_key, 300)
+    if (!source || !matchKey) {
+      results.push({ source, match_key: matchKey, status: 'bad_request' })
+      continue
+    }
+    let game: GameRow | undefined
+    const igdbId = Number(m?.igdb_id)
+    if (Number.isInteger(igdbId) && igdbId > 0) {
+      const { data: existing } = await supabase.from('games').select(GAME_COLUMNS).eq('igdb_id', igdbId).maybeSingle()
+      if (existing) {
+        game = existing as GameRow
+      } else {
+        const fromIgdb = await gameById(igdbId)
+        if (fromIgdb) game = (await saveIgdbGames([fromIgdb]))?.get(igdbId)
+      }
+    } else if (typeof m?.game_id === 'string') {
+      const { data } = await supabase
+        .from('games')
+        .select(`${GAME_COLUMNS}, kind, created_by`)
+        .eq('id', m.game_id)
+        .maybeSingle()
+      if (data && (data.kind === 'official' || data.created_by === device.user_id)) game = data as GameRow
+    }
+    if (!game) {
+      results.push({ source, match_key: matchKey, status: 'unknown_game' })
+      continue
+    }
+    const { error } = await supabase.from('playtime_user_mappings').upsert(
+      { user_id: device.user_id, source, match_key: matchKey, game_id: game.id },
+      { onConflict: 'user_id,source,match_key' },
+    )
+    if (error) {
+      console.error('playtime mapping', error.message)
+      return fail('server_error', 500)
+    }
+    results.push({ source, match_key: matchKey, status: 'saved', game: gameJson(game) })
+  }
   return json({ results })
 }
 
@@ -328,6 +559,12 @@ Deno.serve(async (req) => {
     if (req.method === 'DELETE' && path === '/device') return await withDevice(req, unlink)
     if (req.method === 'POST' && path === '/games/resolve') {
       return await withDevice(req, (device) => resolveGames(req, device))
+    }
+    if (req.method === 'GET' && path === '/games/search') {
+      return await withDevice(req, (device) => searchCatalog(req, device))
+    }
+    if (req.method === 'PUT' && path === '/mappings') {
+      return await withDevice(req, (device) => saveMappings(req, device))
     }
     if (req.method === 'POST' && path === '/sessions/batch') {
       return await withDevice(req, (device) => ingestSessions(req, device))
