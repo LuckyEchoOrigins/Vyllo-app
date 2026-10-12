@@ -1,3 +1,6 @@
 {
-  "rewrites": [{ "source": "/((?!api|privacy|terms|delete-account|manifest|sw|favicon|apple-touch|web-app).*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/link", "destination": "/link.html" },
+    { "source": "/((?!api|privacy|terms|delete-account|manifest|sw|favicon|apple-touch|web-app).*)", "destination": "/index.html" }
+  ]
 }

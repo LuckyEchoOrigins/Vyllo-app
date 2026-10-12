@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Link your PC — Vyllo</title>
+  <!--
+    The QR code in Vyllo Playtime (Windows) opens https://vyllo-app.com/link?pair=ABCD-EFGH.
+    On Android the Vyllo app opens it directly (App Link). Elsewhere this page shows the
+    code and a button that opens the app (com.vyllo-app://link-pc). The code only lets
+    the app show the PC to approve; it is not a credential.
+  -->
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f0f14;
+      color: #e0e0e8;
+      line-height: 1.6;
+      padding: 0 16px 60px;
+      min-height: 100vh;
+    }
+    main {
+      max-width: 440px;
+      margin: 0 auto;
+      padding-top: 56px;
+      text-align: center;
+    }
+    .logo {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      object-fit: cover;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      margin-top: 20px;
+    }
+    .lead {
+      font-size: 14.5px;
+      color: #8b8ba7;
+      margin-top: 6px;
+    }
+    .code {
+      margin: 28px auto 0;
+      padding: 18px 12px;
+      border-radius: 16px;
+      background: #17172a;
+      border: 1px solid #26263d;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      color: #fff;
+      font-variant-numeric: tabular-nums;
+    }
+    .button {
+      display: block;
+      margin-top: 20px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: #7c5ff6;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .button:focus-visible { outline: 2px solid #c4b5fd; outline-offset: 3px; }
+    .steps {
+      margin-top: 28px;
+      text-align: left;
+      font-size: 14px;
+      color: #c0c0d4;
+    }
+    .steps ol { padding-left: 20px; margin-top: 6px; }
+    .steps li { margin-bottom: 4px; }
+    .store {
+      margin-top: 24px;
+      font-size: 13px;
+      color: #6b6b85;
+    }
+    a { color: #a78bfa; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <img class="logo" src="/web-app-manifest-192x192.png" alt="Vyllo" />
+    <h1 id="title">Link your PC to Vyllo</h1>
+    <p class="lead" id="lead">Approve this PC in the Vyllo app on your phone.</p>
+
+    <div class="code" id="code" hidden></div>
+    <a class="button" id="open" hidden>Open in the Vyllo app</a>
+
+    <div class="steps">
+      <span id="steps-title">If the app doesn't open:</span>
+      <ol>
+        <li id="step1">Open Vyllo on your phone.</li>
+        <li id="step2">Go to Profile → PC Playtime → Link a PC.</li>
+        <li id="step3">Enter the code shown on your PC.</li>
+      </ol>
+    </div>
+
+    <p class="store" id="store">
+      Don't have Vyllo yet? <a href="https://play.google.com/store/apps/details?id=com.vyllo_app.twa">Get it on Google Play</a>.
+    </p>
+  </main>
+
+  <script>
+    (function () {
+      var pt = /^pt\b/i.test(navigator.language || '');
+      var text = pt ? {
+        title: 'Ligar o PC à Vyllo',
+        lead: 'Aprova este PC na app Vyllo no telemóvel.',
+        open: 'Abrir na app Vyllo',
+        stepsTitle: 'Se a app não abrir:',
+        step1: 'Abre a Vyllo no telemóvel.',
+        step2: 'Vai a Profile → PC Playtime → Link a PC.',
+        step3: 'Introduz o código que aparece no PC.',
+        storeLead: 'Ainda não tens a Vyllo? ',
+        storeLink: 'Instala-a no Google Play'
+      } : null;
+
+      if (text) {
+        document.documentElement.lang = 'pt';
+        document.title = 'Ligar o PC — Vyllo';
+        document.getElementById('title').textContent = text.title;
+        document.getElementById('lead').textContent = text.lead;
+        document.getElementById('open').textContent = text.open;
+        document.getElementById('steps-title').textContent = text.stepsTitle;
+        document.getElementById('step1').textContent = text.step1;
+        document.getElementById('step2').textContent = text.step2;
+        document.getElementById('step3').textContent = text.step3;
+        var store = document.getElementById('store');
+        var link = store.querySelector('a');
+        link.textContent = text.storeLink;
+        store.textContent = text.storeLead;
+        store.appendChild(link);
+        store.appendChild(document.createTextNode('.'));
+      }
+
+      // Only a well-formed code (ABCD-EFGH) is shown or passed to the app.
+      var raw = new URLSearchParams(location.search).get('pair') || '';
+      var clean = raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (clean.length !== 8) return;
+      var code = clean.slice(0, 4) + '-' + clean.slice(4);
+
+      var box = document.getElementById('code');
+      box.textContent = code;
+      box.hidden = false;
+      var open = document.getElementById('open');
+      open.href = 'com.vyllo-app://link-pc?pair=' + encodeURIComponent(code);
+      open.hidden = false;
+    })();
+  </script>
+</body>
+</html>
