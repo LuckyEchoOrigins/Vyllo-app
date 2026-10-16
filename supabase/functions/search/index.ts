@@ -423,7 +423,71 @@ async function liveFilms(title: string, lang: string): Promise<LiveResult[]> {
   }))
 }
 
+/**
+ * Um livro serve para a pesquisa se o titulo contem o que se escreveu, ou se
+ * o que se escreveu contem o titulo inteiro: "Sabri Subi Sell Like Crazy"
+ * (autor, com erro, mais o titulo) encontra "Sell Like Crazy".
+ */
+function bookMatches(name: string, wanted: string): boolean {
+  if (matchesQuery(name, wanted)) return true
+  const n = normGame(name)
+  return n.length >= 4 && ` ${normGame(wanted)} `.includes(` ${n} `)
+}
+
+/**
+ * Livros: Google Books e Open Library ao mesmo tempo. O Open Library nao
+ * precisa de chave e tem muitos livros que o Google nao devolve (ou quando a
+ * quota do Google acaba). Fica primeiro o Google; do Open Library entram os
+ * que faltam.
+ */
 async function liveBooks(title: string): Promise<LiveResult[]> {
+  const [google, openLibrary] = await Promise.all([
+    googleBooks(title),
+    openLibraryBooks(title),
+  ])
+  const seen = new Set(google.map((b) => normGame(b.title)))
+  const out = [...google]
+  for (const book of openLibrary) {
+    if (out.length >= 6) break
+    if (seen.has(normGame(book.title))) continue
+    seen.add(normGame(book.title))
+    out.push(book)
+  }
+  return out
+}
+
+async function openLibraryBooks(title: string): Promise<LiveResult[]> {
+  try {
+    const r = await fetch(
+      `https://openlibrary.org/search.json?q=${encodeURIComponent(title)}&limit=10&fields=title,author_name,first_publish_year,cover_i,number_of_pages_median,subject`,
+      { signal: AbortSignal.timeout(5000) },
+    )
+    if (!r.ok) return []
+    const d = await r.json()
+    type Doc = { title?: string; author_name?: string[]; first_publish_year?: number; cover_i?: number; number_of_pages_median?: number; subject?: string[] }
+    const out: LiveResult[] = []
+    for (const doc of (d.docs ?? []) as Doc[]) {
+      if (!doc.title || !bookMatches(doc.title, title)) continue
+      // Resumos e guias de estudo de outro livro nao sao o livro.
+      if (/^(summary|study guide|workbook)\b/i.test(doc.title)) continue
+      const author = doc.author_name?.[0] ?? null
+      out.push({
+        title: doc.title,
+        subtitle: author,
+        author,
+        genre: doc.subject?.[0] ?? null,
+        synopsis: null,
+        year: doc.first_publish_year ?? null,
+        totalPages: doc.number_of_pages_median ?? null,
+        cover: doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg` : null,
+      })
+      if (out.length >= 6) break
+    }
+    return out
+  } catch { return [] }
+}
+
+async function googleBooks(title: string): Promise<LiveResult[]> {
   const key = Deno.env.get('GOOGLE_BOOKS_KEY')
   if (!key) return []
   try {
@@ -437,7 +501,7 @@ async function liveBooks(title: string): Promise<LiveResult[]> {
     const out: LiveResult[] = []
     for (const item of (d.items ?? []) as Volume[]) {
       const v = item.volumeInfo
-      if (!v?.title || !matchesQuery(v.title, title)) continue
+      if (!v?.title || !bookMatches(v.title, title)) continue
       const author = v.authors?.[0] ?? null
       // A mesma obra aparece em varias edicoes: fica uma por titulo + autor.
       const key = `${normGame(v.title)}::${normGame(author ?? '')}`
