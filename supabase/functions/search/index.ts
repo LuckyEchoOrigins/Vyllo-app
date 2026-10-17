@@ -275,9 +275,17 @@ async function fetchTvdbMovieData(title: string, year: number | null, lang = 'pt
 }
 
 // ── TVmaze series data ────────────────────────────────────────────────────────
+// O TVmaze deixa ~20 pedidos por 10 s por IP: num 429 espera e tenta outra vez.
+async function tvmazeFetch(url: string, timeout: number): Promise<Response> {
+  const r = await fetch(url, { signal: AbortSignal.timeout(timeout) })
+  if (r.status !== 429) return r
+  await new Promise((resolve) => setTimeout(resolve, 2000))
+  return fetch(url, { signal: AbortSignal.timeout(timeout) })
+}
+
 async function fetchTVmazeData(title: string, year: number | null) {
   try {
-    const r = await fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(title)}`, { signal: AbortSignal.timeout(5000) })
+    const r = await tvmazeFetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(title)}`, 5000)
     const list = await r.json()
     if (!Array.isArray(list) || !list.length) return null
     let best = list[0]
@@ -291,7 +299,7 @@ async function fetchTVmazeData(title: string, year: number | null) {
     const cover = show.image?.original || show.image?.medium || null
     let episodesPerSeason = null, totalSeasons = null, totalEps = null
     try {
-      const epRes = await fetch(`https://api.tvmaze.com/shows/${show.id}/episodes`, { signal: AbortSignal.timeout(6000) })
+      const epRes = await tvmazeFetch(`https://api.tvmaze.com/shows/${show.id}/episodes`, 6000)
       const eps = await epRes.json()
       if (Array.isArray(eps) && eps.length) {
         const counts: Record<number, number> = {}
@@ -305,7 +313,9 @@ async function fetchTVmazeData(title: string, year: number | null) {
       }
     } catch { /* ignore */ }
     const synopsis = show.summary ? show.summary.replace(/<[^>]+>/g, '').trim() : null
-    return { cover, episodesPerSeason, totalSeasons, totalEps, synopsis }
+    const name = typeof show.name === 'string' ? show.name : null
+    const premiered = parseInt(show.premiered?.slice(0, 4) ?? '') || null
+    return { name, premiered, cover, episodesPerSeason, totalSeasons, totalEps, synopsis }
   } catch { return null }
 }
 
@@ -559,6 +569,121 @@ function liveResults(cat: string, title: string, lang: string): Promise<LiveResu
   return run.catch(() => [])
 }
 
+// ── Importação de outras apps (action 'lookup') ──────────────────────────────
+// Capas e dados para as obras de uma exportação (Goodreads, Letterboxd...),
+// sem o Claude: só as bases de dados, uma ou duas chamadas por obra. Recebe
+// até LOOKUP_MAX obras e devolve, para cada uma, os candidatos; a app escolhe
+// o que é mesmo a obra (título, ano, autor) e, se nenhum for, fica sem capa.
+
+const LOOKUP_MAX = 10
+
+type LookupItem = { title?: unknown; year?: unknown; author?: unknown; isbn?: unknown; series?: unknown }
+
+/** [fn] sobre [items], no máximo [limit] de cada vez, pela mesma ordem. */
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = new Array(items.length)
+  let next = 0
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++
+      out[i] = await fn(items[i])
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker))
+  return out
+}
+
+async function lookupBook(title: string, author: string | null, isbn: string | null): Promise<LiveResult[]> {
+  type Doc = { title?: string; author_name?: string[]; first_publish_year?: number; cover_i?: number; number_of_pages_median?: number }
+  // O Open Library pede um User-Agent que identifique quem faz muitos pedidos.
+  const headers = { 'User-Agent': 'Vyllo/1.0 (https://vyllo-app.com)' }
+  const search = async (params: Record<string, string>): Promise<Doc[]> => {
+    const qs = new URLSearchParams({ ...params, fields: 'title,author_name,first_publish_year,cover_i,number_of_pages_median', limit: '5' })
+    const r = await fetch(`https://openlibrary.org/search.json?${qs}`, { headers, signal: AbortSignal.timeout(6000) })
+    if (!r.ok) return []
+    return ((await r.json()).docs ?? []) as Doc[]
+  }
+  const byTitle = (t: string) => search(author ? { title: t, author } : { title: t })
+  let docs = isbn ? await search({ q: `isbn:${isbn}` }) : []
+  if (!docs.length) docs = await byTitle(title)
+  // Com o subtítulo o Open Library muitas vezes não encontra:
+  // "Sapiens: A Brief History of Humankind" procura-se como "Sapiens".
+  const short = title.split(/[:(]/)[0].trim()
+  if (!docs.length && short.length >= 2 && short !== title) docs = await byTitle(short)
+  return docs.filter((d) => d.title).map((d) => ({
+    title: d.title!,
+    subtitle: d.author_name?.[0] ?? null,
+    author: d.author_name?.[0] ?? null,
+    // Os assuntos do Open Library não são géneros ("form:novel").
+    genre: null,
+    synopsis: null,
+    year: d.first_publish_year ?? null,
+    totalPages: d.number_of_pages_median ?? null,
+    cover: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg` : null,
+  }))
+}
+
+async function lookupMovie(title: string, year: number | null, lang: string): Promise<LiveResult[]> {
+  const q = `/search?query=${encodeURIComponent(title)}&type=movie&limit=5`
+  // Com o ano primeiro; se o filtro deixar tudo de fora, sem ano.
+  let hits = year ? await tvdbGet(`${q}&year=${year}`) : null
+  if (!Array.isArray(hits) || !hits.length) hits = await tvdbGet(q)
+  if (!Array.isArray(hits)) return []
+  type Hit = { name?: string; translations?: Record<string, string>; year?: string; image_url?: string; overviews?: Record<string, string>; overview?: string; director?: string; tvdb_id?: string }
+  const out = (hits as Hit[]).map((h) => ({
+    tvdbId: h.tvdb_id,
+    result: {
+      title: h.translations?.eng || h.name || '',
+      subtitle: h.director ?? null,
+      synopsis: h.overviews?.[TVDB_LANG[lang] ?? 'eng'] || h.overviews?.eng || h.overview || null,
+      year: parseInt(h.year ?? '') || null,
+      isSeries: false,
+      cover: h.image_url || null,
+      runtime: null,
+    } as LiveResult,
+  })).filter((h) => h.result.title)
+  // A duração (para as horas vistas) só do que tem o mesmo título e ano.
+  const want = normGame(title)
+  const best = out.find((h) => normGame(h.result.title) === want && (!year || !h.result.year || Math.abs(h.result.year - year) <= 1))
+  if (best?.tvdbId) {
+    try {
+      const ext = await tvdbGet(`/movies/${encodeURIComponent(best.tvdbId)}/extended?short=true`)
+      if (Number.isFinite(ext?.runtime) && ext.runtime > 0) best.result.runtime = ext.runtime
+    } catch { /* fica sem duração */ }
+  }
+  return out.map((h) => h.result)
+}
+
+async function lookupSeries(title: string, year: number | null): Promise<LiveResult[]> {
+  const tv = await fetchTVmazeData(title, year)
+  if (!tv?.name) return []
+  return [{
+    title: tv.name,
+    synopsis: tv.synopsis ?? null,
+    year: tv.premiered,
+    isSeries: true,
+    cover: tv.cover ?? null,
+    totalEps: tv.totalEps ?? null,
+    totalSeasons: tv.totalSeasons ?? null,
+    episodesPerSeason: tv.episodesPerSeason ?? null,
+  }]
+}
+
+function lookupOne(cat: string, item: LookupItem, lang: string): Promise<LiveResult[]> {
+  const title = String(item.title ?? '').trim()
+  if (!title) return Promise.resolve([])
+  const year = Number.isInteger(item.year) ? Number(item.year) : null
+  const text = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null)
+  const run = cat === 'book'
+    ? lookupBook(title, text(item.author), text(item.isbn))
+    : cat === 'game'
+    ? liveGames(title)
+    : item.series === true
+    ? lookupSeries(title, year)
+    : lookupMovie(title, year, lang)
+  return run.catch(() => [])
+}
+
 /**
  * Junta aos resultados do Claude os das bases de dados que ele nao trouxe
  * (mesmo titulo com o ano a um de distancia conta como a mesma obra).
@@ -709,6 +834,17 @@ Deno.serve(async (req) => {
       } catch {
         return json({ normally: null })
       }
+    }
+
+    // ── Importação: capas e dados sem o Claude ────────────────────────────────
+    if (action === 'lookup') {
+      if (cat !== 'book' && cat !== 'film' && cat !== 'game') return json({ error: 'cat required' }, 400)
+      const items: LookupItem[] = Array.isArray(body.items) ? body.items.slice(0, LOOKUP_MAX) : []
+      // O IGDB aceita 4 pedidos por segundo: os jogos vão um a um. As séries
+      // vão duas a duas pelo limite do TVmaze.
+      const limit = cat === 'game' ? 1 : cat === 'film' && items.some((i) => i?.series === true) ? 2 : 5
+      const results = await mapLimit(items, limit, (item) => lookupOne(cat, item ?? {}, lang))
+      return json({ results })
     }
 
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
