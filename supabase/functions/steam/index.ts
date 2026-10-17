@@ -239,6 +239,9 @@ Deno.serve(async (req) => {
           appid: g.appid,
           name: g.name ?? '',
           hours: parseFloat(((g.playtime_forever || 0) / 60).toFixed(1)),
+          // Minutos exatos: com as horas arredondadas, um jogo aberto 2
+          // minutos contaria como nunca jogado no backlog da app.
+          minutes: g.playtime_forever || 0,
           // Jogado nas ultimas 2 semanas (para a app perguntar por jogos que
           // estas a jogar e ainda nao estao na colecao).
           recent: parseFloat(((g.playtime_2weeks || 0) / 60).toFixed(1)),
