@@ -13,6 +13,7 @@
 // → nome do tópico.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { googleIsTrial, logTrialConversion } from '../_shared/purchase_events.ts'
 import {
   googleToken,
   fetchSubscription,
@@ -87,6 +88,11 @@ Deno.serve(async (req) => {
         google_expires_at: expiresAt ? expiresAt.toISOString() : null,
       })
       .eq('google_purchase_token', String(purchaseToken))
+
+    // Os dias gratis passaram a pagamento: a subscricao ja nao esta em trial.
+    if (active && !googleIsTrial(info)) {
+      await logTrialConversion(supabase, 'google', String(purchaseToken))
+    }
 
     return new Response('ok')
   } catch (e) {

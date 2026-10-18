@@ -1,5 +1,6 @@
 import Stripe from 'npm:stripe@14'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { logPurchase } from '../_shared/purchase_events.ts'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   apiVersion: '2024-06-20',
@@ -32,6 +33,15 @@ Deno.serve(async (req) => {
       is_premium: true,
       stripe_plan: plan,
       ...(session.subscription ? { stripe_subscription_id: session.subscription as string } : {}),
+    })
+
+    // Venda na web (ou inicio dos dias gratis, sem pagamento agora).
+    await logPurchase(supabase, {
+      user_id: uid,
+      store: 'stripe',
+      kind: session.payment_status === 'no_payment_required' ? 'trial' : 'purchase',
+      plan: plan ?? null,
+      transaction_ref: String(session.subscription ?? session.id),
     })
   }
 

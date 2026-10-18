@@ -12,6 +12,7 @@
 // Notifications → URL desta função (Production e Sandbox).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { appleIsTrial, logTrialConversion } from '../_shared/purchase_events.ts'
 import {
   LIFETIME_PRODUCT,
   appleToken,
@@ -96,6 +97,11 @@ Deno.serve(async (req) => {
           : null,
       })
       .eq('apple_original_transaction_id', originalTx)
+
+    // Os dias gratis passaram a pagamento: a transacao atual ja nao e trial.
+    if (active && status.transaction && !appleIsTrial(status.transaction)) {
+      await logTrialConversion(supabase, 'apple', originalTx, status.transaction.productId)
+    }
 
     return new Response('ok')
   } catch (e) {

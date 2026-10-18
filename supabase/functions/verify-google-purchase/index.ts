@@ -6,6 +6,7 @@
 // Secret: GOOGLE_SERVICE_ACCOUNT (ver _shared/google.ts)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { googleIsTrial, logPurchase, logTrialConversion } from '../_shared/purchase_events.ts'
 import {
   VALID_SKUS,
   googleToken,
@@ -51,6 +52,7 @@ Deno.serve(async (req) => {
     const token = await googleToken()
     let expiresAt: Date | null = null
     let needsAck = false
+    let trial = false
 
     if (product.subscription) {
       const sub = await fetchSubscription(String(purchaseToken), token)
@@ -60,6 +62,7 @@ Deno.serve(async (req) => {
       if (!active) return json({ error: 'subscription not active' }, 400)
       expiresAt = subExpiry
       needsAck = sub.acknowledgementState === 'ACKNOWLEDGEMENT_STATE_PENDING'
+      trial = googleIsTrial(sub)
     } else {
       const purchase = await fetchProduct(String(sku), String(purchaseToken), token)
       if (!purchase) return json({ error: 'purchase not found' }, 400)
@@ -94,6 +97,20 @@ Deno.serve(async (req) => {
       google_expires_at: expiresAt ? expiresAt.toISOString() : null,
     })
     if (upErr) return json({ error: upErr.message }, 500)
+
+    // Venda (ou inicio dos dias gratis) para medir conversao; uma vez por
+    // compra, um restauro ou verificacao repetida nao conta outra vez.
+    await logPurchase(supabase, {
+      user_id: user.id,
+      store: 'google',
+      kind: trial ? 'trial' : 'purchase',
+      plan: product.plan,
+      product_id: String(sku),
+      transaction_ref: String(purchaseToken),
+    })
+    if (!trial) {
+      await logTrialConversion(supabase, 'google', String(purchaseToken), String(sku), product.plan)
+    }
 
     return json({
       ok: true,

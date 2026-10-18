@@ -9,6 +9,7 @@
 //   APPLE_KEY_ID · APPLE_ISSUER_ID · APPLE_PRIVATE_KEY (conteúdo do .p8)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { appleIsTrial, logPurchase, logTrialConversion } from '../_shared/purchase_events.ts'
 import {
   BUNDLE_ID,
   VALID_PRODUCTS,
@@ -81,6 +82,19 @@ Deno.serve(async (req) => {
       apple_expires_at: expiresAt ? expiresAt.toISOString() : null,
     })
     if (upErr) return json({ error: upErr.message }, 500)
+
+    // Venda (ou inicio dos dias gratis) para medir conversao; uma vez por
+    // transacao, um restauro ou verificacao repetida nao conta outra vez.
+    const trial = appleIsTrial(info)
+    await logPurchase(supabase, {
+      user_id: user.id,
+      store: 'apple',
+      kind: trial ? 'trial' : 'purchase',
+      plan,
+      product_id: info.productId,
+      transaction_ref: originalTx,
+    })
+    if (!trial) await logTrialConversion(supabase, 'apple', originalTx, info.productId, plan)
 
     return json({ ok: true, plan, expiresAt: expiresAt?.toISOString() ?? null })
   } catch (e) {

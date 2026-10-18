@@ -186,3 +186,91 @@ select coalesce(s.source, '(not asked)')                           as source,
   left join public.profiles p on p.id = u.id
  group by 1
  order by signups desc;
+
+
+-- ── 6. Que comportamentos antecedem uma compra ───────────────────────────────
+-- Por comportamento: quantas contas o fizeram e quantas compraram nos 7 e nos 30
+-- dias seguintes. Mesma janela para todos, para uma conta antiga não ganhar só
+-- por ter tido mais tempo. "Compra" = venda confirmada pela loja
+-- (purchase_events: compra paga ou dias grátis que passaram a pagamento); os
+-- dias grátis sozinhos e as compras de antes (existing) não contam.
+-- Os de 20261020000000_conversion_events.sql: second_category,
+-- stats_first_viewed, free_limit_items / free_limit_ai_search /
+-- free_limit_import, premium_activated.
+with sales as (
+  select user_id, min(created_at) as sold_at
+    from public.purchase_events
+   where kind in ('purchase', 'trial_converted')
+   group by user_id
+),
+behaviours as (
+  select user_id, event as behaviour, created_at as done_at
+    from public.activation_events
+   where event <> 'premium_activated'
+  union all
+  select user_id, 'free_limit_any', min(created_at)
+    from public.activation_events
+   where event like 'free_limit_%'
+   group by user_id
+  union all
+  select user_id, 'paywall_shown', min(created_at)
+    from public.paywall_events
+   where event = 'shown' and user_id is not null
+   group by user_id
+)
+select b.behaviour,
+       count(*)                                                              as accounts,
+       count(*) filter (where s.sold_at between b.done_at and b.done_at + interval '7 days')  as bought_7d,
+       count(*) filter (where s.sold_at between b.done_at and b.done_at + interval '30 days') as bought_30d,
+       round(100.0 * count(*) filter (where s.sold_at between b.done_at and b.done_at + interval '30 days')
+             / nullif(count(*), 0), 1)                                         as pct_30d,
+       -- Contas que ainda não tiveram 30 dias desde o comportamento: a taxa
+       -- de 30 dias ainda vai subir.
+       count(*) filter (where b.done_at > now() - interval '30 days')       as still_open
+  from behaviours b
+  left join sales s on s.user_id = b.user_id
+ group by b.behaviour
+ order by pct_30d desc nulls last, accounts desc;
+
+
+-- ── 7. Vendas por tipo e loja ────────────────────────────────────────────────
+-- Uma linha por transação. 'trial' ainda não é venda; 'trial_converted' é.
+select date_trunc('week', created_at at time zone 'Europe/Lisbon')::date as week,
+       store,
+       kind,
+       plan,
+       count(*) as n
+  from public.purchase_events
+ where kind <> 'existing'
+ group by 1, 2, 3, 4
+ order by 1 desc, 2, 3;
+
+
+-- ── 8. Origem, plataforma e primeira categoria → compra ──────────────────────
+-- Liga o marketing às compras: por origem ("Como conheceste o Vyllo?"),
+-- plataforma e categoria do primeiro item, quantas contas compraram nos 30 dias
+-- seguintes à criação da conta.
+with sales as (
+  select user_id, min(created_at) as sold_at
+    from public.purchase_events
+   where kind in ('purchase', 'trial_converted')
+   group by user_id
+)
+select coalesce(s.source, '(not asked)')                     as source,
+       coalesce(a.platform, '(unknown)')                     as platform,
+       -- item_1 só existe desde 2026-10-17; antes disso, o primeiro item.
+       coalesce(f.detail, (select i.category from public.items i
+                            where i.user_id = u.id
+                            order by i.created_at, i.id limit 1),
+                '(no items)')                                as first_category,
+       count(*)                                              as signups,
+       count(*) filter (where e.user_id is not null)         as second_category,
+       count(*) filter (where x.sold_at <= u.created_at + interval '30 days') as bought_30d
+  from auth.users u
+  left join public.acquisition_sources s on s.user_id = u.id
+  left join public.account_attributes a on a.user_id = u.id
+  left join public.activation_events f on f.user_id = u.id and f.event = 'item_1'
+  left join public.activation_events e on e.user_id = u.id and e.event = 'second_category'
+  left join sales x on x.user_id = u.id
+ group by 1, 2, 3
+ order by signups desc;
