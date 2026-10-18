@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/link", "destination": "/link.html" },
+    { "source": "/playtime", "destination": "/playtime.html" },
     { "source": "/((?!api|privacy|terms|delete-account|manifest|sw|favicon|apple-touch|web-app).*)", "destination": "/index.html" }
   ]
 }

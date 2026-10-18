@@ -40,7 +40,29 @@ export default function Landing() {
           icon={<PlayIcon />}
         />
       </div>
+
+      <a href="/playtime" style={{
+        display: 'flex', alignItems: 'center', gap: 14, maxWidth: 380, marginTop: 8,
+        padding: '16px 18px', borderRadius: 16, textDecoration: 'none', textAlign: 'left',
+        background: 'rgba(124,95,246,.12)', border: '1px solid rgba(124,95,246,.35)', color: '#ECEAF3',
+      }}>
+        <span style={{ display: 'flex', flexShrink: 0, color: '#C4B5FD' }}><WindowsIcon /></span>
+        <span style={{ lineHeight: 1.3 }}>
+          <span style={{ display: 'block', fontSize: 15, fontWeight: 900 }}>Vyllo Playtime para Windows</span>
+          <span style={{ display: 'block', fontSize: 13, color: '#9C97AE', fontWeight: 700 }}>
+            Mede sozinho o tempo que jogas no PC. Descarregar →
+          </span>
+        </span>
+      </a>
     </div>
+  )
+}
+
+function WindowsIcon() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z" />
+    </svg>
   )
 }
 
