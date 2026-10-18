@@ -1,7 +1,13 @@
 {
+  "redirects": [
+    {
+      "source": "/((?!playtime|link|privacy\.html|terms\.html|delete-account\.html|auth-callback\.html|\.well-known/|favicon|apple-touch-icon|web-app-manifest|sw\.js).*)",
+      "destination": "/playtime",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     { "source": "/link", "destination": "/link.html" },
-    { "source": "/playtime", "destination": "/playtime.html" },
-    { "source": "/((?!api|privacy|terms|delete-account|manifest|sw|favicon|apple-touch|web-app).*)", "destination": "/index.html" }
+    { "source": "/playtime", "destination": "/playtime.html" }
   ]
 }
