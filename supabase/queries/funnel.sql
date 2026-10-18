@@ -274,3 +274,55 @@ select coalesce(s.source, '(not asked)')                     as source,
   left join sales x on x.user_id = u.id
  group by 1, 2, 3
  order by signups desc;
+
+
+-- ── 9. Do registo ao primeiro item, e quem volta ─────────────────────────────
+-- Para cada passo, quantas contas lá chegaram (cada passo é a primeira vez da
+-- conta). onboarding/pesquisa/escolha vêm da app (versões de 2026-10-18 em diante);
+-- item_1 vem do servidor. Volta = abriu a app 1, 7 e 30 dias depois do registo
+-- (app_opens, uma linha por dia), só para contas com idade para isso.
+with users as (
+  select u.id, u.created_at,
+         (u.created_at at time zone 'Europe/Lisbon')::date as signup_day
+    from auth.users u
+),
+steps as (
+  select user_id,
+         bool_or(event = 'onboarding_completed')  as onboarding,
+         bool_or(event = 'search_started')        as searched,
+         bool_or(event = 'search_results_viewed') as got_results,
+         bool_or(event = 'item_selected')         as selected,
+         bool_or(event = 'item_1')                as first_item
+    from public.activation_events
+   group by user_id
+)
+select count(*)                                                     as signups,
+       count(*) filter (where s.onboarding)                         as onboarding_completed,
+       count(*) filter (where s.searched)                           as search_started,
+       count(*) filter (where s.got_results)                        as search_results_viewed,
+       count(*) filter (where s.selected)                           as item_selected,
+       count(*) filter (where s.first_item)                         as first_item_added,
+       count(*) filter (where u.signup_day <= current_date - 1)     as old_enough_d1,
+       count(*) filter (where exists (select 1 from public.app_opens o
+                         where o.user_id = u.id and o.day = u.signup_day + 1))  as back_d1,
+       count(*) filter (where u.signup_day <= current_date - 7)     as old_enough_d7,
+       count(*) filter (where exists (select 1 from public.app_opens o
+                         where o.user_id = u.id and o.day = u.signup_day + 7))  as back_d7,
+       count(*) filter (where u.signup_day <= current_date - 30)    as old_enough_d30,
+       count(*) filter (where exists (select 1 from public.app_opens o
+                         where o.user_id = u.id and o.day = u.signup_day + 30)) as back_d30
+  from users u
+  left join steps s on s.user_id = u.id;
+
+
+-- ── 10. Pesquisas sem resultado, por categoria e semana ──────────────────────
+-- Contas/dias afetados (não o número de pesquisas). empty = respondeu sem
+-- nada (falta de títulos na base); error = falhou (rede, servidor, serviço).
+select date_trunc('week', day)::date as week,
+       category,
+       count(*) filter (where outcome = 'empty') as empty,
+       count(*) filter (where outcome = 'error') as error,
+       count(distinct user_id)                   as accounts
+  from public.search_misses
+ group by 1, 2
+ order by 1 desc, empty desc;
