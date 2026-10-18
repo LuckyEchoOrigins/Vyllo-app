@@ -9,8 +9,9 @@
 -- As tabelas vêm de migrations/20260807000000_search_cache_and_metrics.sql
 -- (paywall_events) e migrations/20261019000000_funnel_events.sql.
 --
--- Para tirar contas de teste, acrescentar ao "users" de cada bloco:
---   and u.email not in ('conta-de-teste@exemplo.com')
+-- Contas excluídas: todas as queries tiram as de public.analytics_excluded_users
+-- (dono da app, testes, família e amigos que testaram). Para tirar outra:
+--   insert into public.analytics_excluded_users (user_id) values ('<id>');
 --
 -- Notas de leitura:
 -- - Ativação: 1.º item. Vem de activation_events (item_1); as contas de antes
@@ -27,7 +28,7 @@ with users as (
          u.created_at,
          date_trunc('week', u.created_at at time zone 'Europe/Lisbon')::date as week
     from auth.users u
-   where true
+   where not exists (select 1 from public.analytics_excluded_users x where x.user_id = u.id)
 ),
 items_by_user as (
   select i.user_id,
@@ -95,6 +96,7 @@ select date_trunc('week', e.created_at at time zone 'Europe/Lisbon')::date as we
        count(distinct e.user_id) filter (where e.event = 'converted')     as users_converted,
        count(distinct e.user_id) filter (where e.event = 'restore')       as users_restore
   from public.paywall_events e
+ where not exists (select 1 from public.analytics_excluded_users x where x.user_id = e.user_id)
  group by 1, 2
  order by 1 desc, views desc;
 
@@ -109,6 +111,7 @@ select 'paywall_events'                                                 as sourc
        count(distinct e.user_id)                                        as users
   from public.paywall_events e
  where e.event = 'converted'
+   and not exists (select 1 from public.analytics_excluded_users x where x.user_id = e.user_id)
  group by 1, 2, 3
 union all
 select 'profiles (premium_now, signup week)',
@@ -126,6 +129,7 @@ select 'profiles (premium_now, signup week)',
   from public.profiles p
   join auth.users u on u.id = p.id
  where p.is_premium
+   and not exists (select 1 from public.analytics_excluded_users x where x.user_id = u.id)
  group by 1, 2, 3
  order by 1, 2 desc, 3;
 
@@ -136,7 +140,7 @@ with users as (
          u.created_at,
          date_trunc('week', u.created_at at time zone 'Europe/Lisbon')::date as week
     from auth.users u
-   where true
+   where not exists (select 1 from public.analytics_excluded_users x where x.user_id = u.id)
 ),
 first_items as (
   select user_id, min(created_at) as first_item_at
@@ -184,6 +188,7 @@ select coalesce(s.source, '(not asked)')                           as source,
   from auth.users u
   left join public.acquisition_sources s on s.user_id = u.id
   left join public.profiles p on p.id = u.id
+ where not exists (select 1 from public.analytics_excluded_users x where x.user_id = u.id)
  group by 1
  order by signups desc;
 
@@ -229,6 +234,7 @@ select b.behaviour,
        count(*) filter (where b.done_at > now() - interval '30 days')       as still_open
   from behaviours b
   left join sales s on s.user_id = b.user_id
+ where not exists (select 1 from public.analytics_excluded_users x where x.user_id = b.user_id)
  group by b.behaviour
  order by pct_30d desc nulls last, accounts desc;
 
@@ -240,8 +246,9 @@ select date_trunc('week', created_at at time zone 'Europe/Lisbon')::date as week
        kind,
        plan,
        count(*) as n
-  from public.purchase_events
- where kind <> 'existing'
+  from public.purchase_events p
+ where p.kind <> 'existing'
+   and not exists (select 1 from public.analytics_excluded_users x where x.user_id = p.user_id)
  group by 1, 2, 3, 4
  order by 1 desc, 2, 3;
 
@@ -272,6 +279,7 @@ select coalesce(s.source, '(not asked)')                     as source,
   left join public.activation_events f on f.user_id = u.id and f.event = 'item_1'
   left join public.activation_events e on e.user_id = u.id and e.event = 'second_category'
   left join sales x on x.user_id = u.id
+ where not exists (select 1 from public.analytics_excluded_users x where x.user_id = u.id)
  group by 1, 2, 3
  order by signups desc;
 
@@ -285,6 +293,7 @@ with users as (
   select u.id, u.created_at,
          (u.created_at at time zone 'Europe/Lisbon')::date as signup_day
     from auth.users u
+   where not exists (select 1 from public.analytics_excluded_users x where x.user_id = u.id)
 ),
 steps as (
   select user_id,
@@ -323,6 +332,7 @@ select date_trunc('week', day)::date as week,
        count(*) filter (where outcome = 'empty') as empty,
        count(*) filter (where outcome = 'error') as error,
        count(distinct user_id)                   as accounts
-  from public.search_misses
+  from public.search_misses m
+ where not exists (select 1 from public.analytics_excluded_users x where x.user_id = m.user_id)
  group by 1, 2
  order by 1 desc, empty desc;
