@@ -20,7 +20,7 @@
 // Publicar: supabase functions deploy playtime --no-verify-jwt --use-api
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { gameById, gamesByEpicIds, gamesBySteamAppId, type IgdbGame, searchGames } from './igdb.ts'
+import { gameById, gamesByEpicIds, gamesByGogIds, gamesBySteamAppId, type IgdbGame, searchGames } from './igdb.ts'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -212,6 +212,8 @@ type Candidate = {
     epic_app_name?: unknown
     manual_key?: unknown
     battlenet_uid?: unknown
+    gog_product_id?: unknown
+    ubisoft_install_id?: unknown
   }
   // Jogos manuais: o nome da pasta e do exe e o ProductName (nunca o caminho).
   hints?: {
@@ -239,7 +241,8 @@ const gameJson = (g: GameRow | IgdbGame) =>
     : { id: g.id, igdb_id: g.igdb_id, title: g.title, cover_url: g.cover_url, release_year: g.release_year }
 
 // O id do jogo no launcher: o AppID na Steam; namespace:catalogItemId na Epic;
-// "pasta/exe" num jogo manual (só serve para as escolhas deste utilizador).
+// "pasta/exe" num jogo manual (só serve para as escolhas deste utilizador); o id do
+// produto na GOG; o id da instalação na Ubisoft Connect ("Uplay Install 569").
 function launcherKey(c: Candidate): string | null {
   if (c.source === 'steam') {
     const id = String(c.ids?.steam_app_id ?? '').replace(/[^0-9]/g, '')
@@ -254,6 +257,10 @@ function launcherKey(c: Candidate): string | null {
   if (c.source === 'battlenet') {
     const uid = text(c.ids?.battlenet_uid, 100)?.toLowerCase()
     return uid ? battlenetProduct(uid) : null
+  }
+  if (c.source === 'gog' || c.source === 'ubisoft') {
+    const id = String((c.source === 'gog' ? c.ids?.gog_product_id : c.ids?.ubisoft_install_id) ?? '').replace(/[^0-9]/g, '')
+    return id ? id.slice(0, 20) : null
   }
   return null
 }
@@ -312,7 +319,7 @@ function titleGuesses(c: Candidate, name: string): string[] {
 
 // Os ids que o IGDB pode ter para o jogo nessa loja.
 function storeUids(c: Candidate): string[] {
-  if (c.source === 'steam') return [launcherKey(c)].filter((v): v is string => !!v)
+  if (c.source === 'steam' || c.source === 'gog') return [launcherKey(c)].filter((v): v is string => !!v)
   return [c.ids?.epic_catalog_item_id, c.ids?.epic_namespace, c.ids?.epic_app_name]
     .map((v) => text(v, 100))
     .filter((v): v is string => !!v)
@@ -460,7 +467,7 @@ async function resolveGames(req: Request, device: Device): Promise<Response> {
     }
   }
 
-  for (const source of ['steam', 'epic']) {
+  for (const source of ['steam', 'epic', 'gog']) {
     // 2. O catálogo partilhado (só identificações feitas pelo servidor).
     const keys = open().filter((it) => it.source === source).map((it) => it.key as string)
     if (keys.length === 0) continue
@@ -491,6 +498,8 @@ async function resolveGames(req: Request, device: Device): Promise<Response> {
     if (ask.length === 0) continue
     const byUid = source === 'steam'
       ? await gamesBySteamAppId(ask.map((it) => it.key as string))
+      : source === 'gog'
+      ? await gamesByGogIds(ask.map((it) => it.key as string))
       : await gamesByEpicIds([...new Set(ask.flatMap((it) => storeUids(it.c)))])
     if (byUid === null) continue // IGDB indisponível: fica para a próxima procura
     const saved = await saveIgdbGames([...byUid.values()])
@@ -546,6 +555,25 @@ async function resolveGames(req: Request, device: Device): Promise<Response> {
         { source: 'battlenet', external_id: it.key, game_id: game.id, method: 'static_table', confidence: 97 },
         { onConflict: 'source,external_id' },
       )
+    }
+  }
+
+  // 3c. Ubisoft Connect: o IGDB não guarda ids da Ubisoft, por isso o nome decide
+  //     (passo 4). O nome vem do desinstalador e é o oficial; o resultado fica na
+  //     cache partilhada (o id da instalação é o mesmo em todos os PCs).
+  const ubisoft = open().filter((it) => it.source === 'ubisoft')
+  if (ubisoft.length > 0) {
+    const { data: known } = await supabase
+      .from('game_external_ids')
+      .select(`external_id, method, confidence, games(${GAME_COLUMNS})`)
+      .eq('source', 'ubisoft')
+      .in('external_id', ubisoft.map((it) => it.key as string))
+    for (const row of (known ?? []) as unknown as { external_id: string; method: string; confidence: number; games: GameRow }[]) {
+      for (const it of ubisoft) {
+        if (row.games && it.key === row.external_id) {
+          decisions.set(it.i, { decision: 'auto', confidence: row.confidence, method: row.method, game: row.games })
+        }
+      }
     }
   }
 

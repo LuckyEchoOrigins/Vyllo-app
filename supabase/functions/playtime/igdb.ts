@@ -44,9 +44,10 @@ export type IgdbGame = {
 }
 
 // Fontes nos external_games do IGDB (campo novo external_game_source; o antigo,
-// category, fica como alternativa): Steam = 1, Epic Games Store = 26.
+// category, fica como alternativa): Steam = 1, GOG = 5, Epic Games Store = 26.
 const STEAM_SOURCE = 1
 const EPIC_SOURCE = 26
+const GOG_SOURCE = 5
 
 type Game = { id: number; name?: string; cover?: { image_id?: string }; first_release_date?: number }
 
@@ -98,6 +99,10 @@ export const gamesBySteamAppId = (appIds: string[]) =>
  * jogos da Epic, e nem sempre com o mesmo id, por isso tenta-se os três.
  */
 export const gamesByEpicIds = (ids: string[]) => gamesByExternalUid(EPIC_SOURCE, ids)
+
+/** Ids de produto da GOG (os do registo GOG.com\Games) → jogo. */
+export const gamesByGogIds = (ids: string[]) =>
+  gamesByExternalUid(GOG_SOURCE, ids.map((id) => id.replace(/[^0-9]/g, '')))
 
 /** Pesquisa por titulo (so jogos principais; com pcOnly, so os que saíram para PC). */
 export async function searchGames(title: string, pcOnly: boolean, limit = 10): Promise<IgdbGame[] | null> {
