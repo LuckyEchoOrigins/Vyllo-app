@@ -137,6 +137,11 @@
       .hero .wrap, .grid, .steps { grid-template-columns: 1fr; }
       .nav { display: none; }
     }
+    .lang select {
+      background: var(--card); color: var(--muted); border: 1px solid var(--border);
+      border-radius: 9px; padding: 5px 8px; font: inherit; font-size: 13px; font-weight: 700;
+    }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -144,9 +149,9 @@
     <div class="wrap">
       <a class="brand" href="/playtime"><img src="/web-app-manifest-192x192.png" alt="" /> Vyllo</a>
       <nav class="nav">
-        <a href="#como-funciona">Como funciona</a>
-        <a href="#perguntas">Perguntas</a>
-        <a href="/privacy.html#playtime">Privacidade</a>
+        <a href="#como-funciona" data-i18n="navHow">Como funciona</a>
+        <a href="#perguntas" data-i18n="navFaq">Perguntas</a>
+        <a href="/privacy.html#playtime" data-i18n="navPrivacy">Privacidade</a>
       </nav>
     </div>
   </header>
@@ -155,38 +160,38 @@
     <div class="hero">
       <div class="wrap">
         <div>
-          <span class="eyebrow">Novo · Para Windows</span>
-          <h1>O tempo que jogas no PC, na tua coleção.</h1>
-          <p class="lead">O Vyllo Playtime fica no tray e mede sozinho cada sessão. As horas aparecem na Vyllo, no jogo certo, sem escreveres nada.</p>
+          <span class="eyebrow" data-i18n="eyebrow">Novo · Para Windows</span>
+          <h1 data-i18n="title">O tempo que jogas no PC, na tua coleção.</h1>
+          <p class="lead" data-i18n="lead">O Vyllo Playtime fica no tray e mede sozinho cada sessão. As horas aparecem na Vyllo, no jogo certo, sem escreveres nada.</p>
           <div class="cta">
             <a class="button" id="download" href="https://github.com/LuckyEchoOrigins/Vyllo-playtime-releases/releases/latest/download/VylloPlaytime-win-Setup.exe">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
-              Descarregar para Windows
+              <span data-i18n="download">Descarregar para Windows</span>
             </a>
-            <span class="meta">Windows 10 (2004) ou 11 · 76 MB · grátis com o Vyllo Premium</span>
+            <span class="meta" data-i18n="meta">Windows 10 (2004) ou 11 · 76 MB · grátis com o Vyllo Premium</span>
           </div>
         </div>
         <div class="shot" aria-hidden="true">
-          <div class="shot-title"><img src="/web-app-manifest-192x192.png" alt="" /> Vyllo Playtime · Sessões recentes</div>
+          <div class="shot-title"><img src="/web-app-manifest-192x192.png" alt="" /> <span>Vyllo Playtime · <span data-i18n="recent">Sessões recentes</span></span></div>
           <div class="row">
             <div class="cover" style="background: linear-gradient(160deg, #c08a3e, #4a2f17)"></div>
-            <div><strong>For Honor</strong><span>Ubisoft Connect · Ontem, 22:14</span></div>
-            <div class="time"><strong>1 h 31 min</strong><span>Na Vyllo</span></div>
+            <div><strong>For Honor</strong><span>Ubisoft Connect · <span data-i18n="yesterday">Ontem</span>, 22:14</span></div>
+            <div class="time"><strong>1 h 31 min</strong><span data-i18n="inVyllo">Na Vyllo</span></div>
           </div>
           <div class="row">
             <div class="cover" style="background: linear-gradient(160deg, #3b6fd8, #12224a)"></div>
-            <div><strong>Rocket League</strong><span>Steam · Ontem, 19:14</span></div>
-            <div class="time"><strong>47 min</strong><span>Na Vyllo</span></div>
+            <div><strong>Rocket League</strong><span>Steam · <span data-i18n="yesterday">Ontem</span>, 19:14</span></div>
+            <div class="time"><strong>47 min</strong><span data-i18n="inVyllo">Na Vyllo</span></div>
           </div>
           <div class="row">
             <div class="cover" style="background: linear-gradient(160deg, #d43a3a, #3a0f12)"></div>
-            <div><strong>Control</strong><span>Epic Games · Sábado, 15:02</span></div>
-            <div class="time"><strong>2 h 05 min</strong><span>Na Vyllo</span></div>
+            <div><strong>Control</strong><span>Epic Games · <span data-i18n="saturday">Sábado</span>, 15:02</span></div>
+            <div class="time"><strong>2 h 05 min</strong><span data-i18n="inVyllo">Na Vyllo</span></div>
           </div>
           <div class="row">
             <div class="cover" style="background: linear-gradient(160deg, #6a6a7a, #1d1d28)"></div>
             <div><strong>Rainbow Six Siege</strong><span>Ubisoft Connect</span></div>
-            <div class="time"><span class="badge">A sincronizar</span></div>
+            <div class="time"><span class="badge" data-i18n="syncing">A sincronizar</span></div>
           </div>
         </div>
       </div>
@@ -194,15 +199,15 @@
 
     <section>
       <div class="wrap">
-        <h2>Encontra os teus jogos sozinho</h2>
-        <p class="section-lead">Lê o que os launchers já sabem e as pastas de jogos que escolheres. Um jogo que não reconhece fica à espera que digas qual é.</p>
+        <h2 data-i18n="findTitle">Encontra os teus jogos sozinho</h2>
+        <p class="section-lead" data-i18n="findLead">Lê o que os launchers já sabem e as pastas de jogos que escolheres. Um jogo que não reconhece fica à espera que digas qual é.</p>
         <div class="launchers">
           <span class="chip">Steam</span>
           <span class="chip">Epic Games</span>
           <span class="chip">Battle.net</span>
           <span class="chip">GOG</span>
           <span class="chip">Ubisoft Connect</span>
-          <span class="chip">Os teus próprios jogos</span>
+          <span class="chip" data-i18n="ownGames">Os teus próprios jogos</span>
         </div>
       </div>
     </section>
@@ -212,18 +217,18 @@
         <div class="grid">
           <div class="card">
             <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
-            <h3>Sessões medidas sozinhas</h3>
-            <p>Começa quando o jogo abre e acaba quando fecha. Sem botões, sem esquecer de parar o relógio.</p>
+            <h3 data-i18n="f1Title">Sessões medidas sozinhas</h3>
+            <p data-i18n="f1Text">Começa quando o jogo abre e acaba quando fecha. Sem botões, sem esquecer de parar o relógio.</p>
           </div>
           <div class="card">
             <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></div>
-            <h3>Funciona sem internet</h3>
-            <p>As sessões ficam guardadas no PC e sincronizam quando houver ligação. Nada se perde.</p>
+            <h3 data-i18n="f2Title">Funciona sem internet</h3>
+            <p data-i18n="f2Text">As sessões ficam guardadas no PC e sincronizam quando houver ligação. Nada se perde.</p>
           </div>
           <div class="card">
             <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
-            <h3>Só o necessário</h3>
-            <p>Envia o jogo, o início e o fim de cada sessão. Nunca caminhos de pastas, outros programas nem o que fazes no PC.</p>
+            <h3 data-i18n="f3Title">Só o necessário</h3>
+            <p data-i18n="f3Text">Envia o jogo, o início e o fim de cada sessão. Nunca caminhos de pastas, outros programas nem o que fazes no PC.</p>
           </div>
         </div>
       </div>
@@ -231,57 +236,57 @@
 
     <section id="como-funciona">
       <div class="wrap">
-        <h2>Como funciona</h2>
-        <p class="section-lead">Dois minutos, uma vez.</p>
+        <h2 data-i18n="howTitle">Como funciona</h2>
+        <p class="section-lead" data-i18n="howLead">Dois minutos, uma vez.</p>
         <div class="steps">
           <div class="step">
-            <h3>Instala</h3>
-            <p>Descarrega e abre o instalador. Não pede administrador e fica no menu Iniciar.</p>
+            <h3 data-i18n="s1Title">Instala</h3>
+            <p data-i18n="s1Text">Descarrega e abre o instalador. Não pede administrador e fica no menu Iniciar.</p>
           </div>
           <div class="step">
-            <h3>Liga à tua conta</h3>
-            <p>O Playtime mostra um código e um QR. Na app Vyllo, abre Perfil → PC Playtime, ou aponta a câmara ao QR.</p>
+            <h3 data-i18n="s2Title">Liga à tua conta</h3>
+            <p data-i18n="s2Text">O Playtime mostra um código e um QR. Na app Vyllo, abre Perfil → PC Playtime, ou aponta a câmara ao QR.</p>
           </div>
           <div class="step">
-            <h3>Joga</h3>
-            <p>Arranca com o Windows, só no tray. As horas aparecem na Vyllo, e as atualizações chegam sozinhas.</p>
+            <h3 data-i18n="s3Title">Joga</h3>
+            <p data-i18n="s3Text">Arranca com o Windows, só no tray. As horas aparecem na Vyllo, e as atualizações chegam sozinhas.</p>
           </div>
         </div>
-        <p class="note"><strong>O Windows pode mostrar "O Windows protegeu o PC".</strong> O instalador ainda não tem certificado de assinatura. Carrega em "Mais informações" e depois em "Executar mesmo assim".</p>
+        <p class="note"><strong data-i18n="noteTitle">O Windows pode mostrar "O Windows protegeu o PC".</strong> <span data-i18n="noteText">O instalador ainda não tem certificado de assinatura. Carrega em "Mais informações" e depois em "Executar mesmo assim".</span></p>
       </div>
     </section>
 
     <section id="perguntas">
       <div class="wrap">
-        <h2>Perguntas</h2>
+        <h2 data-i18n="faqTitle">Perguntas</h2>
         <details>
-          <summary>Preciso do Vyllo Premium?</summary>
-          <p>Sim. O Playtime faz parte do Vyllo Premium, e liga-se à conta que tens na app Vyllo para iOS ou Android.</p>
+          <summary data-i18n="q1">Preciso do Vyllo Premium?</summary>
+          <p data-i18n="a1">Sim. O Playtime faz parte do Vyllo Premium, e liga-se à conta que tens na app Vyllo para iOS ou Android.</p>
         </details>
         <details>
-          <summary>Mexe nos jogos ou no anti-cheat?</summary>
-          <p>Não. Só vê que programas estão a correr dentro das pastas dos teus jogos. Não injeta nada, não lê memória e não toca em ficheiros dos jogos.</p>
+          <summary data-i18n="q2">Mexe nos jogos ou no anti-cheat?</summary>
+          <p data-i18n="a2">Não. Só vê que programas estão a correr dentro das pastas dos teus jogos. Não injeta nada, não lê memória e não toca em ficheiros dos jogos.</p>
         </details>
         <details>
-          <summary>Gasta recursos enquanto jogo?</summary>
-          <p>Quase nada: fica no tray em modo de eficiência e verifica os processos a cada poucos segundos.</p>
+          <summary data-i18n="q3">Gasta recursos enquanto jogo?</summary>
+          <p data-i18n="a3">Quase nada: fica no tray em modo de eficiência e verifica os processos a cada poucos segundos.</p>
         </details>
         <details>
-          <summary>E se tiver vários PCs?</summary>
-          <p>Liga cada um à mesma conta. Vês e removes os PCs na app Vyllo, em Perfil → PC Playtime.</p>
+          <summary data-i18n="q4">E se tiver vários PCs?</summary>
+          <p data-i18n="a4">Liga cada um à mesma conta. Vês e removes os PCs na app Vyllo, em Perfil → PC Playtime.</p>
         </details>
         <details>
-          <summary>Como desinstalo?</summary>
-          <p>Em Definições do Windows → Aplicações → Vyllo Playtime → Desinstalar. As sessões já enviadas ficam na tua conta.</p>
+          <summary data-i18n="q5">Como desinstalo?</summary>
+          <p data-i18n="a5">Em Definições do Windows → Aplicações → Vyllo Playtime → Desinstalar. As sessões já enviadas ficam na tua conta.</p>
         </details>
       </div>
     </section>
 
     <section class="final">
       <div class="wrap">
-        <h2>Pronto para começar?</h2>
+        <h2 data-i18n="finalTitle">Pronto para começar?</h2>
         <div class="cta">
-          <a class="button" href="https://github.com/LuckyEchoOrigins/Vyllo-playtime-releases/releases/latest/download/VylloPlaytime-win-Setup.exe">Descarregar para Windows</a>
+          <a class="button" href="https://github.com/LuckyEchoOrigins/Vyllo-playtime-releases/releases/latest/download/VylloPlaytime-win-Setup.exe" data-i18n="download">Descarregar para Windows</a>
         </div>
       </div>
     </section>
@@ -290,8 +295,142 @@
   <footer>
     <div class="wrap">
       <span>© 2026 Vyllo</span>
-      <span><a href="/privacy.html">Privacidade</a> · <a href="/terms.html">Termos</a> · <a href="mailto:support@vyllo-app.com">support@vyllo-app.com</a></span>
+      <label class="lang">
+        <span class="sr-only" data-i18n="language">Língua</span>
+        <select id="lang" aria-label="Language">
+          <option value="en">English</option>
+          <option value="pt">Português (Portugal)</option>
+          <option value="br">Português (Brasil)</option>
+          <option value="es">Español</option>
+        </select>
+      </label>
+      <span><a href="/privacy.html" data-i18n="privacy">Privacidade</a> · <a href="/terms.html" data-i18n="terms">Termos</a> · <a href="mailto:support@vyllo-app.com">support@vyllo-app.com</a></span>
     </div>
   </footer>
+
+  <script>
+    (function () {
+      // O texto da pagina esta em portugues de Portugal; as outras linguas substituem-no.
+      // A do Brasil so tem o que difere de Portugal (como na app Vyllo).
+      var en = {
+        navHow: 'How it works', navFaq: 'FAQ', navPrivacy: 'Privacy',
+        eyebrow: 'New · For Windows',
+        title: 'The time you play on PC, in your collection.',
+        lead: 'Vyllo Playtime sits in the tray and tracks every session on its own. Your hours show up in Vyllo, on the right game, without typing anything.',
+        download: 'Download for Windows',
+        meta: 'Windows 10 (2004) or 11 · 76 MB · free with Vyllo Premium',
+        recent: 'Recent sessions', yesterday: 'Yesterday', saturday: 'Saturday', inVyllo: 'In Vyllo', syncing: 'Syncing',
+        findTitle: 'Finds your games on its own',
+        findLead: "It reads what your launchers already know and the game folders you choose. A game it doesn't recognize waits for you to say which one it is.",
+        ownGames: 'Your own games',
+        f1Title: 'Sessions tracked on their own', f1Text: 'Starts when the game opens and stops when it closes. No buttons, no forgetting to stop the clock.',
+        f2Title: 'Works offline', f2Text: 'Sessions are kept on the PC and sync when there is a connection. Nothing gets lost.',
+        f3Title: 'Only what it needs', f3Text: 'It sends the game and when each session started and ended. Never folder paths, other programs, or what you do on your PC.',
+        howTitle: 'How it works', howLead: 'Two minutes, once.',
+        s1Title: 'Install', s1Text: "Download and open the installer. It doesn't need admin rights and goes into the Start menu.",
+        s2Title: 'Link your account', s2Text: 'Playtime shows a code and a QR code. In the Vyllo app, open Profile → PC Playtime, or point your camera at the QR code.',
+        s3Title: 'Play', s3Text: 'It starts with Windows, in the tray only. Your hours show up in Vyllo, and updates arrive on their own.',
+        noteTitle: 'Windows may show "Windows protected your PC".', noteText: 'The installer is not code-signed yet. Click "More info" and then "Run anyway".',
+        faqTitle: 'FAQ',
+        q1: 'Do I need Vyllo Premium?', a1: 'Yes. Playtime is part of Vyllo Premium and links to the account you use in the Vyllo app for iOS or Android.',
+        q2: 'Does it touch my games or anti-cheat?', a2: "No. It only sees which programs are running inside your game folders. It doesn't inject anything, read memory, or touch game files.",
+        q3: 'Does it use resources while I play?', a3: 'Almost none: it sits in the tray in efficiency mode and checks processes every few seconds.',
+        q4: 'What if I have several PCs?', a4: 'Link each one to the same account. You can see and remove your PCs in the Vyllo app, under Profile → PC Playtime.',
+        q5: 'How do I uninstall it?', a5: 'In Windows Settings → Apps → Vyllo Playtime → Uninstall. Sessions already sent stay in your account.',
+        finalTitle: 'Ready to start?',
+        language: 'Language', privacy: 'Privacy', terms: 'Terms'
+      };
+      var es = {
+        navHow: 'Cómo funciona', navFaq: 'Preguntas', navPrivacy: 'Privacidad',
+        eyebrow: 'Nuevo · Para Windows',
+        title: 'El tiempo que juegas en el PC, en tu colección.',
+        lead: 'Vyllo Playtime se queda en la bandeja del sistema y mide solo cada sesión. Las horas aparecen en Vyllo, en el juego correcto, sin escribir nada.',
+        download: 'Descargar para Windows',
+        meta: 'Windows 10 (2004) u 11 · 76 MB · gratis con Vyllo Premium',
+        recent: 'Sesiones recientes', yesterday: 'Ayer', saturday: 'Sábado', inVyllo: 'En Vyllo', syncing: 'Sincronizando',
+        findTitle: 'Encuentra tus juegos solo',
+        findLead: 'Lee lo que tus launchers ya saben y las carpetas de juegos que elijas. Un juego que no reconoce espera a que le digas cuál es.',
+        ownGames: 'Tus propios juegos',
+        f1Title: 'Sesiones medidas solas', f1Text: 'Empieza cuando el juego se abre y termina cuando se cierra. Sin botones, sin olvidarte de parar el reloj.',
+        f2Title: 'Funciona sin internet', f2Text: 'Las sesiones se guardan en el PC y se sincronizan cuando hay conexión. No se pierde nada.',
+        f3Title: 'Solo lo necesario', f3Text: 'Envía el juego, el inicio y el fin de cada sesión. Nunca rutas de carpetas, otros programas ni lo que haces en el PC.',
+        howTitle: 'Cómo funciona', howLead: 'Dos minutos, una sola vez.',
+        s1Title: 'Instala', s1Text: 'Descarga y abre el instalador. No pide permisos de administrador y queda en el menú Inicio.',
+        s2Title: 'Vincula tu cuenta', s2Text: 'Playtime muestra un código y un QR. En la app Vyllo, abre Perfil → PC Playtime, o apunta la cámara al QR.',
+        s3Title: 'Juega', s3Text: 'Se inicia con Windows, solo en la bandeja del sistema. Las horas aparecen en Vyllo, y las actualizaciones llegan solas.',
+        noteTitle: 'Windows puede mostrar "Windows protegió su PC".', noteText: 'El instalador todavía no tiene certificado de firma. Pulsa "Más información" y después "Ejecutar de todas formas".',
+        faqTitle: 'Preguntas',
+        q1: '¿Necesito Vyllo Premium?', a1: 'Sí. Playtime forma parte de Vyllo Premium y se vincula a la cuenta que usas en la app Vyllo para iOS o Android.',
+        q2: '¿Toca mis juegos o el anti-cheat?', a2: 'No. Solo ve qué programas se están ejecutando dentro de las carpetas de tus juegos. No inyecta nada, no lee la memoria y no toca archivos de los juegos.',
+        q3: '¿Consume recursos mientras juego?', a3: 'Casi nada: se queda en la bandeja en modo de eficiencia y comprueba los procesos cada pocos segundos.',
+        q4: '¿Y si tengo varios PC?', a4: 'Vincula cada uno a la misma cuenta. Puedes ver y quitar tus PC en la app Vyllo, en Perfil → PC Playtime.',
+        q5: '¿Cómo lo desinstalo?', a5: 'En Configuración de Windows → Aplicaciones → Vyllo Playtime → Desinstalar. Las sesiones ya enviadas se quedan en tu cuenta.',
+        finalTitle: '¿Listo para empezar?',
+        language: 'Idioma', privacy: 'Privacidad', terms: 'Términos'
+      };
+      var br = {
+        title: 'O tempo que você joga no PC, na sua coleção.',
+        lead: 'O Vyllo Playtime fica na bandeja do sistema e mede sozinho cada sessão. As horas aparecem na Vyllo, no jogo certo, sem você digitar nada.',
+        download: 'Baixar para Windows',
+        syncing: 'Sincronizando',
+        findTitle: 'Encontra seus jogos sozinho',
+        findLead: 'Lê o que os launchers já sabem e as pastas de jogos que você escolher. Um jogo que ele não reconhece fica esperando você dizer qual é.',
+        ownGames: 'Seus próprios jogos',
+        f1Text: 'Começa quando o jogo abre e termina quando fecha. Sem botões, sem esquecer de parar o relógio.',
+        f2Text: 'As sessões ficam salvas no PC e sincronizam quando houver conexão. Nada se perde.',
+        f3Text: 'Envia o jogo, o início e o fim de cada sessão. Nunca caminhos de pastas, outros programas nem o que você faz no PC.',
+        s1Title: 'Instale', s1Text: 'Baixe e abra o instalador. Não pede administrador e fica no menu Iniciar.',
+        s2Title: 'Conecte sua conta', s2Text: 'O Playtime mostra um código e um QR. No app Vyllo, abra Perfil → PC Playtime, ou aponte a câmera para o QR.',
+        s3Title: 'Jogue', s3Text: 'Inicia com o Windows, só na bandeja. As horas aparecem na Vyllo, e as atualizações chegam sozinhas.',
+        noteTitle: 'O Windows pode mostrar "O Windows protegeu o computador".', noteText: 'O instalador ainda não tem certificado de assinatura. Clique em "Mais informações" e depois em "Executar assim mesmo".',
+        a1: 'Sim. O Playtime faz parte do Vyllo Premium e se conecta à conta que você usa no app Vyllo para iOS ou Android.',
+        q2: 'Mexe nos jogos ou no anti-cheat?', a2: 'Não. Só vê quais programas estão rodando dentro das pastas dos seus jogos. Não injeta nada, não lê memória e não toca em arquivos dos jogos.',
+        q3: 'Gasta recursos enquanto eu jogo?', a3: 'Quase nada: fica na bandeja em modo de eficiência e verifica os processos a cada poucos segundos.',
+        q4: 'E se eu tiver vários PCs?', a4: 'Conecte cada um à mesma conta. Você vê e remove os PCs no app Vyllo, em Perfil → PC Playtime.',
+        q5: 'Como desinstalo?', a5: 'Em Configurações do Windows → Aplicativos → Vyllo Playtime → Desinstalar. As sessões já enviadas ficam na sua conta.',
+        language: 'Idioma'
+      };
+      var dictionaries = { en: en, es: es, br: br };
+      var titles = {
+        en: 'Vyllo Playtime for Windows', es: 'Vyllo Playtime para Windows',
+        br: 'Vyllo Playtime para Windows', pt: 'Vyllo Playtime para Windows'
+      };
+      var original = {};
+      var nodes = document.querySelectorAll('[data-i18n]');
+      for (var i = 0; i < nodes.length; i++) original[nodes[i].getAttribute('data-i18n')] = nodes[i].textContent;
+
+      function detect() {
+        try {
+          var saved = localStorage.getItem('vyllo-lang');
+          if (saved && (saved === 'pt' || dictionaries[saved])) return saved;
+        } catch (e) { /* sem armazenamento: segue o browser */ }
+        var wanted = (navigator.languages && navigator.languages[0]) || navigator.language || 'en';
+        wanted = wanted.toLowerCase();
+        if (wanted === 'pt-br' || wanted === 'pt') return 'br';
+        if (wanted.indexOf('pt') === 0) return 'pt';
+        if (wanted.indexOf('es') === 0) return 'es';
+        return 'en';
+      }
+
+      function apply(lang) {
+        var dict = dictionaries[lang] || {};
+        for (var i = 0; i < nodes.length; i++) {
+          var key = nodes[i].getAttribute('data-i18n');
+          var text = dict[key] || original[key];
+          nodes[i].textContent = text;
+        }
+        document.documentElement.lang = lang === 'br' ? 'pt-BR' : lang === 'pt' ? 'pt-PT' : lang;
+        document.title = titles[lang];
+        document.getElementById('lang').value = lang;
+      }
+
+      var select = document.getElementById('lang');
+      select.addEventListener('change', function () {
+        try { localStorage.setItem('vyllo-lang', select.value); } catch (e) { /* so nesta visita */ }
+        apply(select.value);
+      });
+      apply(detect());
+    })();
+  </script>
 </body>
 </html>

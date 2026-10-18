@@ -110,22 +110,54 @@
 
   <script>
     (function () {
-      var pt = /^pt\b/i.test(navigator.language || '');
-      var text = pt ? {
-        title: 'Ligar o PC à Vyllo',
-        lead: 'Aprova este PC na app Vyllo no telemóvel.',
-        open: 'Abrir na app Vyllo',
-        stepsTitle: 'Se a app não abrir:',
-        step1: 'Abre a Vyllo no telemóvel.',
-        step2: 'Vai a Profile → PC Playtime → Link a PC.',
-        step3: 'Introduz o código que aparece no PC.',
-        storeLead: 'Ainda não tens a Vyllo? ',
-        storeLink: 'Instala-a no Google Play'
-      } : null;
+      // English is in the markup; the other languages of the Vyllo app replace it.
+      var languages = {
+        'pt-PT': {
+          pageTitle: 'Ligar o PC — Vyllo',
+          title: 'Ligar o PC à Vyllo',
+          lead: 'Aprova este PC na app Vyllo no telemóvel.',
+          open: 'Abrir na app Vyllo',
+          stepsTitle: 'Se a app não abrir:',
+          step1: 'Abre a Vyllo no telemóvel.',
+          step2: 'Vai a Perfil → PC Playtime → Ligar um PC.',
+          step3: 'Introduz o código que aparece no PC.',
+          storeLead: 'Ainda não tens a Vyllo? ',
+          storeLink: 'Instala-a no Google Play'
+        },
+        'pt-BR': {
+          pageTitle: 'Conectar o PC — Vyllo',
+          title: 'Conectar o PC à Vyllo',
+          lead: 'Aprove este PC no app Vyllo no celular.',
+          open: 'Abrir no app Vyllo',
+          stepsTitle: 'Se o app não abrir:',
+          step1: 'Abra a Vyllo no celular.',
+          step2: 'Vá em Perfil → PC Playtime → Conectar um PC.',
+          step3: 'Digite o código que aparece no PC.',
+          storeLead: 'Ainda não tem a Vyllo? ',
+          storeLink: 'Instale no Google Play'
+        },
+        es: {
+          pageTitle: 'Vincular el PC — Vyllo',
+          title: 'Vincular el PC a Vyllo',
+          lead: 'Aprueba este PC en la app Vyllo del móvil.',
+          open: 'Abrir en la app Vyllo',
+          stepsTitle: 'Si la app no se abre:',
+          step1: 'Abre Vyllo en el móvil.',
+          step2: 'Ve a Perfil → PC Playtime → Vincular un PC.',
+          step3: 'Introduce el código que aparece en el PC.',
+          storeLead: '¿Todavía no tienes Vyllo? ',
+          storeLink: 'Instálala desde Google Play'
+        }
+      };
+      var wanted = ((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase();
+      var lang = wanted === 'pt-br' || wanted === 'pt' ? 'pt-BR'
+        : wanted.indexOf('pt') === 0 ? 'pt-PT'
+        : wanted.indexOf('es') === 0 ? 'es' : null;
+      var text = lang ? languages[lang] : null;
 
       if (text) {
-        document.documentElement.lang = 'pt';
-        document.title = 'Ligar o PC — Vyllo';
+        document.documentElement.lang = lang;
+        document.title = text.pageTitle;
         document.getElementById('title').textContent = text.title;
         document.getElementById('lead').textContent = text.lead;
         document.getElementById('open').textContent = text.open;
