@@ -1,7 +1,7 @@
 {
   "redirects": [
     {
-      "source": "/((?!playtime|link|privacy\.html|terms\.html|delete-account\.html|auth-callback\.html|\.well-known/|favicon|apple-touch-icon|web-app-manifest|sw\.js).*)",
+      "source": "/((?!playtime|link|privacy|terms|delete-account|auth-callback|.well-known|favicon|apple-touch|web-app|sw).*)",
       "destination": "/playtime",
       "permanent": false
     }
