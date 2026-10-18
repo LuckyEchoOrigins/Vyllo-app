@@ -137,6 +137,8 @@
       .hero .wrap, .grid, .steps { grid-template-columns: 1fr; }
       .nav { display: none; }
     }
+    .top-right { display: flex; align-items: center; gap: 22px; }
+    .lang { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
     .lang select {
       background: var(--card); color: var(--muted); border: 1px solid var(--border);
       border-radius: 9px; padding: 5px 8px; font: inherit; font-size: 13px; font-weight: 700;
@@ -148,11 +150,23 @@
   <header>
     <div class="wrap">
       <a class="brand" href="/playtime"><img src="/web-app-manifest-192x192.png" alt="" /> Vyllo</a>
-      <nav class="nav">
-        <a href="#como-funciona" data-i18n="navHow">Como funciona</a>
-        <a href="#perguntas" data-i18n="navFaq">Perguntas</a>
-        <a href="/privacy.html#playtime" data-i18n="navPrivacy">Privacidade</a>
-      </nav>
+      <div class="top-right">
+        <nav class="nav">
+          <a href="#como-funciona" data-i18n="navHow">Como funciona</a>
+          <a href="#perguntas" data-i18n="navFaq">Perguntas</a>
+          <a href="/privacy.html#playtime" data-i18n="navPrivacy">Privacidade</a>
+        </nav>
+        <label class="lang">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+          <span class="sr-only" data-i18n="language">Língua</span>
+          <select id="lang" aria-label="Language">
+            <option value="en">English</option>
+            <option value="pt">Português (PT)</option>
+            <option value="br">Português (BR)</option>
+            <option value="es">Español</option>
+          </select>
+        </label>
+      </div>
     </div>
   </header>
 
@@ -295,15 +309,6 @@
   <footer>
     <div class="wrap">
       <span>© 2026 Vyllo</span>
-      <label class="lang">
-        <span class="sr-only" data-i18n="language">Língua</span>
-        <select id="lang" aria-label="Language">
-          <option value="en">English</option>
-          <option value="pt">Português (Portugal)</option>
-          <option value="br">Português (Brasil)</option>
-          <option value="es">Español</option>
-        </select>
-      </label>
       <span><a href="/privacy.html" data-i18n="privacy">Privacidade</a> · <a href="/terms.html" data-i18n="terms">Termos</a> · <a href="mailto:support@vyllo-app.com">support@vyllo-app.com</a></span>
     </div>
   </footer>
