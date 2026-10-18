@@ -125,6 +125,8 @@
     details + details { margin-top: 10px; }
     summary { cursor: pointer; font-weight: 800; }
     details p { margin-top: 10px; color: var(--muted); font-size: 14px; }
+    .stores { font-weight: 800; }
+    .stores a { color: #c4b5fd; }
     .final { text-align: center; }
     .final .cta { justify-content: center; }
     footer { padding: 32px 0 48px; border-top: 1px solid #1a1a2b; margin-top: 24px; font-size: 13px; color: var(--faint); }
@@ -182,7 +184,7 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
               <span data-i18n="download">Descarregar para Windows</span>
             </a>
-            <span class="meta" data-i18n="meta">Windows 10 (2004) ou 11 · 76 MB · grátis com o Vyllo Premium</span>
+            <span class="meta" data-i18n="meta">Windows 10 (2004) ou 11 · 76 MB · incluído no Vyllo Premium</span>
           </div>
         </div>
         <div class="shot" aria-hidden="true">
@@ -273,9 +275,26 @@
     <section id="perguntas">
       <div class="wrap">
         <h2 data-i18n="faqTitle">Perguntas</h2>
+        <details open>
+          <summary data-i18n="qAuto">Como funciona o registo automático?</summary>
+          <p data-i18n="aAuto">O Playtime fica no tray e, a cada poucos segundos, vê se algum programa está a correr dentro da pasta de um jogo que conhece. Quando o jogo abre começa uma sessão; quando fecha, a sessão acaba e é enviada para a Vyllo, que soma as horas ao jogo certo e ao dia em que jogaste. Sem internet, a sessão fica guardada no PC e é enviada mais tarde.</p>
+        </details>
         <details>
-          <summary data-i18n="q1">Preciso do Vyllo Premium?</summary>
-          <p data-i18n="a1">Sim. O Playtime faz parte do Vyllo Premium, e liga-se à conta que tens na app Vyllo para iOS ou Android.</p>
+          <summary data-i18n="qGames">Que jogos e launchers são compatíveis?</summary>
+          <p data-i18n="aGames">Os jogos da Steam, Epic Games, Battle.net, GOG e Ubisoft Connect são encontrados sozinhos. Qualquer outro jogo de Windows também conta: adiciona o executável ou uma pasta de jogos no Playtime. A app Xbox (Game Pass) e a EA app ainda não são lidas sozinhas, mas em muitos casos os jogos delas podem ser adicionados à mão. Só funciona em Windows 10 (versão 2004) ou 11.</p>
+        </details>
+        <details>
+          <summary data-i18n="qPhone">Preciso de instalar a Vyllo no iPhone?</summary>
+          <p data-i18n="aPhone">Precisas da app Vyllo no telemóvel, seja iPhone ou Android: é lá que ligas o PC (uma vez, com um código ou o QR) e onde vês as horas, as estatísticas e a coleção. Depois de ligado, o PC funciona sozinho.</p>
+          <p class="stores"><a href="https://apps.apple.com/pt/app/vyllo-media-tracker/id6786422865">App Store</a> · <a href="https://play.google.com/store/apps/details?id=com.vyllo_app.twa">Google Play</a></p>
+        </details>
+        <details>
+          <summary data-i18n="qData">Que dados do computador são monitorizados?</summary>
+          <p data-i18n="aData">Só os programas que correm dentro das pastas dos teus jogos, para saber quando um jogo abre e fecha. Para a Vyllo vai o nome e o identificador de cada jogo na loja e o início e o fim de cada sessão. Nunca saem caminhos de pastas, o teu nome de utilizador do Windows, outros programas, sites, teclas ou capturas de ecrã. Tudo explicado na política de privacidade.</p>
+        </details>
+        <details>
+          <summary data-i18n="qPrice">Quanto custa e o que está incluído na versão gratuita?</summary>
+          <p data-i18n="aPrice">O Playtime para Windows não tem custo próprio: faz parte do Vyllo Premium, que pode ser mensal, anual ou vitalício (o preço aparece na app, na tua moeda). A versão gratuita da Vyllo guarda até 40 itens na coleção, mas não inclui o Playtime: sem Premium, o PC não pode ser ligado à conta.</p>
         </details>
         <details>
           <summary data-i18n="q2">Mexe nos jogos ou no anti-cheat?</summary>
@@ -323,7 +342,7 @@
         title: 'The time you play on PC, in your collection.',
         lead: 'Vyllo Playtime sits in the tray and tracks every session on its own. Your hours show up in Vyllo, on the right game, without typing anything.',
         download: 'Download for Windows',
-        meta: 'Windows 10 (2004) or 11 · 76 MB · free with Vyllo Premium',
+        meta: 'Windows 10 (2004) or 11 · 76 MB · included in Vyllo Premium',
         recent: 'Recent sessions', yesterday: 'Yesterday', saturday: 'Saturday', inVyllo: 'In Vyllo', syncing: 'Syncing',
         findTitle: 'Finds your games on its own',
         findLead: "It reads what your launchers already know and the game folders you choose. A game it doesn't recognize waits for you to say which one it is.",
@@ -337,7 +356,16 @@
         s3Title: 'Play', s3Text: 'It starts with Windows, in the tray only. Your hours show up in Vyllo, and updates arrive on their own.',
         noteTitle: 'Windows may show "Windows protected your PC".', noteText: 'The installer is not code-signed yet. Click "More info" and then "Run anyway".',
         faqTitle: 'FAQ',
-        q1: 'Do I need Vyllo Premium?', a1: 'Yes. Playtime is part of Vyllo Premium and links to the account you use in the Vyllo app for iOS or Android.',
+        qAuto: 'How does automatic tracking work?',
+        aAuto: 'Playtime sits in the tray and, every few seconds, checks whether a program is running inside the folder of a game it knows. When the game opens a session starts; when it closes, the session ends and is sent to Vyllo, which adds the hours to the right game and to the day you played. Without internet, the session is kept on the PC and sent later.',
+        qGames: 'Which games and launchers are supported?',
+        aGames: "Games from Steam, Epic Games, Battle.net, GOG and Ubisoft Connect are found on their own. Any other Windows game counts too: add its executable or a game folder in Playtime. The Xbox app (Game Pass) and the EA app aren't read automatically yet, but in many cases their games can be added by hand. It runs on Windows 10 (version 2004) or 11.",
+        qPhone: 'Do I need to install Vyllo on my iPhone?',
+        aPhone: "You need the Vyllo app on your phone, iPhone or Android: it's where you link the PC (once, with a code or the QR code) and where you see your hours, stats and collection. Once linked, the PC works on its own.",
+        qData: 'What data on my computer is monitored?',
+        aData: 'Only the programs running inside your game folders, to know when a game opens and closes. Vyllo receives each game’s name and store id and when each session started and ended. Folder paths, your Windows user name, other programs, websites, keystrokes and screenshots never leave the PC. It’s all explained in the privacy policy.',
+        qPrice: "How much does it cost, and what's in the free version?",
+        aPrice: "Playtime for Windows has no price of its own: it's part of Vyllo Premium, which can be monthly, yearly or lifetime (the price is shown in the app, in your currency). The free version of Vyllo holds up to 40 items in your collection but doesn't include Playtime: without Premium, the PC can't be linked to your account.",
         q2: 'Does it touch my games or anti-cheat?', a2: "No. It only sees which programs are running inside your game folders. It doesn't inject anything, read memory, or touch game files.",
         q3: 'Does it use resources while I play?', a3: 'Almost none: it sits in the tray in efficiency mode and checks processes every few seconds.',
         q4: 'What if I have several PCs?', a4: 'Link each one to the same account. You can see and remove your PCs in the Vyllo app, under Profile → PC Playtime.',
@@ -351,7 +379,7 @@
         title: 'El tiempo que juegas en el PC, en tu colección.',
         lead: 'Vyllo Playtime se queda en la bandeja del sistema y mide solo cada sesión. Las horas aparecen en Vyllo, en el juego correcto, sin escribir nada.',
         download: 'Descargar para Windows',
-        meta: 'Windows 10 (2004) u 11 · 76 MB · gratis con Vyllo Premium',
+        meta: 'Windows 10 (2004) u 11 · 76 MB · incluido en Vyllo Premium',
         recent: 'Sesiones recientes', yesterday: 'Ayer', saturday: 'Sábado', inVyllo: 'En Vyllo', syncing: 'Sincronizando',
         findTitle: 'Encuentra tus juegos solo',
         findLead: 'Lee lo que tus launchers ya saben y las carpetas de juegos que elijas. Un juego que no reconoce espera a que le digas cuál es.',
@@ -365,7 +393,16 @@
         s3Title: 'Juega', s3Text: 'Se inicia con Windows, solo en la bandeja del sistema. Las horas aparecen en Vyllo, y las actualizaciones llegan solas.',
         noteTitle: 'Windows puede mostrar "Windows protegió su PC".', noteText: 'El instalador todavía no tiene certificado de firma. Pulsa "Más información" y después "Ejecutar de todas formas".',
         faqTitle: 'Preguntas',
-        q1: '¿Necesito Vyllo Premium?', a1: 'Sí. Playtime forma parte de Vyllo Premium y se vincula a la cuenta que usas en la app Vyllo para iOS o Android.',
+        qAuto: '¿Cómo funciona el registro automático?',
+        aAuto: 'Playtime se queda en la bandeja del sistema y, cada pocos segundos, comprueba si algún programa se está ejecutando dentro de la carpeta de un juego que conoce. Cuando el juego se abre empieza una sesión; cuando se cierra, la sesión termina y se envía a Vyllo, que suma las horas al juego correcto y al día en que jugaste. Sin internet, la sesión se guarda en el PC y se envía más tarde.',
+        qGames: '¿Qué juegos y launchers son compatibles?',
+        aGames: 'Los juegos de Steam, Epic Games, Battle.net, GOG y Ubisoft Connect se encuentran solos. Cualquier otro juego de Windows también cuenta: añade el ejecutable o una carpeta de juegos en Playtime. La app de Xbox (Game Pass) y la EA app todavía no se leen solas, pero en muchos casos sus juegos se pueden añadir a mano. Funciona en Windows 10 (versión 2004) u 11.',
+        qPhone: '¿Necesito instalar Vyllo en el iPhone?',
+        aPhone: 'Necesitas la app Vyllo en el móvil, sea iPhone o Android: ahí vinculas el PC (una vez, con un código o el QR) y ves las horas, las estadísticas y la colección. Una vez vinculado, el PC funciona solo.',
+        qData: '¿Qué datos del ordenador se supervisan?',
+        aData: 'Solo los programas que se ejecutan dentro de las carpetas de tus juegos, para saber cuándo se abre y se cierra un juego. A Vyllo llega el nombre y el identificador de cada juego en la tienda y el inicio y el fin de cada sesión. Nunca salen rutas de carpetas, tu nombre de usuario de Windows, otros programas, sitios web, teclas ni capturas de pantalla. Todo está explicado en la política de privacidad.',
+        qPrice: '¿Cuánto cuesta y qué incluye la versión gratuita?',
+        aPrice: 'Playtime para Windows no tiene coste propio: forma parte de Vyllo Premium, que puede ser mensual, anual o de por vida (el precio aparece en la app, en tu moneda). La versión gratuita de Vyllo guarda hasta 40 elementos en la colección, pero no incluye Playtime: sin Premium, el PC no se puede vincular a la cuenta.',
         q2: '¿Toca mis juegos o el anti-cheat?', a2: 'No. Solo ve qué programas se están ejecutando dentro de las carpetas de tus juegos. No inyecta nada, no lee la memoria y no toca archivos de los juegos.',
         q3: '¿Consume recursos mientras juego?', a3: 'Casi nada: se queda en la bandeja en modo de eficiencia y comprueba los procesos cada pocos segundos.',
         q4: '¿Y si tengo varios PC?', a4: 'Vincula cada uno a la misma cuenta. Puedes ver y quitar tus PC en la app Vyllo, en Perfil → PC Playtime.',
@@ -388,7 +425,16 @@
         s2Title: 'Conecte sua conta', s2Text: 'O Playtime mostra um código e um QR. No app Vyllo, abra Perfil → PC Playtime, ou aponte a câmera para o QR.',
         s3Title: 'Jogue', s3Text: 'Inicia com o Windows, só na bandeja. As horas aparecem na Vyllo, e as atualizações chegam sozinhas.',
         noteTitle: 'O Windows pode mostrar "O Windows protegeu o computador".', noteText: 'O instalador ainda não tem certificado de assinatura. Clique em "Mais informações" e depois em "Executar assim mesmo".',
-        a1: 'Sim. O Playtime faz parte do Vyllo Premium e se conecta à conta que você usa no app Vyllo para iOS ou Android.',
+        qAuto: 'Como funciona o registro automático?',
+        qGames: 'Quais jogos e launchers são compatíveis?',
+        aAuto: 'O Playtime fica na bandeja do sistema e, a cada poucos segundos, verifica se algum programa está rodando dentro da pasta de um jogo que ele conhece. Quando o jogo abre, começa uma sessão; quando fecha, a sessão termina e é enviada para a Vyllo, que soma as horas ao jogo certo e ao dia em que você jogou. Sem internet, a sessão fica salva no PC e é enviada depois.',
+        aGames: 'Os jogos da Steam, Epic Games, Battle.net, GOG e Ubisoft Connect são encontrados sozinhos. Qualquer outro jogo de Windows também conta: adicione o executável ou uma pasta de jogos no Playtime. O app Xbox (Game Pass) e o EA app ainda não são lidos sozinhos, mas em muitos casos os jogos deles podem ser adicionados à mão. Funciona no Windows 10 (versão 2004) ou 11.',
+        qPhone: 'Preciso instalar a Vyllo no iPhone?',
+        aPhone: 'Você precisa do app Vyllo no celular, seja iPhone ou Android: é nele que você conecta o PC (uma vez, com um código ou o QR) e vê as horas, as estatísticas e a coleção. Depois de conectado, o PC funciona sozinho.',
+        qData: 'Quais dados do computador são monitorados?',
+        aData: 'Só os programas que rodam dentro das pastas dos seus jogos, para saber quando um jogo abre e fecha. Para a Vyllo vão o nome e o identificador de cada jogo na loja e o início e o fim de cada sessão. Nunca saem caminhos de pastas, seu nome de usuário do Windows, outros programas, sites, teclas ou capturas de tela. Tudo está explicado na política de privacidade.',
+        qPrice: 'Quanto custa e o que está incluído na versão gratuita?',
+        aPrice: 'O Playtime para Windows não tem custo próprio: faz parte do Vyllo Premium, que pode ser mensal, anual ou vitalício (o preço aparece no app, na sua moeda). A versão gratuita da Vyllo guarda até 40 itens na coleção, mas não inclui o Playtime: sem Premium, o PC não pode ser conectado à conta.',
         q2: 'Mexe nos jogos ou no anti-cheat?', a2: 'Não. Só vê quais programas estão rodando dentro das pastas dos seus jogos. Não injeta nada, não lê memória e não toca em arquivos dos jogos.',
         q3: 'Gasta recursos enquanto eu jogo?', a3: 'Quase nada: fica na bandeja em modo de eficiência e verifica os processos a cada poucos segundos.',
         q4: 'E se eu tiver vários PCs?', a4: 'Conecte cada um à mesma conta. Você vê e remove os PCs no app Vyllo, em Perfil → PC Playtime.',
