@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PC Gaming Playtime Toolkit · Vyllo</title>
+  <meta name="description" content="Are you tracking all your PC gaming hours? Answer 5 quick questions and get a personalized playtime tracking setup for your games and launchers. Free, no sign-up." />
+  <meta property="og:title" content="Are you tracking all your PC gaming hours?" />
+  <meta property="og:description" content="Find the right playtime tracking setup for your games, launchers and habits. Free, about 60 seconds, no sign-up." />
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0b18;
+      --card: #12121f;
+      --border: #24233a;
+      --text: #f3f2f8;
+      --muted: #a29fb6;
+      --faint: #6e6a85;
+      --accent: #7c5ff6;
+      --accent-soft: rgba(124, 95, 246, 0.14);
+      --green: #3ddc97;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; }
+    [hidden] { display: none !important; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+
+    header { padding: 22px 0; }
+    header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 900; font-size: 18px; }
+    .brand img { width: 34px; height: 34px; border-radius: 9px; }
+    .brand span { color: #a78bfa; }
+    .tag { padding: 4px 10px; border-radius: 99px; border: 1px solid var(--border); font-size: 12px; font-weight: 800; color: var(--muted); }
+
+    main { position: relative; overflow: hidden; }
+    main::before {
+      content: '';
+      position: absolute;
+      top: -320px; right: -260px;
+      width: 720px; height: 720px;
+      background: radial-gradient(circle, rgba(124, 95, 246, 0.2), transparent 62%);
+      pointer-events: none;
+    }
+    .screen { position: relative; padding: 36px 0 64px; }
+
+    .eyebrow { color: #c4b5fd; font-size: 13px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+    h1 { font-size: clamp(32px, 6vw, 50px); line-height: 1.08; font-weight: 900; letter-spacing: -0.02em; margin: 12px 0 16px; }
+    h2 { font-size: clamp(24px, 4.4vw, 32px); line-height: 1.2; font-weight: 900; letter-spacing: -0.01em; }
+    h3 { font-size: 17px; font-weight: 900; }
+    .lead { font-size: 18px; color: var(--muted); }
+    .muted { color: var(--muted); }
+    .small { font-size: 14px; }
+
+    .button {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 15px 24px; border-radius: 14px; border: 0; cursor: pointer;
+      background: var(--accent); color: #fff; text-decoration: none;
+      font: inherit; font-weight: 800; font-size: 16px;
+      box-shadow: 0 10px 30px rgba(124, 95, 246, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    }
+    .button:hover { transform: translateY(-1px); box-shadow: 0 14px 36px rgba(124, 95, 246, 0.45); }
+    .button:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
+    .button.wide { width: 100%; }
+    .button.ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); box-shadow: none; }
+    .button.ghost:hover { color: var(--text); border-color: #3a3858; }
+    .button:focus-visible, .option:focus-within, .linkish:focus-visible { outline: 2px solid #c4b5fd; outline-offset: 3px; }
+    .meta { margin-top: 12px; font-size: 13px; color: var(--faint); font-weight: 700; text-align: center; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; }
+    .card + .card { margin-top: 14px; }
+    .list { list-style: none; display: grid; gap: 10px; margin-top: 14px; }
+    .list li { display: flex; gap: 10px; color: var(--muted); }
+    .list li::before { content: '✓'; color: var(--green); font-weight: 900; }
+    .steps3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
+    .steps3 div { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 14px; padding: 16px; font-weight: 800; font-size: 14px; }
+    .steps3 b { display: block; color: #c4b5fd; font-size: 12px; margin-bottom: 4px; }
+    .block { margin-top: 40px; }
+    .block > h2 { font-size: 22px; margin-bottom: 6px; }
+
+    /* Questionario */
+    .progress { display: flex; gap: 6px; margin: 4px 0 22px; }
+    .progress span { flex: 1; height: 5px; border-radius: 5px; background: #24233a; transition: background 0.2s ease; }
+    .progress span.on { background: var(--accent); }
+    .count { font-size: 13px; color: var(--faint); font-weight: 800; }
+    fieldset { border: 0; }
+    legend { display: block; width: 100%; margin-bottom: 6px; }
+    legend h2:focus { outline: none; }
+    .hint { color: var(--muted); font-size: 15px; margin-bottom: 18px; }
+    .options { display: grid; gap: 10px; }
+    .option {
+      display: flex; align-items: center; gap: 14px;
+      padding: 15px 16px; border-radius: 14px; cursor: pointer;
+      background: var(--card); border: 1px solid var(--border);
+      font-weight: 800; transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .option:hover { border-color: #3a3858; }
+    .option input { position: absolute; opacity: 0; pointer-events: none; }
+    .dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #4a4766; flex-shrink: 0; display: grid; place-items: center; }
+    .option.checked { border-color: var(--accent); background: var(--accent-soft); }
+    .option.checked .dot { border-color: var(--accent); }
+    .option.checked .dot::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+    .nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 24px; }
+
+    /* Resultado */
+    .profile { display: flex; gap: 16px; align-items: flex-start; }
+    .icon {
+      width: 46px; height: 46px; border-radius: 13px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--accent-soft); color: #c4b5fd;
+    }
+    .label { font-size: 12px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; color: #c4b5fd; }
+    .ordered { list-style: none; counter-reset: n; display: grid; gap: 12px; margin-top: 14px; }
+    .ordered li { counter-increment: n; display: flex; gap: 14px; color: var(--muted); }
+    .ordered li::before {
+      content: counter(n);
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      background: var(--accent); color: #fff; font-weight: 900; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tools { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 14px; }
+    .tool { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+    .tool p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .price { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 7px; font-size: 11px; font-weight: 900; vertical-align: 2px; }
+    .price.free { background: rgba(61, 220, 151, 0.12); color: var(--green); }
+    .price.paid { background: var(--accent-soft); color: #c4b5fd; }
+    .offer { background: linear-gradient(160deg, #1a1533, #12121f 60%); border-color: #3a2f6e; }
+    .offer h2 { font-size: 22px; margin: 6px 0 6px; }
+    .demo { margin: 18px 0; background: #0e0e1a; border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+    .demo-title { font-size: 12px; color: var(--faint); font-weight: 800; margin-bottom: 8px; }
+    .row { display: flex; align-items: center; gap: 12px; padding: 9px; border-radius: 11px; }
+    .row:nth-child(even) { background: rgba(255, 255, 255, 0.025); }
+    .cover { width: 30px; height: 40px; border-radius: 6px; flex-shrink: 0; }
+    .row strong { display: block; font-size: 14px; }
+    .row span { display: block; font-size: 12px; color: var(--faint); font-weight: 700; }
+    .row .time { margin-left: auto; text-align: right; white-space: nowrap; }
+    .limits { list-style: none; display: grid; gap: 6px; margin-top: 8px; font-size: 14px; color: var(--muted); }
+    .limits li { display: flex; gap: 8px; }
+    .limits li::before { content: '•'; color: var(--faint); }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+    .stores { margin-top: 12px; font-size: 14px; font-weight: 800; color: var(--muted); }
+    .stores a { color: #c4b5fd; }
+    .disclaimer { margin-top: 28px; font-size: 13px; color: var(--faint); }
+    .linkish { background: none; border: 0; color: #c4b5fd; font: inherit; font-weight: 800; cursor: pointer; text-decoration: underline; }
+
+    footer { padding: 28px 0 44px; border-top: 1px solid #1a1a2b; font-size: 13px; color: var(--faint); }
+    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+    footer a { text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    @media (max-width: 640px) {
+      .screen { padding-top: 16px; }
+      .steps3, .tools { grid-template-columns: 1fr; }
+      .nav .button { padding: 14px 18px; }
+      .profile { flex-direction: column; gap: 12px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a class="brand" href="/tools/pc-playtime"><img src="/web-app-manifest-192x192.png" alt="" /> Vyllo <span>/ Toolkit</span></a>
+      <span class="tag">Free diagnostic</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1. Landing -->
+    <section class="screen" id="intro">
+      <div class="wrap">
+        <p class="eyebrow">For PC gamers</p>
+        <h1>Are you tracking all your PC gaming hours?</h1>
+        <p class="lead">Steam, Epic, EA, Ubisoft, standalone games… keeping track of your gaming history isn't always straightforward. Answer 5 quick questions and get a tracking setup that fits how you play.</p>
+        <div style="margin-top: 28px">
+          <button class="button wide" type="button" id="start">Find my tracking setup →</button>
+          <p class="meta">Free · About 60 seconds · No sign-up · Nothing to install</p>
+        </div>
+
+        <div class="steps3">
+          <div><b>1</b>Your setup</div>
+          <div><b>2</b>What's probably missing</div>
+          <div><b>3</b>Your next steps</div>
+        </div>
+
+        <div class="block">
+          <h2>What you'll discover</h2>
+          <ul class="list">
+            <li>Which tracking approach suits your launchers and habits</li>
+            <li>Common reasons playtime records end up incomplete</li>
+            <li>Free and paid tools worth considering, including when you don't need anything new</li>
+            <li>Three practical next steps for your gaming history</li>
+          </ul>
+        </div>
+
+        <div class="block card">
+          <h3>Built by Vyllo</h3>
+          <p class="muted small" style="margin-top: 6px">Vyllo helps you organize everything you read, watch and play. For PC gamers who want sessions tracked automatically and synced to the phone app, Vyllo Playtime is available with Premium. The toolkit recommends it only when it fits your answers.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Questionario -->
+    <section class="screen" id="quiz" hidden>
+      <div class="wrap">
+        <p class="count" id="count" aria-live="polite">Question 1 of 5</p>
+        <div class="progress" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+        <form id="form" novalidate>
+          <fieldset>
+            <legend><h2 id="question" tabindex="-1"></h2></legend>
+            <p class="hint" id="hint"></p>
+            <div class="options" id="options"></div>
+          </fieldset>
+          <div class="nav">
+            <button class="button ghost" type="button" id="back">← Back</button>
+            <button class="button" type="submit" id="next" disabled>Continue →</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- 3. Resultado -->
+    <section class="screen" id="result" hidden>
+      <div class="wrap">
+        <div class="card">
+          <div class="profile">
+            <div class="icon" id="result-icon" aria-hidden="true"></div>
+            <div>
+              <p class="label">Your tracking profile</p>
+              <h2 id="result-title" tabindex="-1"></h2>
+              <p class="muted" id="result-summary" style="margin-top: 6px"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="label">What's probably missing</p>
+          <p class="muted" id="result-missing" style="margin-top: 8px"></p>
+        </div>
+
+        <div class="block">
+          <h2>Your recommended setup</h2>
+          <ol class="ordered" id="result-steps"></ol>
+        </div>
+
+        <div class="block" id="tools-block">
+          <h2>Tools worth considering</h2>
+          <div class="tools" id="result-tools"></div>
+        </div>
+
+        <div class="block card offer" id="offer-playtime" hidden>
+          <p class="label">Vyllo Playtime · Premium</p>
+          <h2 id="offer-title">Want your PC sessions tracked automatically and synced to your phone?</h2>
+          <p class="muted">A small Windows app that notices when a game opens and closes, however you launch it, and sends each session to the Vyllo app on your iPhone or Android phone.</p>
+          <div class="demo" id="demo" aria-label="Example of what Vyllo Playtime records">
+            <p class="demo-title">Example · Recent sessions in Vyllo</p>
+            <div class="row">
+              <div class="cover" style="background: linear-gradient(160deg, #c08a3e, #4a2f17)"></div>
+              <div><strong>For Honor</strong><span>Ubisoft Connect · Yesterday, 22:14</span></div>
+              <div class="time"><strong>1 h 31 min</strong></div>
+            </div>
+            <div class="row">
+              <div class="cover" style="background: linear-gradient(160deg, #3b6fd8, #12224a)"></div>
+              <div><strong>Rocket League</strong><span>Steam · Yesterday, 19:14</span></div>
+              <div class="time"><strong>47 min</strong></div>
+            </div>
+            <div class="row">
+              <div class="cover" style="background: linear-gradient(160deg, #d43a3a, #3a0f12)"></div>
+              <div><strong>Control</strong><span>Epic Games · Saturday, 15:02</span></div>
+              <div class="time"><strong>2 h 05 min</strong></div>
+            </div>
+          </div>
+          <h3>Good to know before you try it</h3>
+          <ul class="limits">
+            <li>Windows 10 (version 2004) or 11 only.</li>
+            <li>Finds Steam, Epic Games, Battle.net, GOG and Ubisoft Connect games on its own. Xbox app (Game Pass) and EA app games aren't read automatically yet; many can be added by hand.</li>
+            <li>Part of Vyllo Premium, and it needs the Vyllo app on your phone to link the PC.</li>
+            <li>The installer isn't code-signed yet, so Windows may show a warning the first time.</li>
+          </ul>
+          <div class="actions">
+            <a class="button" id="cta-playtime" href="/playtime?utm_source=toolkit">See how Vyllo Playtime works →</a>
+          </div>
+          <p class="stores">Get Vyllo: <a data-store="ios" href="https://apps.apple.com/pt/app/vyllo-media-tracker/id6786422865">App Store</a> · <a data-store="android" href="https://play.google.com/store/apps/details?id=com.vyllo_app.twa&amp;referrer=utm_source%3Dtoolkit">Google Play</a></p>
+        </div>
+
+        <div class="block card" id="offer-vyllo" hidden>
+          <p class="label">From the makers of this toolkit</p>
+          <h3 style="margin-top: 6px" id="vyllo-title"></h3>
+          <p class="muted small" style="margin-top: 6px" id="vyllo-text"></p>
+          <p class="stores"><a data-store="ios" href="https://apps.apple.com/pt/app/vyllo-media-tracker/id6786422865">App Store</a> · <a data-store="android" href="https://play.google.com/store/apps/details?id=com.vyllo_app.twa&amp;referrer=utm_source%3Dtoolkit">Google Play</a></p>
+        </div>
+
+        <p class="disclaimer">This result is based only on your answers. The toolkit hasn't looked at your PC, your launchers or your play data, so it can't tell you whether any hours are actually missing, only where gaps usually come from. <button class="linkish" type="button" id="restart">Start over</button></p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 Vyllo</span>
+      <span><a href="/privacy.html#toolkit">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="mailto:support@vyllo-app.com">support@vyllo-app.com</a></span>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      // ── Perguntas. Os valores sao os que a funcao log_toolkit_event aceita. ──
+      var QUESTIONS = [
+        { id: 'where', title: 'Where do you play your PC games?', hint: 'Pick the one closest to your setup.', options: [
+          ['steam', 'Steam only'],
+          ['multiple', 'Multiple launchers (Steam, Epic, EA, Ubisoft…)'],
+          ['non_steam', 'Mostly non-Steam games']
+        ] },
+        { id: 'track', title: 'How do you currently track your playtime?', hint: 'However you check how long you played.', options: [
+          ['steam', "Steam's own stats"],
+          ['tracker', 'Playnite or another tracker'],
+          ['manual', 'Manually (notes, spreadsheet, an app)'],
+          ['none', "I don't"]
+        ] },
+        { id: 'pain', title: "What's your biggest frustration?", hint: 'Pick the one that bothers you most.', options: [
+          ['missing_hours', 'Hours that are missing or wrong'],
+          ['manual', 'Having to log sessions by hand'],
+          ['scattered', 'My playtime is scattered across launchers'],
+          ['no_mobile', "I can't see my gaming history on my phone"],
+          ['nothing', "Nothing really, I'm just curious"]
+        ] },
+        { id: 'phone', title: 'Would you like to see your gaming history on your phone?', hint: 'Your sessions and hours, away from the PC.', options: [
+          ['yes', 'Yes'],
+          ['maybe', 'Maybe'],
+          ['no', 'No']
+        ] },
+        { id: 'often', title: 'How often do you play PC games?', hint: 'A rough idea is enough.', options: [
+          ['daily', 'Daily'],
+          ['weekly', 'Several times a week'],
+          ['occasionally', 'Occasionally']
+        ] }
+      ];
+
+      var ICONS = {
+        steam: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="6"/><path d="M6 12h4M8 10v4M15 11h.01M18 13h.01"/></svg>',
+        multi: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+        simple: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>'
+      };
+
+      // ── Regras: deterministicas, sem IA. ──
+      function classify(a) {
+        if ((a.pain === 'nothing' && a.phone !== 'yes') ||
+            (a.often === 'occasionally' && a.phone === 'no')) return 'simple';
+        return a.where === 'steam' ? 'steam' : 'multi';
+      }
+
+      var PROFILES = {
+        steam: ['Steam Gamer', 'Most of your games live on Steam, and Steam already counts the hours for every game it launches. You probably need less than you think.'],
+        multi: ['Multi-Launcher Gamer', "Your games are spread across more than one place, so your playtime is too. Each launcher only knows about its own games, and none of them add up the rest."],
+        simple: ['Simple Setup', "What you use today seems to be enough for now. You don't need a new tool to enjoy your games."]
+      };
+
+      var MISSING = {
+        missing_hours: 'Launchers only count the games they start. Games opened from their own .exe, standalone games and anything played outside the launcher are where gaps usually come from.',
+        manual: 'Manual logs depend on remembering to start and stop the clock, so short sessions and late nights are the easiest to lose.',
+        scattered: "Each launcher keeps its own number and none of them add the others up, so there's no single total for all your gaming.",
+        no_mobile: "Launcher stats live on the PC or inside each launcher's own app, so there's no one place on your phone to see what you played.",
+        nothing: 'Probably nothing important. If that changes, the most common gap is games played outside the launcher that normally counts them.'
+      };
+
+      function steps(r, a) {
+        if (r === 'steam') return [
+          'Check that Steam is counting: in your Library, look at the play time of the games you played this week.',
+          a.track === 'manual'
+            ? "Drop the manual log for Steam games: Steam's own number is already more reliable."
+            : 'If you also play outside Steam now and then, note which games: those are the hours Steam can\'t see.',
+          a.phone === 'no'
+            ? "Keep it simple: Steam's stats are enough while all your games live there."
+            : 'If you want those hours on your phone next to everything else you play, read and watch, Vyllo Premium can sync your Steam hours and achievements.'
+        ];
+        if (r === 'multi') return [
+          'List where your games actually start: each launcher, the Xbox app, standalone .exe files. Every place on that list keeps its own count.',
+          a.track === 'tracker'
+            ? 'You already use a tracker. Check that you launch every game through it: trackers like Playnite only count the games they start.'
+            : a.track === 'manual'
+              ? 'Replace manual logs with something automatic: forgetting to start or stop the clock is the most common source of wrong hours.'
+              : 'Pick one place to see the total. Playnite does this for free on the PC, as long as you start your games from it.',
+          a.phone === 'yes'
+            ? "If you want every session on your phone without changing how you open your games, try Vyllo Playtime, and check its limits below first."
+            : a.phone === 'maybe'
+              ? 'If seeing your history on your phone becomes important, Vyllo Playtime is an option. Its limits are listed below.'
+              : "If you never need it on your phone, a free PC tracker like Playnite is the simplest choice."
+        ];
+        return [
+          'Keep using your launchers\' own stats: most of them show play time for the games they start.',
+          'If a game ever shows no hours, check whether you opened it outside its launcher.',
+          'Come back when something changes, like more launchers or wanting your history on your phone.'
+        ];
+      }
+
+      function tools(r, a) {
+        var steam = ['Steam', 'free', 'Counts play time for every game it launches. Steam games only.'];
+        var playnite = ['Playnite', 'free', 'Free, open-source library for all your launchers, with play time for games you start from it. Stays on the PC; no phone app.'];
+        var launchers = ["Your launchers' own stats", 'free', 'Steam, GOG Galaxy, Battle.net and others each show their own numbers. Nothing to install.'];
+        var playtime = ['Vyllo Playtime', 'paid', 'Tracks sessions on its own, however you launch the game, and syncs them to the Vyllo app on your phone. Premium.'];
+        if (r === 'steam') return a.phone === 'no' ? [steam] : [steam, ['Vyllo', 'paid', 'Your Steam hours and achievements next to your books, films and shows. Free for up to 40 items; Steam sync is Premium.']];
+        if (r === 'multi') return [playnite, playtime];
+        return a.where === 'steam' ? [steam] : [launchers, playnite];
+      }
+
+      // ── Metricas: anonimas, so em memoria (sem cookies nem localStorage). ──
+      var ENDPOINT = 'https://awlluazqkdvfpqzbwyfe.supabase.co/rest/v1/rpc/log_toolkit_event';
+      var KEY = 'sb_publishable_8nyEN62rg2i_DVHB3KdwfQ_G-_Lp-ci';
+      function newSession() {
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+          var n = Math.random() * 16 | 0;
+          return (c === 'x' ? n : (n & 3 | 8)).toString(16);
+        });
+      }
+      function campaign() {
+        var params = new URLSearchParams(location.search);
+        var clean = function (v) { return (v || '').toLowerCase().replace(/[^a-z0-9_.-]/g, '').slice(0, 40); };
+        var src = clean(params.get('utm_source'));
+        var camp = clean(params.get('utm_campaign'));
+        return src ? (camp ? src + '/' + camp : src) : null;
+      }
+      var session = newSession();
+      var source = campaign();
+      function track(event, extra) {
+        extra = extra || {};
+        try {
+          fetch(ENDPOINT, {
+            method: 'POST',
+            keepalive: true,
+            headers: { 'Content-Type': 'application/json', apikey: KEY },
+            body: JSON.stringify({
+              p_session: session, p_event: event,
+              p_result: extra.result || null, p_answers: extra.answers || null,
+              p_detail: extra.detail || null, p_source: source
+            })
+          }).catch(function () { /* as metricas nunca estragam a pagina */ });
+        } catch (e) { /* idem */ }
+      }
+
+      // ── Navegacao: intro → 5 perguntas → resultado. O "voltar" do browser
+      // tambem anda para tras, sem perder respostas. ──
+      var screens = { intro: document.getElementById('intro'), quiz: document.getElementById('quiz'), result: document.getElementById('result') };
+      var answers = {};
+      var step = 0;
+      var result = null;
+
+      function show(name) {
+        for (var k in screens) screens[k].hidden = k !== name;
+        window.scrollTo(0, 0);
+      }
+
+      function renderQuestion() {
+        var q = QUESTIONS[step];
+        document.getElementById('count').textContent = 'Question ' + (step + 1) + ' of ' + QUESTIONS.length;
+        var bars = document.querySelectorAll('.progress span');
+        for (var i = 0; i < bars.length; i++) bars[i].className = i <= step ? 'on' : '';
+        document.getElementById('question').textContent = q.title;
+        document.getElementById('hint').textContent = q.hint;
+        var box = document.getElementById('options');
+        box.innerHTML = '';
+        q.options.forEach(function (o) {
+          var label = document.createElement('label');
+          label.className = 'option' + (answers[q.id] === o[0] ? ' checked' : '');
+          var input = document.createElement('input');
+          input.type = 'radio'; input.name = q.id; input.value = o[0];
+          input.checked = answers[q.id] === o[0];
+          input.addEventListener('change', function () {
+            answers[q.id] = o[0];
+            var all = box.querySelectorAll('.option');
+            for (var j = 0; j < all.length; j++) all[j].classList.remove('checked');
+            label.classList.add('checked');
+            document.getElementById('next').disabled = false;
+          });
+          var dot = document.createElement('span'); dot.className = 'dot';
+          var text = document.createElement('span'); text.textContent = o[1];
+          label.appendChild(input); label.appendChild(dot); label.appendChild(text);
+          box.appendChild(label);
+        });
+        var next = document.getElementById('next');
+        next.disabled = !answers[q.id];
+        next.textContent = step === QUESTIONS.length - 1 ? 'See my result →' : 'Continue →';
+        show('quiz');
+        document.getElementById('question').focus();
+      }
+
+      function renderResult() {
+        result = classify(answers);
+        var p = PROFILES[result];
+        document.getElementById('result-icon').innerHTML = ICONS[result];
+        document.getElementById('result-title').textContent = p[0];
+        document.getElementById('result-summary').textContent = p[1];
+        document.getElementById('result-missing').textContent = MISSING[answers.pain];
+
+        var ol = document.getElementById('result-steps');
+        ol.innerHTML = '';
+        steps(result, answers).forEach(function (s) {
+          var li = document.createElement('li'); li.textContent = s; ol.appendChild(li);
+        });
+
+        var grid = document.getElementById('result-tools');
+        grid.innerHTML = '';
+        tools(result, answers).forEach(function (t) {
+          var div = document.createElement('div'); div.className = 'tool';
+          var h = document.createElement('h3'); h.textContent = t[0];
+          var tag = document.createElement('span');
+          tag.className = 'price ' + t[1]; tag.textContent = t[1] === 'free' ? 'Free' : 'Premium';
+          h.appendChild(tag);
+          var d = document.createElement('p'); d.textContent = t[2];
+          div.appendChild(h); div.appendChild(d); grid.appendChild(div);
+        });
+
+        // A Playtime so aparece a quem usa varios launchers; sem interesse no
+        // telemovel fica sem a demonstracao, porque e a diferenca principal.
+        var playtime = result === 'multi';
+        document.getElementById('offer-playtime').hidden = !playtime;
+        document.getElementById('demo').hidden = answers.phone === 'no';
+        document.getElementById('offer-title').textContent = answers.phone === 'no'
+          ? "Prefer not to launch games from one specific app?"
+          : 'Want your PC sessions tracked automatically and synced to your phone?';
+
+        var vyllo = document.getElementById('offer-vyllo');
+        vyllo.hidden = playtime;
+        if (result === 'steam') {
+          document.getElementById('vyllo-title').textContent = 'Organize your Steam library with Vyllo';
+          document.getElementById('vyllo-text').textContent = 'Keep your games, books, films and shows in one app on your phone. Free for up to 40 items; Premium syncs your Steam hours and achievements and shows the games you never played.';
+        } else {
+          document.getElementById('vyllo-title').textContent = 'Explore Vyllo when you need it';
+          document.getElementById('vyllo-text').textContent = 'A free app to keep everything you play, read and watch in one place. No PC setup needed.';
+        }
+
+        show('result');
+        document.getElementById('result-title').focus();
+        track('quiz_completed', { result: result, answers: answers });
+        watchRead();
+      }
+
+      // result_viewed: so quando as recomendacoes entram no ecra (leu, nao so abriu).
+      var observer = null;
+      function watchRead() {
+        if (observer) observer.disconnect();
+        var target = document.getElementById('tools-block');
+        if (!('IntersectionObserver' in window)) { track('result_viewed', { result: result }); return; }
+        observer = new IntersectionObserver(function (entries) {
+          if (entries[0].isIntersecting) {
+            track('result_viewed', { result: result });
+            observer.disconnect();
+          }
+        }, { threshold: 0.4 });
+        observer.observe(target);
+      }
+
+      function go(view, push) {
+        if (view === 'intro') show('intro');
+        else if (view === 'result') renderResult();
+        else { step = view; renderQuestion(); }
+        if (push) history.pushState({ view: view }, '');
+      }
+
+      window.addEventListener('popstate', function (e) {
+        var view = e.state && e.state.view !== undefined ? e.state.view : 'intro';
+        // Sem respostas (pagina recarregada a meio) volta ao inicio.
+        if (view === 'result' && !answers.often) view = 'intro';
+        if (typeof view === 'number' && view > 0 && !answers[QUESTIONS[view - 1].id]) view = 'intro';
+        go(view, false);
+      });
+
+      document.getElementById('start').addEventListener('click', function () {
+        track('quiz_started');
+        go(0, true);
+      });
+      document.getElementById('back').addEventListener('click', function () {
+        history.back();
+      });
+      document.getElementById('form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!answers[QUESTIONS[step].id]) return;
+        go(step === QUESTIONS.length - 1 ? 'result' : step + 1, true);
+      });
+      document.getElementById('restart').addEventListener('click', function () {
+        // Nova tentativa, nova sessao: cada sessao tem no maximo um resultado.
+        answers = {};
+        session = newSession();
+        track('quiz_started');
+        go(0, true);
+      });
+
+      document.getElementById('cta-playtime').addEventListener('click', function () {
+        track('playtime_cta_clicked', { result: result });
+      });
+      var stores = document.querySelectorAll('[data-store]');
+      for (var i = 0; i < stores.length; i++) {
+        stores[i].addEventListener('click', function (e) {
+          track('store_clicked', { result: result, detail: e.currentTarget.getAttribute('data-store') });
+        });
+      }
+
+      history.replaceState({ view: 'intro' }, '');
+      track('toolkit_viewed');
+    })();
+  </script>
+</body>
+</html>

@@ -1,13 +1,14 @@
 {
   "redirects": [
     {
-      "source": "/((?!playtime|link|privacy|terms|delete-account|auth-callback|.well-known|favicon|apple-touch|web-app|sw).*)",
+      "source": "/((?!playtime|tools|link|privacy|terms|delete-account|auth-callback|.well-known|favicon|apple-touch|web-app|sw).*)",
       "destination": "/playtime",
       "permanent": false
     }
   ],
   "rewrites": [
     { "source": "/link", "destination": "/link.html" },
-    { "source": "/playtime", "destination": "/playtime.html" }
+    { "source": "/playtime", "destination": "/playtime.html" },
+    { "source": "/tools/pc-playtime", "destination": "/tools/pc-playtime.html" }
   ]
 }
