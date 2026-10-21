@@ -127,6 +127,11 @@
     details p { margin-top: 10px; color: var(--muted); font-size: 14px; }
     .stores { font-weight: 800; }
     .stores a { color: #c4b5fd; }
+    .toolkit { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; }
+    .toolkit h2 { font-size: 22px; }
+    .toolkit p { color: var(--muted); font-size: 15px; max-width: 560px; }
+    .button.ghost { background: transparent; border: 1px solid #3a2f6e; color: #c4b5fd; box-shadow: none; }
+    .button.ghost:hover { border-color: var(--accent); color: var(--text); box-shadow: none; }
     .final { text-align: center; }
     .final .cta { justify-content: center; }
     footer { padding: 32px 0 48px; border-top: 1px solid #1a1a2b; margin-top: 24px; font-size: 13px; color: var(--faint); }
@@ -272,6 +277,18 @@
       </div>
     </section>
 
+    <section>
+      <div class="wrap">
+        <div class="card toolkit">
+          <div>
+            <h2 data-i18n="toolkitTitle">Não sabes se precisas disto?</h2>
+            <p data-i18n="toolkitText">Responde a 5 perguntas rápidas e descobre a melhor forma de registar o tempo que jogas no PC, mesmo que não seja a Vyllo. Grátis, sem conta, cerca de 1 minuto.</p>
+          </div>
+          <a class="button ghost" href="/tools/pc-playtime?utm_source=playtime_page" data-i18n="toolkitButton">Fazer o diagnóstico →</a>
+        </div>
+      </div>
+    </section>
+
     <section id="perguntas">
       <div class="wrap">
         <h2 data-i18n="faqTitle">Perguntas</h2>
@@ -370,6 +387,9 @@
         q3: 'Does it use resources while I play?', a3: 'Almost none: it sits in the tray in efficiency mode and checks processes every few seconds.',
         q4: 'What if I have several PCs?', a4: 'Link each one to the same account. You can see and remove your PCs in the Vyllo app, under Profile → PC Playtime.',
         q5: 'How do I uninstall it?', a5: 'In Windows Settings → Apps → Vyllo Playtime → Uninstall. Sessions already sent stay in your account.',
+        toolkitTitle: 'Not sure you need this?',
+        toolkitText: "Answer 5 quick questions and find the best way to track your PC playtime, even if it isn't Vyllo. Free, no sign-up, about a minute.",
+        toolkitButton: 'Take the quiz →',
         finalTitle: 'Ready to start?',
         language: 'Language', privacy: 'Privacy', terms: 'Terms'
       };
@@ -407,6 +427,9 @@
         q3: '¿Consume recursos mientras juego?', a3: 'Casi nada: se queda en la bandeja en modo de eficiencia y comprueba los procesos cada pocos segundos.',
         q4: '¿Y si tengo varios PC?', a4: 'Vincula cada uno a la misma cuenta. Puedes ver y quitar tus PC en la app Vyllo, en Perfil → PC Playtime.',
         q5: '¿Cómo lo desinstalo?', a5: 'En Configuración de Windows → Aplicaciones → Vyllo Playtime → Desinstalar. Las sesiones ya enviadas se quedan en tu cuenta.',
+        toolkitTitle: '¿No sabes si lo necesitas?',
+        toolkitText: 'Responde a 5 preguntas rápidas y descubre la mejor forma de registrar el tiempo que juegas en el PC, aunque no sea Vyllo. Gratis, sin cuenta, en un minuto.',
+        toolkitButton: 'Hacer el diagnóstico →',
         finalTitle: '¿Listo para empezar?',
         language: 'Idioma', privacy: 'Privacidad', terms: 'Términos'
       };
@@ -439,6 +462,8 @@
         q3: 'Gasta recursos enquanto eu jogo?', a3: 'Quase nada: fica na bandeja em modo de eficiência e verifica os processos a cada poucos segundos.',
         q4: 'E se eu tiver vários PCs?', a4: 'Conecte cada um à mesma conta. Você vê e remove os PCs no app Vyllo, em Perfil → PC Playtime.',
         q5: 'Como desinstalo?', a5: 'Em Configurações do Windows → Aplicativos → Vyllo Playtime → Desinstalar. As sessões já enviadas ficam na sua conta.',
+        toolkitTitle: 'Não sabe se precisa disso?',
+        toolkitText: 'Responda a 5 perguntas rápidas e descubra a melhor forma de registrar o tempo que você joga no PC, mesmo que não seja a Vyllo. Grátis, sem conta, cerca de 1 minuto.',
         language: 'Idioma'
       };
       var dictionaries = { en: en, es: es, br: br };

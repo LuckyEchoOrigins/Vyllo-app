@@ -37,10 +37,17 @@
 
     header { padding: 22px 0; }
     header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 900; font-size: 18px; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 900; font-size: 18px; white-space: nowrap; }
     .brand img { width: 34px; height: 34px; border-radius: 9px; }
     .brand span { color: #a78bfa; }
-    .tag { padding: 4px 10px; border-radius: 99px; border: 1px solid var(--border); font-size: 12px; font-weight: 800; color: var(--muted); }
+    .top-right { display: flex; align-items: center; gap: 14px; }
+    .tag { padding: 4px 10px; border-radius: 99px; border: 1px solid var(--border); font-size: 12px; font-weight: 800; color: var(--muted); white-space: nowrap; }
+    .lang { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+    .lang select {
+      background: var(--card); color: var(--muted); border: 1px solid var(--border);
+      border-radius: 9px; padding: 5px 8px; font: inherit; font-size: 13px; font-weight: 700;
+    }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
     main { position: relative; overflow: hidden; }
     main::before {
@@ -142,7 +149,7 @@
     .row:nth-child(even) { background: rgba(255, 255, 255, 0.025); }
     .cover { width: 30px; height: 40px; border-radius: 6px; flex-shrink: 0; }
     .row strong { display: block; font-size: 14px; }
-    .row span { display: block; font-size: 12px; color: var(--faint); font-weight: 700; }
+    .row > div > span { display: block; font-size: 12px; color: var(--faint); font-weight: 700; }
     .row .time { margin-left: auto; text-align: right; white-space: nowrap; }
     .limits { list-style: none; display: grid; gap: 6px; margin-top: 8px; font-size: 14px; color: var(--muted); }
     .limits li { display: flex; gap: 8px; }
@@ -163,6 +170,7 @@
       .steps3, .tools { grid-template-columns: 1fr; }
       .nav .button { padding: 14px 18px; }
       .profile { flex-direction: column; gap: 12px; }
+      .tag { display: none; }
     }
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; }
@@ -173,7 +181,19 @@
   <header>
     <div class="wrap">
       <a class="brand" href="/tools/pc-playtime"><img src="/web-app-manifest-192x192.png" alt="" /> Vyllo <span>/ Toolkit</span></a>
-      <span class="tag">Free diagnostic</span>
+      <div class="top-right">
+        <span class="tag" data-i18n="tag">Free diagnostic</span>
+        <label class="lang">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+          <span class="sr-only" data-i18n="language">Language</span>
+          <select id="lang" aria-label="Language">
+            <option value="en">English</option>
+            <option value="pt">Português (PT)</option>
+            <option value="br">Português (BR)</option>
+            <option value="es">Español</option>
+          </select>
+        </label>
+      </div>
     </div>
   </header>
 
@@ -181,33 +201,33 @@
     <!-- 1. Landing -->
     <section class="screen" id="intro">
       <div class="wrap">
-        <p class="eyebrow">For PC gamers</p>
-        <h1>Are you tracking all your PC gaming hours?</h1>
-        <p class="lead">Steam, Epic, EA, Ubisoft, standalone games… keeping track of your gaming history isn't always straightforward. Answer 5 quick questions and get a tracking setup that fits how you play.</p>
+        <p class="eyebrow" data-i18n="eyebrow">For PC gamers</p>
+        <h1 data-i18n="h1">Are you tracking all your PC gaming hours?</h1>
+        <p class="lead" data-i18n="lead">Steam, Epic, EA, Ubisoft, standalone games… keeping track of your gaming history isn't always straightforward. Answer 5 quick questions and get a tracking setup that fits how you play.</p>
         <div style="margin-top: 28px">
-          <button class="button wide" type="button" id="start">Find my tracking setup →</button>
-          <p class="meta">Free · About 60 seconds · No sign-up · Nothing to install</p>
+          <button class="button wide" type="button" id="start" data-i18n="start">Find my tracking setup →</button>
+          <p class="meta" data-i18n="meta">Free · About 60 seconds · No sign-up · Nothing to install</p>
         </div>
 
         <div class="steps3">
-          <div><b>1</b>Your setup</div>
-          <div><b>2</b>What's probably missing</div>
-          <div><b>3</b>Your next steps</div>
+          <div><b>1</b><span data-i18n="step1">Your setup</span></div>
+          <div><b>2</b><span data-i18n="step2">What's probably missing</span></div>
+          <div><b>3</b><span data-i18n="step3">Your next steps</span></div>
         </div>
 
         <div class="block">
-          <h2>What you'll discover</h2>
+          <h2 data-i18n="discoverTitle">What you'll discover</h2>
           <ul class="list">
-            <li>Which tracking approach suits your launchers and habits</li>
-            <li>Common reasons playtime records end up incomplete</li>
-            <li>Free and paid tools worth considering, including when you don't need anything new</li>
-            <li>Three practical next steps for your gaming history</li>
+            <li data-i18n="d1">Which tracking approach suits your launchers and habits</li>
+            <li data-i18n="d2">Common reasons playtime records end up incomplete</li>
+            <li data-i18n="d3">Free and paid tools worth considering, including when you don't need anything new</li>
+            <li data-i18n="d4">Three practical next steps for your gaming history</li>
           </ul>
         </div>
 
         <div class="block card">
-          <h3>Built by Vyllo</h3>
-          <p class="muted small" style="margin-top: 6px">Vyllo helps you organize everything you read, watch and play. For PC gamers who want sessions tracked automatically and synced to the phone app, Vyllo Playtime is available with Premium. The toolkit recommends it only when it fits your answers.</p>
+          <h3 data-i18n="builtTitle">Built by Vyllo</h3>
+          <p class="muted small" style="margin-top: 6px" data-i18n="builtText">Vyllo helps you organize everything you read, watch and play. For PC gamers who want sessions tracked automatically and synced to the phone app, Vyllo Playtime is available with Premium. The toolkit recommends it only when it fits your answers.</p>
         </div>
       </div>
     </section>
@@ -215,7 +235,7 @@
     <!-- 2. Questionario -->
     <section class="screen" id="quiz" hidden>
       <div class="wrap">
-        <p class="count" id="count" aria-live="polite">Question 1 of 5</p>
+        <p class="count" id="count" aria-live="polite"></p>
         <div class="progress" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
         <form id="form" novalidate>
           <fieldset>
@@ -224,8 +244,8 @@
             <div class="options" id="options"></div>
           </fieldset>
           <div class="nav">
-            <button class="button ghost" type="button" id="back">← Back</button>
-            <button class="button" type="submit" id="next" disabled>Continue →</button>
+            <button class="button ghost" type="button" id="back" data-i18n="back">← Back</button>
+            <button class="button" type="submit" id="next" disabled></button>
           </div>
         </form>
       </div>
@@ -238,7 +258,7 @@
           <div class="profile">
             <div class="icon" id="result-icon" aria-hidden="true"></div>
             <div>
-              <p class="label">Your tracking profile</p>
+              <p class="label" data-i18n="profileLabel">Your tracking profile</p>
               <h2 id="result-title" tabindex="-1"></h2>
               <p class="muted" id="result-summary" style="margin-top: 6px"></p>
             </div>
@@ -246,63 +266,63 @@
         </div>
 
         <div class="card">
-          <p class="label">What's probably missing</p>
+          <p class="label" data-i18n="missingLabel">What's probably missing</p>
           <p class="muted" id="result-missing" style="margin-top: 8px"></p>
         </div>
 
         <div class="block">
-          <h2>Your recommended setup</h2>
+          <h2 data-i18n="setupTitle">Your recommended setup</h2>
           <ol class="ordered" id="result-steps"></ol>
         </div>
 
         <div class="block" id="tools-block">
-          <h2>Tools worth considering</h2>
+          <h2 data-i18n="toolsTitle">Tools worth considering</h2>
           <div class="tools" id="result-tools"></div>
         </div>
 
         <div class="block card offer" id="offer-playtime" hidden>
           <p class="label">Vyllo Playtime · Premium</p>
-          <h2 id="offer-title">Want your PC sessions tracked automatically and synced to your phone?</h2>
-          <p class="muted">A small Windows app that notices when a game opens and closes, however you launch it, and sends each session to the Vyllo app on your iPhone or Android phone.</p>
-          <div class="demo" id="demo" aria-label="Example of what Vyllo Playtime records">
-            <p class="demo-title">Example · Recent sessions in Vyllo</p>
+          <h2 id="offer-title"></h2>
+          <p class="muted" data-i18n="offerText">A small Windows app that notices when a game opens and closes, however you launch it, and sends each session to the Vyllo app on your iPhone or Android phone.</p>
+          <div class="demo" id="demo">
+            <p class="demo-title" data-i18n="demoTitle">Example · Recent sessions in Vyllo</p>
             <div class="row">
               <div class="cover" style="background: linear-gradient(160deg, #c08a3e, #4a2f17)"></div>
-              <div><strong>For Honor</strong><span>Ubisoft Connect · Yesterday, 22:14</span></div>
+              <div><strong>For Honor</strong><span>Ubisoft Connect · <span data-i18n="yesterday">Yesterday</span>, 22:14</span></div>
               <div class="time"><strong>1 h 31 min</strong></div>
             </div>
             <div class="row">
               <div class="cover" style="background: linear-gradient(160deg, #3b6fd8, #12224a)"></div>
-              <div><strong>Rocket League</strong><span>Steam · Yesterday, 19:14</span></div>
+              <div><strong>Rocket League</strong><span>Steam · <span data-i18n="yesterday">Yesterday</span>, 19:14</span></div>
               <div class="time"><strong>47 min</strong></div>
             </div>
             <div class="row">
               <div class="cover" style="background: linear-gradient(160deg, #d43a3a, #3a0f12)"></div>
-              <div><strong>Control</strong><span>Epic Games · Saturday, 15:02</span></div>
+              <div><strong>Control</strong><span>Epic Games · <span data-i18n="saturday">Saturday</span>, 15:02</span></div>
               <div class="time"><strong>2 h 05 min</strong></div>
             </div>
           </div>
-          <h3>Good to know before you try it</h3>
+          <h3 data-i18n="goodToKnow">Good to know before you try it</h3>
           <ul class="limits">
-            <li>Windows 10 (version 2004) or 11 only.</li>
-            <li>Finds Steam, Epic Games, Battle.net, GOG and Ubisoft Connect games on its own. Xbox app (Game Pass) and EA app games aren't read automatically yet; many can be added by hand.</li>
-            <li>Part of Vyllo Premium, and it needs the Vyllo app on your phone to link the PC.</li>
-            <li>The installer isn't code-signed yet, so Windows may show a warning the first time.</li>
+            <li data-i18n="l1">Windows 10 (version 2004) or 11 only.</li>
+            <li data-i18n="l2">Finds Steam, Epic Games, Battle.net, GOG and Ubisoft Connect games on its own. Xbox app (Game Pass) and EA app games aren't read automatically yet; many can be added by hand.</li>
+            <li data-i18n="l3">Part of Vyllo Premium, and it needs the Vyllo app on your phone to link the PC.</li>
+            <li data-i18n="l4">The installer isn't code-signed yet, so Windows may show a warning the first time.</li>
           </ul>
           <div class="actions">
-            <a class="button" id="cta-playtime" href="/playtime?utm_source=toolkit">See how Vyllo Playtime works →</a>
+            <a class="button" id="cta-playtime" href="/playtime?utm_source=toolkit" data-i18n="ctaPlaytime">See how Vyllo Playtime works →</a>
           </div>
-          <p class="stores">Get Vyllo: <a data-store="ios" href="https://apps.apple.com/pt/app/vyllo-media-tracker/id6786422865">App Store</a> · <a data-store="android" href="https://play.google.com/store/apps/details?id=com.vyllo_app.twa&amp;referrer=utm_source%3Dtoolkit">Google Play</a></p>
+          <p class="stores"><span data-i18n="getVyllo">Get Vyllo:</span> <a data-store="ios" href="https://apps.apple.com/pt/app/vyllo-media-tracker/id6786422865">App Store</a> · <a data-store="android" href="https://play.google.com/store/apps/details?id=com.vyllo_app.twa&amp;referrer=utm_source%3Dtoolkit">Google Play</a></p>
         </div>
 
         <div class="block card" id="offer-vyllo" hidden>
-          <p class="label">From the makers of this toolkit</p>
+          <p class="label" data-i18n="vylloLabel">From the makers of this toolkit</p>
           <h3 style="margin-top: 6px" id="vyllo-title"></h3>
           <p class="muted small" style="margin-top: 6px" id="vyllo-text"></p>
           <p class="stores"><a data-store="ios" href="https://apps.apple.com/pt/app/vyllo-media-tracker/id6786422865">App Store</a> · <a data-store="android" href="https://play.google.com/store/apps/details?id=com.vyllo_app.twa&amp;referrer=utm_source%3Dtoolkit">Google Play</a></p>
         </div>
 
-        <p class="disclaimer">This result is based only on your answers. The toolkit hasn't looked at your PC, your launchers or your play data, so it can't tell you whether any hours are actually missing, only where gaps usually come from. <button class="linkish" type="button" id="restart">Start over</button></p>
+        <p class="disclaimer"><span data-i18n="disclaimer">This result is based only on your answers. The toolkit hasn't looked at your PC, your launchers or your play data, so it can't tell you whether any hours are actually missing, only where gaps usually come from.</span> <button class="linkish" type="button" id="restart" data-i18n="restart">Start over</button></p>
       </div>
     </section>
   </main>
@@ -310,42 +330,301 @@
   <footer>
     <div class="wrap">
       <span>© 2026 Vyllo</span>
-      <span><a href="/privacy.html#toolkit">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="mailto:support@vyllo-app.com">support@vyllo-app.com</a></span>
+      <span><a href="/privacy.html#toolkit" data-i18n="privacy">Privacy</a> · <a href="/terms.html" data-i18n="terms">Terms</a> · <a href="mailto:support@vyllo-app.com">support@vyllo-app.com</a></span>
     </div>
   </footer>
 
   <script>
     (function () {
+      // ── Textos. O ingles esta completo; pt e es tambem. A do Brasil so tem o
+      // que difere de Portugal (como na pagina da Playtime e na app). ──
+      var STR = {
+        en: {
+          docTitle: 'PC Gaming Playtime Toolkit · Vyllo',
+          count: 'Question {n} of {total}', next: 'Continue →', seeResult: 'See my result →',
+          free: 'Free',
+          q_where: 'Where do you play your PC games?', h_where: 'Pick the one closest to your setup.',
+          where_steam: 'Steam only', where_multiple: 'Multiple launchers (Steam, Epic, EA, Ubisoft…)', where_non_steam: 'Mostly non-Steam games',
+          q_track: 'How do you currently track your playtime?', h_track: 'However you check how long you played.',
+          track_steam: "Steam's own stats", track_tracker: 'Playnite or another tracker', track_manual: 'Manually (notes, spreadsheet, an app)', track_none: "I don't",
+          q_pain: "What's your biggest frustration?", h_pain: 'Pick the one that bothers you most.',
+          pain_missing_hours: 'Hours that are missing or wrong', pain_manual: 'Having to log sessions by hand', pain_scattered: 'My playtime is scattered across launchers',
+          pain_no_mobile: "I can't see my gaming history on my phone", pain_nothing: "Nothing really, I'm just curious",
+          q_phone: 'Would you like to see your gaming history on your phone?', h_phone: 'Your sessions and hours, away from the PC.',
+          phone_yes: 'Yes', phone_maybe: 'Maybe', phone_no: 'No',
+          q_often: 'How often do you play PC games?', h_often: 'A rough idea is enough.',
+          often_daily: 'Daily', often_weekly: 'Several times a week', often_occasionally: 'Occasionally',
+          p_steam: 'Steam Gamer', ps_steam: 'Most of your games live on Steam, and Steam already counts the hours for every game it launches. You probably need less than you think.',
+          p_multi: 'Multi-Launcher Gamer', ps_multi: 'Your games are spread across more than one place, so your playtime is too. Each launcher only knows about its own games, and none of them add up the rest.',
+          p_simple: 'Simple Setup', ps_simple: "What you use today seems to be enough for now. You don't need a new tool to enjoy your games.",
+          m_missing_hours: 'Launchers only count the games they start. Games opened from their own .exe, standalone games and anything played outside the launcher are where gaps usually come from.',
+          m_manual: 'Manual logs depend on remembering to start and stop the clock, so short sessions and late nights are the easiest to lose.',
+          m_scattered: "Each launcher keeps its own number and none of them add the others up, so there's no single total for all your gaming.",
+          m_no_mobile: "Launcher stats live on the PC or inside each launcher's own app, so there's no one place on your phone to see what you played.",
+          m_nothing: 'Probably nothing important. If that changes, the most common gap is games played outside the launcher that normally counts them.',
+          s_steam_1: 'Check that Steam is counting: in your Library, look at the play time of the games you played this week.',
+          s_steam_2_manual: "Drop the manual log for Steam games: Steam's own number is already more reliable.",
+          s_steam_2: "If you also play outside Steam now and then, note which games: those are the hours Steam can't see.",
+          s_steam_3_no: "Keep it simple: Steam's stats are enough while all your games live there.",
+          s_steam_3: 'If you want those hours on your phone next to everything else you play, read and watch, Vyllo Premium can sync your Steam hours and achievements.',
+          s_multi_1: 'List where your games actually start: each launcher, the Xbox app, standalone .exe files. Every place on that list keeps its own count.',
+          s_multi_2_tracker: 'You already use a tracker. Check that you launch every game through it: trackers like Playnite only count the games they start.',
+          s_multi_2_manual: 'Replace manual logs with something automatic: forgetting to start or stop the clock is the most common source of wrong hours.',
+          s_multi_2: 'Pick one place to see the total. Playnite does this for free on the PC, as long as you start your games from it.',
+          s_multi_3_yes: 'If you want every session on your phone without changing how you open your games, try Vyllo Playtime, and check its limits below first.',
+          s_multi_3_maybe: 'If seeing your history on your phone becomes important, Vyllo Playtime is an option. Its limits are listed below.',
+          s_multi_3_no: 'If you never need it on your phone, a free PC tracker like Playnite is the simplest choice.',
+          s_simple_1: "Keep using your launchers' own stats: most of them show play time for the games they start.",
+          s_simple_2: 'If a game ever shows no hours, check whether you opened it outside its launcher.',
+          s_simple_3: 'Come back when something changes, like more launchers or wanting your history on your phone.',
+          t_steam: 'Counts play time for every game it launches. Steam games only.',
+          t_playnite: 'Free, open-source library for all your launchers, with play time for games you start from it. Stays on the PC; no phone app.',
+          t_launchers_name: "Your launchers' own stats", t_launchers: 'Steam, GOG Galaxy, Battle.net and others each show their own numbers. Nothing to install.',
+          t_playtime: 'Tracks sessions on its own, however you launch the game, and syncs them to the Vyllo app on your phone. Premium.',
+          t_vyllo: 'Your Steam hours and achievements next to your books, films and shows. Free for up to 40 items; Steam sync is Premium.',
+          offerTitlePhone: 'Want your PC sessions tracked automatically and synced to your phone?',
+          offerTitleNoPhone: 'Prefer not to launch games from one specific app?',
+          vylloSteamTitle: 'Organize your Steam library with Vyllo',
+          vylloSteamText: 'Keep your games, books, films and shows in one app on your phone. Free for up to 40 items; Premium syncs your Steam hours and achievements and shows the games you never played.',
+          vylloSimpleTitle: 'Explore Vyllo when you need it',
+          vylloSimpleText: 'A free app to keep everything you play, read and watch in one place. No PC setup needed.'
+        },
+        pt: {
+          docTitle: 'Diagnóstico do tempo de jogo no PC · Vyllo',
+          tag: 'Diagnóstico grátis', language: 'Língua',
+          eyebrow: 'Para quem joga no PC',
+          h1: 'Estás a registar todas as horas que jogas no PC?',
+          lead: 'Steam, Epic, EA, Ubisoft, jogos sem launcher… nem sempre é fácil acompanhar o teu histórico de jogo. Responde a 5 perguntas rápidas e recebe uma forma de registo à medida de como jogas.',
+          start: 'Descobrir o meu registo ideal →',
+          meta: 'Grátis · Cerca de 60 segundos · Sem conta · Nada para instalar',
+          step1: 'O teu setup', step2: 'O que provavelmente falta', step3: 'Os teus próximos passos',
+          discoverTitle: 'O que vais descobrir',
+          d1: 'Que forma de registo combina com os teus launchers e hábitos',
+          d2: 'Porque é que os registos de tempo de jogo ficam muitas vezes incompletos',
+          d3: 'Ferramentas grátis e pagas a considerar, incluindo quando não precisas de nada novo',
+          d4: 'Três passos práticos para o teu histórico de jogo',
+          builtTitle: 'Feito pela Vyllo',
+          builtText: 'A Vyllo ajuda-te a organizar tudo o que lês, vês e jogas. Para quem joga no PC e quer as sessões registadas sozinhas e sincronizadas com a app no telemóvel, o Vyllo Playtime está incluído no Premium. O diagnóstico só o recomenda quando faz sentido para as tuas respostas.',
+          count: 'Pergunta {n} de {total}', back: '← Voltar', next: 'Continuar →', seeResult: 'Ver o meu resultado →',
+          free: 'Grátis',
+          q_where: 'Onde jogas no PC?', h_where: 'Escolhe a opção mais próxima do teu setup.',
+          where_steam: 'Só na Steam', where_multiple: 'Vários launchers (Steam, Epic, EA, Ubisoft…)', where_non_steam: 'Sobretudo jogos fora da Steam',
+          q_track: 'Como registas hoje o tempo que jogas?', h_track: 'Seja qual for a forma de veres quanto jogaste.',
+          track_steam: 'Estatísticas da Steam', track_tracker: 'Playnite ou outro tracker', track_manual: 'À mão (notas, folha de cálculo, uma app)', track_none: 'Não registo',
+          q_pain: 'Qual é a tua maior frustração?', h_pain: 'Escolhe a que mais te incomoda.',
+          pain_missing_hours: 'Horas que faltam ou estão erradas', pain_manual: 'Ter de registar sessões à mão', pain_scattered: 'O meu tempo de jogo está espalhado por vários launchers',
+          pain_no_mobile: 'Não consigo ver o meu histórico de jogo no telemóvel', pain_nothing: 'Nada de especial, é só curiosidade',
+          q_phone: 'Gostavas de ver o teu histórico de jogo no telemóvel?', h_phone: 'As tuas sessões e horas, longe do PC.',
+          phone_yes: 'Sim', phone_maybe: 'Talvez', phone_no: 'Não',
+          q_often: 'Com que frequência jogas no PC?', h_often: 'Uma ideia aproximada chega.',
+          often_daily: 'Todos os dias', often_weekly: 'Várias vezes por semana', often_occasionally: 'De vez em quando',
+          p_steam: 'Jogador de Steam', ps_steam: 'A maioria dos teus jogos está na Steam, e a Steam já conta as horas de cada jogo que abre. Provavelmente precisas de menos do que pensas.',
+          p_multi: 'Jogador multi-launcher', ps_multi: 'Os teus jogos estão espalhados por mais do que um sítio, e o teu tempo de jogo também. Cada launcher só conhece os seus jogos e nenhum soma os dos outros.',
+          p_simple: 'Setup simples', ps_simple: 'O que usas hoje parece chegar por agora. Não precisas de uma ferramenta nova para aproveitar os teus jogos.',
+          m_missing_hours: 'Os launchers só contam os jogos que eles próprios abrem. Jogos abertos pelo próprio .exe, jogos sem launcher e tudo o que jogas fora do launcher são de onde costumam vir as falhas.',
+          m_manual: 'Os registos à mão dependem de te lembrares de iniciar e parar o relógio, por isso as sessões curtas e as noitadas são as mais fáceis de perder.',
+          m_scattered: 'Cada launcher guarda o seu número e nenhum soma os outros, por isso não há um total único de tudo o que jogas.',
+          m_no_mobile: 'As estatísticas dos launchers ficam no PC ou dentro da app de cada launcher, por isso não há um único sítio no telemóvel onde vejas o que jogaste.',
+          m_nothing: 'Provavelmente nada de importante. Se isso mudar, a falha mais comum são jogos jogados fora do launcher que normalmente os conta.',
+          s_steam_1: 'Confirma que a Steam está a contar: na tua Biblioteca, vê o tempo de jogo dos jogos que jogaste esta semana.',
+          s_steam_2_manual: 'Deixa o registo à mão para os jogos da Steam: o número da própria Steam já é mais fiável.',
+          s_steam_2: 'Se de vez em quando também jogas fora da Steam, aponta quais são esses jogos: são as horas que a Steam não vê.',
+          s_steam_3_no: 'Mantém tudo simples: as estatísticas da Steam chegam enquanto todos os teus jogos estiverem lá.',
+          s_steam_3: 'Se quiseres essas horas no telemóvel, ao lado de tudo o que jogas, lês e vês, o Vyllo Premium sincroniza as horas e as conquistas da Steam.',
+          s_multi_1: 'Faz a lista de onde os teus jogos arrancam de facto: cada launcher, a app Xbox, ficheiros .exe soltos. Cada sítio dessa lista tem a sua própria contagem.',
+          s_multi_2_tracker: 'Já usas um tracker. Confirma que abres todos os jogos através dele: trackers como o Playnite só contam os jogos que eles abrem.',
+          s_multi_2_manual: 'Troca os registos à mão por algo automático: esquecer de iniciar ou parar o relógio é a causa mais comum de horas erradas.',
+          s_multi_2: 'Escolhe um sítio para veres o total. O Playnite faz isso de graça no PC, desde que abras os jogos a partir dele.',
+          s_multi_3_yes: 'Se quiseres todas as sessões no telemóvel sem mudar a forma como abres os jogos, experimenta o Vyllo Playtime, e vê primeiro os limites abaixo.',
+          s_multi_3_maybe: 'Se ver o histórico no telemóvel passar a ser importante, o Vyllo Playtime é uma opção. Os limites dele estão abaixo.',
+          s_multi_3_no: 'Se nunca precisas disto no telemóvel, um tracker grátis para PC como o Playnite é a escolha mais simples.',
+          s_simple_1: 'Continua com as estatísticas dos teus launchers: a maioria mostra o tempo de jogo dos jogos que abre.',
+          s_simple_2: 'Se algum jogo aparecer sem horas, vê se o abriste fora do launcher.',
+          s_simple_3: 'Volta quando alguma coisa mudar, como teres mais launchers ou quereres o histórico no telemóvel.',
+          t_steam: 'Conta o tempo de jogo de cada jogo que abre. Só jogos da Steam.',
+          t_playnite: 'Biblioteca grátis e open source para todos os teus launchers, com o tempo dos jogos que abres a partir dela. Fica no PC; sem app para telemóvel.',
+          t_launchers_name: 'As estatísticas dos teus launchers', t_launchers: 'Steam, GOG Galaxy, Battle.net e outros mostram cada um os seus números. Nada para instalar.',
+          t_playtime: 'Regista as sessões sozinho, seja qual for a forma como abres o jogo, e sincroniza-as com a app Vyllo no telemóvel. Premium.',
+          t_vyllo: 'As tuas horas e conquistas da Steam ao lado dos teus livros, filmes e séries. Grátis até 40 itens; a sincronização da Steam é Premium.',
+          profileLabel: 'O teu perfil de registo', missingLabel: 'O que provavelmente falta',
+          setupTitle: 'O teu setup recomendado', toolsTitle: 'Ferramentas a considerar',
+          offerTitlePhone: 'Queres as tuas sessões no PC registadas sozinhas e sincronizadas com o telemóvel?',
+          offerTitleNoPhone: 'Preferes não ter de abrir os jogos a partir de uma app específica?',
+          offerText: 'Uma pequena app para Windows que dá conta de quando um jogo abre e fecha, seja como for que o abras, e envia cada sessão para a app Vyllo no teu iPhone ou Android.',
+          demoTitle: 'Exemplo · Sessões recentes na Vyllo', yesterday: 'Ontem', saturday: 'Sábado',
+          goodToKnow: 'Bom saber antes de experimentar',
+          l1: 'Só Windows 10 (versão 2004) ou 11.',
+          l2: 'Encontra sozinho os jogos da Steam, Epic Games, Battle.net, GOG e Ubisoft Connect. Os jogos da app Xbox (Game Pass) e da EA app ainda não são lidos sozinhos; muitos podem ser adicionados à mão.',
+          l3: 'Faz parte do Vyllo Premium e precisa da app Vyllo no telemóvel para ligar o PC.',
+          l4: 'O instalador ainda não tem certificado de assinatura, por isso o Windows pode mostrar um aviso da primeira vez.',
+          ctaPlaytime: 'Ver como funciona o Vyllo Playtime →', getVyllo: 'Instalar a Vyllo:',
+          vylloLabel: 'Dos criadores deste diagnóstico',
+          vylloSteamTitle: 'Organiza a tua biblioteca da Steam com a Vyllo',
+          vylloSteamText: 'Junta os teus jogos, livros, filmes e séries numa app no telemóvel. Grátis até 40 itens; o Premium sincroniza as horas e conquistas da Steam e mostra os jogos que nunca jogaste.',
+          vylloSimpleTitle: 'Explora a Vyllo quando precisares',
+          vylloSimpleText: 'Uma app grátis para teres tudo o que jogas, lês e vês num só sítio. Não precisa de nada no PC.',
+          disclaimer: 'Este resultado baseia-se só nas tuas respostas. O diagnóstico não olhou para o teu PC, os teus launchers nem os teus dados de jogo, por isso não pode dizer se te faltam mesmo horas, só de onde costumam vir as falhas.',
+          restart: 'Recomeçar', privacy: 'Privacidade', terms: 'Termos'
+        },
+        br: {
+          language: 'Idioma',
+          h1: 'Você está registrando todas as horas que joga no PC?',
+          lead: 'Steam, Epic, EA, Ubisoft, jogos sem launcher… nem sempre é fácil acompanhar seu histórico de jogos. Responda a 5 perguntas rápidas e receba uma forma de registro sob medida para o seu jeito de jogar.',
+          start: 'Descobrir meu registro ideal →',
+          meta: 'Grátis · Cerca de 60 segundos · Sem cadastro · Nada para instalar',
+          step1: 'Seu setup', step3: 'Seus próximos passos',
+          discoverTitle: 'O que você vai descobrir',
+          d1: 'Qual forma de registro combina com seus launchers e hábitos',
+          d2: 'Por que os registros de tempo de jogo muitas vezes ficam incompletos',
+          d3: 'Ferramentas grátis e pagas a considerar, inclusive quando você não precisa de nada novo',
+          d4: 'Três passos práticos para seu histórico de jogos',
+          builtText: 'A Vyllo ajuda você a organizar tudo o que lê, assiste e joga. Para quem joga no PC e quer as sessões registradas sozinhas e sincronizadas com o app no celular, o Vyllo Playtime está incluído no Premium. O diagnóstico só o recomenda quando faz sentido para suas respostas.',
+          seeResult: 'Ver meu resultado →',
+          q_where: 'Onde você joga no PC?', h_where: 'Escolha a opção mais próxima do seu setup.',
+          q_track: 'Como você registra hoje o tempo que joga?', h_track: 'Qualquer forma que você usa para ver quanto jogou.',
+          track_manual: 'À mão (notas, planilha, um app)', track_none: 'Não registro',
+          q_pain: 'Qual é sua maior frustração?', h_pain: 'Escolha a que mais incomoda você.',
+          pain_missing_hours: 'Horas faltando ou erradas', pain_manual: 'Ter que registrar sessões à mão', pain_scattered: 'Meu tempo de jogo está espalhado por vários launchers',
+          pain_no_mobile: 'Não consigo ver meu histórico de jogos no celular',
+          q_phone: 'Você gostaria de ver seu histórico de jogos no celular?', h_phone: 'Suas sessões e horas, longe do PC.',
+          q_often: 'Com que frequência você joga no PC?', h_often: 'Uma ideia aproximada basta.',
+          ps_steam: 'A maioria dos seus jogos está na Steam, e a Steam já conta as horas de cada jogo que abre. Você provavelmente precisa de menos do que imagina.',
+          ps_multi: 'Seus jogos estão espalhados por mais de um lugar, e seu tempo de jogo também. Cada launcher só conhece os próprios jogos e nenhum soma os dos outros.',
+          ps_simple: 'O que você usa hoje parece bastar por enquanto. Você não precisa de uma ferramenta nova para aproveitar seus jogos.',
+          m_missing_hours: 'Os launchers só contam os jogos que eles mesmos abrem. Jogos abertos pelo próprio .exe, jogos sem launcher e tudo o que você joga fora do launcher costumam ser a origem das falhas.',
+          m_manual: 'Os registros à mão dependem de você lembrar de iniciar e parar o relógio, então sessões curtas e madrugadas são as mais fáceis de perder.',
+          m_scattered: 'Cada launcher guarda o próprio número e nenhum soma os outros, então não existe um total único de tudo o que você joga.',
+          m_no_mobile: 'As estatísticas dos launchers ficam no PC ou dentro do app de cada launcher, então não existe um único lugar no celular para ver o que você jogou.',
+          m_nothing: 'Provavelmente nada importante. Se isso mudar, a falha mais comum são jogos jogados fora do launcher que normalmente os conta.',
+          s_steam_1: 'Confirme que a Steam está contando: na sua Biblioteca, veja o tempo de jogo dos jogos que você jogou nesta semana.',
+          s_steam_2_manual: 'Abandone o registro à mão para os jogos da Steam: o número da própria Steam já é mais confiável.',
+          s_steam_2: 'Se de vez em quando você também joga fora da Steam, anote quais são esses jogos: são as horas que a Steam não vê.',
+          s_steam_3_no: 'Mantenha tudo simples: as estatísticas da Steam bastam enquanto todos os seus jogos estiverem lá.',
+          s_steam_3: 'Se você quiser essas horas no celular, ao lado de tudo o que joga, lê e assiste, o Vyllo Premium sincroniza as horas e as conquistas da Steam.',
+          s_multi_1: 'Faça a lista de onde seus jogos realmente abrem: cada launcher, o app Xbox, arquivos .exe soltos. Cada lugar dessa lista tem a própria contagem.',
+          s_multi_2_tracker: 'Você já usa um tracker. Confirme que abre todos os jogos por ele: trackers como o Playnite só contam os jogos que eles abrem.',
+          s_multi_2_manual: 'Troque os registros à mão por algo automático: esquecer de iniciar ou parar o relógio é a causa mais comum de horas erradas.',
+          s_multi_2: 'Escolha um lugar para ver o total. O Playnite faz isso de graça no PC, desde que você abra os jogos por ele.',
+          s_multi_3_yes: 'Se você quiser todas as sessões no celular sem mudar o jeito de abrir os jogos, experimente o Vyllo Playtime, e veja antes os limites abaixo.',
+          s_multi_3_maybe: 'Se ver o histórico no celular passar a ser importante, o Vyllo Playtime é uma opção. Os limites dele estão abaixo.',
+          s_multi_3_no: 'Se você nunca precisa disso no celular, um tracker grátis para PC como o Playnite é a escolha mais simples.',
+          s_simple_1: 'Continue com as estatísticas dos seus launchers: a maioria mostra o tempo de jogo dos jogos que abre.',
+          s_simple_2: 'Se algum jogo aparecer sem horas, veja se você o abriu fora do launcher.',
+          s_simple_3: 'Volte quando algo mudar, como ter mais launchers ou querer o histórico no celular.',
+          t_playnite: 'Biblioteca grátis e open source para todos os seus launchers, com o tempo dos jogos que você abre por ela. Fica no PC; sem app para celular.',
+          t_launchers_name: 'As estatísticas dos seus launchers', t_launchers: 'Steam, GOG Galaxy, Battle.net e outros mostram cada um os próprios números. Nada para instalar.',
+          t_playtime: 'Registra as sessões sozinho, seja qual for o jeito que você abre o jogo, e sincroniza com o app Vyllo no celular. Premium.',
+          t_vyllo: 'Suas horas e conquistas da Steam ao lado dos seus livros, filmes e séries. Grátis até 40 itens; a sincronização da Steam é Premium.',
+          profileLabel: 'Seu perfil de registro', setupTitle: 'Seu setup recomendado',
+          offerTitlePhone: 'Quer suas sessões no PC registradas sozinhas e sincronizadas com o celular?',
+          offerTitleNoPhone: 'Prefere não ter que abrir os jogos por um app específico?',
+          offerText: 'Um pequeno app para Windows que percebe quando um jogo abre e fecha, seja qual for o jeito que você o abre, e envia cada sessão para o app Vyllo no seu iPhone ou Android.',
+          l2: 'Encontra sozinho os jogos da Steam, Epic Games, Battle.net, GOG e Ubisoft Connect. Os jogos do app Xbox (Game Pass) e do EA app ainda não são lidos sozinhos; muitos podem ser adicionados à mão.',
+          l3: 'Faz parte do Vyllo Premium e precisa do app Vyllo no celular para conectar o PC.',
+          l4: 'O instalador ainda não tem certificado de assinatura, então o Windows pode mostrar um aviso na primeira vez.',
+          getVyllo: 'Baixar a Vyllo:',
+          vylloSteamTitle: 'Organize sua biblioteca da Steam com a Vyllo',
+          vylloSteamText: 'Junte seus jogos, livros, filmes e séries em um app no celular. Grátis até 40 itens; o Premium sincroniza as horas e conquistas da Steam e mostra os jogos que você nunca jogou.',
+          vylloSimpleTitle: 'Conheça a Vyllo quando precisar',
+          vylloSimpleText: 'Um app grátis para ter tudo o que você joga, lê e assiste em um só lugar. Não precisa de nada no PC.',
+          disclaimer: 'Este resultado se baseia só nas suas respostas. O diagnóstico não olhou seu PC, seus launchers nem seus dados de jogo, então não pode dizer se realmente faltam horas, só de onde as falhas costumam vir.'
+        },
+        es: {
+          docTitle: 'Diagnóstico del tiempo de juego en PC · Vyllo',
+          tag: 'Diagnóstico gratis', language: 'Idioma',
+          eyebrow: 'Para jugadores de PC',
+          h1: '¿Estás registrando todas tus horas de juego en el PC?',
+          lead: 'Steam, Epic, EA, Ubisoft, juegos sin launcher… no siempre es fácil llevar el control de tu historial de juego. Responde 5 preguntas rápidas y recibe una forma de registro hecha a tu medida.',
+          start: 'Descubrir mi configuración ideal →',
+          meta: 'Gratis · Unos 60 segundos · Sin cuenta · Nada que instalar',
+          step1: 'Tu configuración', step2: 'Lo que probablemente falta', step3: 'Tus próximos pasos',
+          discoverTitle: 'Qué vas a descubrir',
+          d1: 'Qué forma de registro encaja con tus launchers y hábitos',
+          d2: 'Por qué los registros de tiempo de juego suelen quedar incompletos',
+          d3: 'Herramientas gratis y de pago a tener en cuenta, incluso cuando no necesitas nada nuevo',
+          d4: 'Tres pasos prácticos para tu historial de juego',
+          builtTitle: 'Creado por Vyllo',
+          builtText: 'Vyllo te ayuda a organizar todo lo que lees, ves y juegas. Para quienes juegan en PC y quieren las sesiones registradas solas y sincronizadas con la app del móvil, Vyllo Playtime está incluido en Premium. El diagnóstico solo lo recomienda cuando encaja con tus respuestas.',
+          count: 'Pregunta {n} de {total}', back: '← Atrás', next: 'Continuar →', seeResult: 'Ver mi resultado →',
+          free: 'Gratis',
+          q_where: '¿Dónde juegas en el PC?', h_where: 'Elige la opción más parecida a tu configuración.',
+          where_steam: 'Solo en Steam', where_multiple: 'Varios launchers (Steam, Epic, EA, Ubisoft…)', where_non_steam: 'Sobre todo juegos fuera de Steam',
+          q_track: '¿Cómo registras ahora el tiempo que juegas?', h_track: 'Cualquier forma en que miras cuánto jugaste.',
+          track_steam: 'Estadísticas de Steam', track_tracker: 'Playnite u otro tracker', track_manual: 'A mano (notas, hoja de cálculo, una app)', track_none: 'No lo registro',
+          q_pain: '¿Cuál es tu mayor frustración?', h_pain: 'Elige la que más te molesta.',
+          pain_missing_hours: 'Horas que faltan o están mal', pain_manual: 'Tener que registrar sesiones a mano', pain_scattered: 'Mi tiempo de juego está repartido entre varios launchers',
+          pain_no_mobile: 'No puedo ver mi historial de juego en el móvil', pain_nothing: 'Nada en especial, solo curiosidad',
+          q_phone: '¿Te gustaría ver tu historial de juego en el móvil?', h_phone: 'Tus sesiones y horas, lejos del PC.',
+          phone_yes: 'Sí', phone_maybe: 'Quizás', phone_no: 'No',
+          q_often: '¿Con qué frecuencia juegas en el PC?', h_often: 'Basta con una idea aproximada.',
+          often_daily: 'Todos los días', often_weekly: 'Varias veces por semana', often_occasionally: 'De vez en cuando',
+          p_steam: 'Jugador de Steam', ps_steam: 'La mayoría de tus juegos están en Steam, y Steam ya cuenta las horas de cada juego que abre. Probablemente necesitas menos de lo que crees.',
+          p_multi: 'Jugador multi-launcher', ps_multi: 'Tus juegos están repartidos en más de un sitio, y tu tiempo de juego también. Cada launcher solo conoce sus propios juegos y ninguno suma los de los demás.',
+          p_simple: 'Configuración sencilla', ps_simple: 'Lo que usas hoy parece suficiente por ahora. No necesitas una herramienta nueva para disfrutar de tus juegos.',
+          m_missing_hours: 'Los launchers solo cuentan los juegos que abren ellos. Los juegos abiertos desde su propio .exe, los juegos sin launcher y todo lo que juegas fuera del launcher suelen ser el origen de los huecos.',
+          m_manual: 'Los registros a mano dependen de acordarte de iniciar y parar el reloj, así que las sesiones cortas y las noches largas son las más fáciles de perder.',
+          m_scattered: 'Cada launcher guarda su propio número y ninguno suma los demás, así que no hay un total único de todo lo que juegas.',
+          m_no_mobile: 'Las estadísticas de los launchers se quedan en el PC o dentro de la app de cada launcher, así que no hay un solo lugar en el móvil donde ver lo que jugaste.',
+          m_nothing: 'Probablemente nada importante. Si eso cambia, el hueco más común son los juegos jugados fuera del launcher que normalmente los cuenta.',
+          s_steam_1: 'Comprueba que Steam está contando: en tu Biblioteca, mira el tiempo de juego de los juegos que jugaste esta semana.',
+          s_steam_2_manual: 'Deja el registro a mano para los juegos de Steam: el número de Steam ya es más fiable.',
+          s_steam_2: 'Si de vez en cuando también juegas fuera de Steam, apunta qué juegos son: son las horas que Steam no ve.',
+          s_steam_3_no: 'Mantenlo simple: las estadísticas de Steam bastan mientras todos tus juegos estén allí.',
+          s_steam_3: 'Si quieres esas horas en el móvil, junto a todo lo que juegas, lees y ves, Vyllo Premium sincroniza las horas y los logros de Steam.',
+          s_multi_1: 'Haz una lista de dónde se abren de verdad tus juegos: cada launcher, la app de Xbox, archivos .exe sueltos. Cada sitio de esa lista lleva su propia cuenta.',
+          s_multi_2_tracker: 'Ya usas un tracker. Comprueba que abres todos los juegos desde él: trackers como Playnite solo cuentan los juegos que abren ellos.',
+          s_multi_2_manual: 'Cambia los registros a mano por algo automático: olvidarse de iniciar o parar el reloj es la causa más común de horas mal contadas.',
+          s_multi_2: 'Elige un sitio donde ver el total. Playnite lo hace gratis en el PC, siempre que abras los juegos desde él.',
+          s_multi_3_yes: 'Si quieres todas las sesiones en el móvil sin cambiar cómo abres los juegos, prueba Vyllo Playtime, y mira antes sus límites más abajo.',
+          s_multi_3_maybe: 'Si ver el historial en el móvil llega a ser importante, Vyllo Playtime es una opción. Sus límites están más abajo.',
+          s_multi_3_no: 'Si nunca lo necesitas en el móvil, un tracker gratis para PC como Playnite es la opción más sencilla.',
+          s_simple_1: 'Sigue con las estadísticas de tus launchers: la mayoría muestra el tiempo de juego de los juegos que abre.',
+          s_simple_2: 'Si algún juego aparece sin horas, mira si lo abriste fuera de su launcher.',
+          s_simple_3: 'Vuelve cuando algo cambie, como tener más launchers o querer el historial en el móvil.',
+          t_steam: 'Cuenta el tiempo de juego de cada juego que abre. Solo juegos de Steam.',
+          t_playnite: 'Biblioteca gratis y de código abierto para todos tus launchers, con el tiempo de los juegos que abres desde ella. Se queda en el PC; sin app para el móvil.',
+          t_launchers_name: 'Las estadísticas de tus launchers', t_launchers: 'Steam, GOG Galaxy, Battle.net y otros muestran cada uno sus propios números. Nada que instalar.',
+          t_playtime: 'Registra las sesiones solo, abras el juego como lo abras, y las sincroniza con la app Vyllo del móvil. Premium.',
+          t_vyllo: 'Tus horas y logros de Steam junto a tus libros, películas y series. Gratis hasta 40 elementos; la sincronización de Steam es Premium.',
+          profileLabel: 'Tu perfil de registro', missingLabel: 'Lo que probablemente falta',
+          setupTitle: 'Tu configuración recomendada', toolsTitle: 'Herramientas a tener en cuenta',
+          offerTitlePhone: '¿Quieres tus sesiones de PC registradas solas y sincronizadas con el móvil?',
+          offerTitleNoPhone: '¿Prefieres no tener que abrir los juegos desde una app concreta?',
+          offerText: 'Una pequeña app para Windows que detecta cuándo se abre y se cierra un juego, lo abras como lo abras, y envía cada sesión a la app Vyllo de tu iPhone o Android.',
+          demoTitle: 'Ejemplo · Sesiones recientes en Vyllo', yesterday: 'Ayer', saturday: 'Sábado',
+          goodToKnow: 'Conviene saber antes de probarlo',
+          l1: 'Solo Windows 10 (versión 2004) u 11.',
+          l2: 'Encuentra solo los juegos de Steam, Epic Games, Battle.net, GOG y Ubisoft Connect. Los juegos de la app de Xbox (Game Pass) y la EA app todavía no se leen solos; muchos se pueden añadir a mano.',
+          l3: 'Forma parte de Vyllo Premium y necesita la app Vyllo en el móvil para vincular el PC.',
+          l4: 'El instalador todavía no tiene certificado de firma, así que Windows puede mostrar un aviso la primera vez.',
+          ctaPlaytime: 'Ver cómo funciona Vyllo Playtime →', getVyllo: 'Descargar Vyllo:',
+          vylloLabel: 'De los creadores de este diagnóstico',
+          vylloSteamTitle: 'Organiza tu biblioteca de Steam con Vyllo',
+          vylloSteamText: 'Reúne tus juegos, libros, películas y series en una app en el móvil. Gratis hasta 40 elementos; Premium sincroniza las horas y logros de Steam y muestra los juegos que nunca jugaste.',
+          vylloSimpleTitle: 'Descubre Vyllo cuando lo necesites',
+          vylloSimpleText: 'Una app gratis para tener todo lo que juegas, lees y ves en un solo sitio. No necesita nada en el PC.',
+          disclaimer: 'Este resultado se basa solo en tus respuestas. El diagnóstico no ha mirado tu PC, tus launchers ni tus datos de juego, así que no puede decir si de verdad te faltan horas, solo de dónde suelen venir los huecos.',
+          restart: 'Empezar de nuevo', privacy: 'Privacidad', terms: 'Términos'
+        }
+      };
+
+      // O texto do HTML e o ingles; guarda-o para voltar a ele.
+      var nodes = document.querySelectorAll('[data-i18n]');
+      for (var n = 0; n < nodes.length; n++) STR.en[nodes[n].getAttribute('data-i18n')] = nodes[n].textContent;
+
+      var lang = 'en';
+      function t(key) {
+        return (lang === 'br' && STR.br[key]) ||
+          (STR[lang === 'br' ? 'pt' : lang] || {})[key] || STR.en[key];
+      }
+
       // ── Perguntas. Os valores sao os que a funcao log_toolkit_event aceita. ──
       var QUESTIONS = [
-        { id: 'where', title: 'Where do you play your PC games?', hint: 'Pick the one closest to your setup.', options: [
-          ['steam', 'Steam only'],
-          ['multiple', 'Multiple launchers (Steam, Epic, EA, Ubisoft…)'],
-          ['non_steam', 'Mostly non-Steam games']
-        ] },
-        { id: 'track', title: 'How do you currently track your playtime?', hint: 'However you check how long you played.', options: [
-          ['steam', "Steam's own stats"],
-          ['tracker', 'Playnite or another tracker'],
-          ['manual', 'Manually (notes, spreadsheet, an app)'],
-          ['none', "I don't"]
-        ] },
-        { id: 'pain', title: "What's your biggest frustration?", hint: 'Pick the one that bothers you most.', options: [
-          ['missing_hours', 'Hours that are missing or wrong'],
-          ['manual', 'Having to log sessions by hand'],
-          ['scattered', 'My playtime is scattered across launchers'],
-          ['no_mobile', "I can't see my gaming history on my phone"],
-          ['nothing', "Nothing really, I'm just curious"]
-        ] },
-        { id: 'phone', title: 'Would you like to see your gaming history on your phone?', hint: 'Your sessions and hours, away from the PC.', options: [
-          ['yes', 'Yes'],
-          ['maybe', 'Maybe'],
-          ['no', 'No']
-        ] },
-        { id: 'often', title: 'How often do you play PC games?', hint: 'A rough idea is enough.', options: [
-          ['daily', 'Daily'],
-          ['weekly', 'Several times a week'],
-          ['occasionally', 'Occasionally']
-        ] }
+        { id: 'where', options: ['steam', 'multiple', 'non_steam'] },
+        { id: 'track', options: ['steam', 'tracker', 'manual', 'none'] },
+        { id: 'pain', options: ['missing_hours', 'manual', 'scattered', 'no_mobile', 'nothing'] },
+        { id: 'phone', options: ['yes', 'maybe', 'no'] },
+        { id: 'often', options: ['daily', 'weekly', 'occasionally'] }
       ];
 
       var ICONS = {
@@ -361,68 +640,39 @@
         return a.where === 'steam' ? 'steam' : 'multi';
       }
 
-      var PROFILES = {
-        steam: ['Steam Gamer', 'Most of your games live on Steam, and Steam already counts the hours for every game it launches. You probably need less than you think.'],
-        multi: ['Multi-Launcher Gamer', "Your games are spread across more than one place, so your playtime is too. Each launcher only knows about its own games, and none of them add up the rest."],
-        simple: ['Simple Setup', "What you use today seems to be enough for now. You don't need a new tool to enjoy your games."]
-      };
-
-      var MISSING = {
-        missing_hours: 'Launchers only count the games they start. Games opened from their own .exe, standalone games and anything played outside the launcher are where gaps usually come from.',
-        manual: 'Manual logs depend on remembering to start and stop the clock, so short sessions and late nights are the easiest to lose.',
-        scattered: "Each launcher keeps its own number and none of them add the others up, so there's no single total for all your gaming.",
-        no_mobile: "Launcher stats live on the PC or inside each launcher's own app, so there's no one place on your phone to see what you played.",
-        nothing: 'Probably nothing important. If that changes, the most common gap is games played outside the launcher that normally counts them.'
-      };
-
       function steps(r, a) {
         if (r === 'steam') return [
-          'Check that Steam is counting: in your Library, look at the play time of the games you played this week.',
-          a.track === 'manual'
-            ? "Drop the manual log for Steam games: Steam's own number is already more reliable."
-            : 'If you also play outside Steam now and then, note which games: those are the hours Steam can\'t see.',
-          a.phone === 'no'
-            ? "Keep it simple: Steam's stats are enough while all your games live there."
-            : 'If you want those hours on your phone next to everything else you play, read and watch, Vyllo Premium can sync your Steam hours and achievements.'
+          's_steam_1',
+          a.track === 'manual' ? 's_steam_2_manual' : 's_steam_2',
+          a.phone === 'no' ? 's_steam_3_no' : 's_steam_3'
         ];
         if (r === 'multi') return [
-          'List where your games actually start: each launcher, the Xbox app, standalone .exe files. Every place on that list keeps its own count.',
-          a.track === 'tracker'
-            ? 'You already use a tracker. Check that you launch every game through it: trackers like Playnite only count the games they start.'
-            : a.track === 'manual'
-              ? 'Replace manual logs with something automatic: forgetting to start or stop the clock is the most common source of wrong hours.'
-              : 'Pick one place to see the total. Playnite does this for free on the PC, as long as you start your games from it.',
-          a.phone === 'yes'
-            ? "If you want every session on your phone without changing how you open your games, try Vyllo Playtime, and check its limits below first."
-            : a.phone === 'maybe'
-              ? 'If seeing your history on your phone becomes important, Vyllo Playtime is an option. Its limits are listed below.'
-              : "If you never need it on your phone, a free PC tracker like Playnite is the simplest choice."
+          's_multi_1',
+          a.track === 'tracker' ? 's_multi_2_tracker' : a.track === 'manual' ? 's_multi_2_manual' : 's_multi_2',
+          's_multi_3_' + a.phone
         ];
-        return [
-          'Keep using your launchers\' own stats: most of them show play time for the games they start.',
-          'If a game ever shows no hours, check whether you opened it outside its launcher.',
-          'Come back when something changes, like more launchers or wanting your history on your phone.'
-        ];
+        return ['s_simple_1', 's_simple_2', 's_simple_3'];
       }
 
+      // [nome, gratis/pago, texto]; nomes de produtos nao se traduzem.
       function tools(r, a) {
-        var steam = ['Steam', 'free', 'Counts play time for every game it launches. Steam games only.'];
-        var playnite = ['Playnite', 'free', 'Free, open-source library for all your launchers, with play time for games you start from it. Stays on the PC; no phone app.'];
-        var launchers = ["Your launchers' own stats", 'free', 'Steam, GOG Galaxy, Battle.net and others each show their own numbers. Nothing to install.'];
-        var playtime = ['Vyllo Playtime', 'paid', 'Tracks sessions on its own, however you launch the game, and syncs them to the Vyllo app on your phone. Premium.'];
-        if (r === 'steam') return a.phone === 'no' ? [steam] : [steam, ['Vyllo', 'paid', 'Your Steam hours and achievements next to your books, films and shows. Free for up to 40 items; Steam sync is Premium.']];
+        var steam = ['Steam', 'free', 't_steam'];
+        var playnite = ['Playnite', 'free', 't_playnite'];
+        var launchers = ['t_launchers_name', 'free', 't_launchers'];
+        var playtime = ['Vyllo Playtime', 'paid', 't_playtime'];
+        if (r === 'steam') return a.phone === 'no' ? [steam] : [steam, ['Vyllo', 'paid', 't_vyllo']];
         if (r === 'multi') return [playnite, playtime];
         return a.where === 'steam' ? [steam] : [launchers, playnite];
       }
 
-      // ── Metricas: anonimas, so em memoria (sem cookies nem localStorage). ──
+      // ── Metricas: anonimas, so em memoria (sem cookies). ──
       var ENDPOINT = 'https://awlluazqkdvfpqzbwyfe.supabase.co/rest/v1/rpc/log_toolkit_event';
       var KEY = 'sb_publishable_8nyEN62rg2i_DVHB3KdwfQ_G-_Lp-ci';
       function newSession() {
         if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-          var n = Math.random() * 16 | 0;
-          return (c === 'x' ? n : (n & 3 | 8)).toString(16);
+          var r = Math.random() * 16 | 0;
+          return (c === 'x' ? r : (r & 3 | 8)).toString(16);
         });
       }
       function campaign() {
@@ -456,69 +706,69 @@
       var answers = {};
       var step = 0;
       var result = null;
+      var current = 'intro';
 
       function show(name) {
         for (var k in screens) screens[k].hidden = k !== name;
-        window.scrollTo(0, 0);
       }
 
-      function renderQuestion() {
+      function renderQuestion(focus) {
         var q = QUESTIONS[step];
-        document.getElementById('count').textContent = 'Question ' + (step + 1) + ' of ' + QUESTIONS.length;
+        document.getElementById('count').textContent =
+          t('count').replace('{n}', step + 1).replace('{total}', QUESTIONS.length);
         var bars = document.querySelectorAll('.progress span');
         for (var i = 0; i < bars.length; i++) bars[i].className = i <= step ? 'on' : '';
-        document.getElementById('question').textContent = q.title;
-        document.getElementById('hint').textContent = q.hint;
+        document.getElementById('question').textContent = t('q_' + q.id);
+        document.getElementById('hint').textContent = t('h_' + q.id);
         var box = document.getElementById('options');
         box.innerHTML = '';
-        q.options.forEach(function (o) {
+        q.options.forEach(function (value) {
           var label = document.createElement('label');
-          label.className = 'option' + (answers[q.id] === o[0] ? ' checked' : '');
+          label.className = 'option' + (answers[q.id] === value ? ' checked' : '');
           var input = document.createElement('input');
-          input.type = 'radio'; input.name = q.id; input.value = o[0];
-          input.checked = answers[q.id] === o[0];
+          input.type = 'radio'; input.name = q.id; input.value = value;
+          input.checked = answers[q.id] === value;
           input.addEventListener('change', function () {
-            answers[q.id] = o[0];
+            answers[q.id] = value;
             var all = box.querySelectorAll('.option');
             for (var j = 0; j < all.length; j++) all[j].classList.remove('checked');
             label.classList.add('checked');
             document.getElementById('next').disabled = false;
           });
           var dot = document.createElement('span'); dot.className = 'dot';
-          var text = document.createElement('span'); text.textContent = o[1];
+          var text = document.createElement('span'); text.textContent = t(q.id + '_' + value);
           label.appendChild(input); label.appendChild(dot); label.appendChild(text);
           box.appendChild(label);
         });
         var next = document.getElementById('next');
         next.disabled = !answers[q.id];
-        next.textContent = step === QUESTIONS.length - 1 ? 'See my result →' : 'Continue →';
+        next.textContent = step === QUESTIONS.length - 1 ? t('seeResult') : t('next');
         show('quiz');
-        document.getElementById('question').focus();
+        if (focus) { window.scrollTo(0, 0); document.getElementById('question').focus(); }
       }
 
-      function renderResult() {
+      function renderResult(first) {
         result = classify(answers);
-        var p = PROFILES[result];
         document.getElementById('result-icon').innerHTML = ICONS[result];
-        document.getElementById('result-title').textContent = p[0];
-        document.getElementById('result-summary').textContent = p[1];
-        document.getElementById('result-missing').textContent = MISSING[answers.pain];
+        document.getElementById('result-title').textContent = t('p_' + result);
+        document.getElementById('result-summary').textContent = t('ps_' + result);
+        document.getElementById('result-missing').textContent = t('m_' + answers.pain);
 
         var ol = document.getElementById('result-steps');
         ol.innerHTML = '';
-        steps(result, answers).forEach(function (s) {
-          var li = document.createElement('li'); li.textContent = s; ol.appendChild(li);
+        steps(result, answers).forEach(function (key) {
+          var li = document.createElement('li'); li.textContent = t(key); ol.appendChild(li);
         });
 
         var grid = document.getElementById('result-tools');
         grid.innerHTML = '';
-        tools(result, answers).forEach(function (t) {
+        tools(result, answers).forEach(function (tool) {
           var div = document.createElement('div'); div.className = 'tool';
-          var h = document.createElement('h3'); h.textContent = t[0];
+          var h = document.createElement('h3'); h.textContent = STR.en[tool[0]] ? t(tool[0]) : tool[0];
           var tag = document.createElement('span');
-          tag.className = 'price ' + t[1]; tag.textContent = t[1] === 'free' ? 'Free' : 'Premium';
+          tag.className = 'price ' + tool[1]; tag.textContent = tool[1] === 'free' ? t('free') : 'Premium';
           h.appendChild(tag);
-          var d = document.createElement('p'); d.textContent = t[2];
+          var d = document.createElement('p'); d.textContent = t(tool[2]);
           div.appendChild(h); div.appendChild(d); grid.appendChild(div);
         });
 
@@ -527,24 +777,21 @@
         var playtime = result === 'multi';
         document.getElementById('offer-playtime').hidden = !playtime;
         document.getElementById('demo').hidden = answers.phone === 'no';
-        document.getElementById('offer-title').textContent = answers.phone === 'no'
-          ? "Prefer not to launch games from one specific app?"
-          : 'Want your PC sessions tracked automatically and synced to your phone?';
+        document.getElementById('offer-title').textContent =
+          t(answers.phone === 'no' ? 'offerTitleNoPhone' : 'offerTitlePhone');
 
-        var vyllo = document.getElementById('offer-vyllo');
-        vyllo.hidden = playtime;
-        if (result === 'steam') {
-          document.getElementById('vyllo-title').textContent = 'Organize your Steam library with Vyllo';
-          document.getElementById('vyllo-text').textContent = 'Keep your games, books, films and shows in one app on your phone. Free for up to 40 items; Premium syncs your Steam hours and achievements and shows the games you never played.';
-        } else {
-          document.getElementById('vyllo-title').textContent = 'Explore Vyllo when you need it';
-          document.getElementById('vyllo-text').textContent = 'A free app to keep everything you play, read and watch in one place. No PC setup needed.';
-        }
+        document.getElementById('offer-vyllo').hidden = playtime;
+        var kind = result === 'steam' ? 'Steam' : 'Simple';
+        document.getElementById('vyllo-title').textContent = t('vyllo' + kind + 'Title');
+        document.getElementById('vyllo-text').textContent = t('vyllo' + kind + 'Text');
 
         show('result');
-        document.getElementById('result-title').focus();
-        track('quiz_completed', { result: result, answers: answers });
-        watchRead();
+        if (first) {
+          window.scrollTo(0, 0);
+          document.getElementById('result-title').focus();
+          track('quiz_completed', { result: result, answers: answers });
+          watchRead();
+        }
       }
 
       // result_viewed: so quando as recomendacoes entram no ecra (leu, nao so abriu).
@@ -563,9 +810,10 @@
       }
 
       function go(view, push) {
-        if (view === 'intro') show('intro');
-        else if (view === 'result') renderResult();
-        else { step = view; renderQuestion(); }
+        current = view;
+        if (view === 'intro') { show('intro'); window.scrollTo(0, 0); }
+        else if (view === 'result') renderResult(true);
+        else { step = view; renderQuestion(true); }
         if (push) history.pushState({ view: view }, '');
       }
 
@@ -601,12 +849,45 @@
         track('playtime_cta_clicked', { result: result });
       });
       var stores = document.querySelectorAll('[data-store]');
-      for (var i = 0; i < stores.length; i++) {
-        stores[i].addEventListener('click', function (e) {
+      for (var s = 0; s < stores.length; s++) {
+        stores[s].addEventListener('click', function (e) {
           track('store_clicked', { result: result, detail: e.currentTarget.getAttribute('data-store') });
         });
       }
 
+      // ── Lingua: ?lang= no link (para os videos), depois a escolha guardada
+      // (a mesma da pagina da Playtime), depois o browser. ──
+      function detect() {
+        var wanted = new URLSearchParams(location.search).get('lang');
+        if (wanted && STR[wanted]) return wanted;
+        try {
+          var saved = localStorage.getItem('vyllo-lang');
+          if (saved && STR[saved]) return saved;
+        } catch (e) { /* sem armazenamento: segue o browser */ }
+        wanted = ((navigator.languages && navigator.languages[0]) || navigator.language || 'en').toLowerCase();
+        if (wanted === 'pt-br' || wanted === 'pt') return 'br';
+        if (wanted.indexOf('pt') === 0) return 'pt';
+        if (wanted.indexOf('es') === 0) return 'es';
+        return 'en';
+      }
+
+      function apply(next) {
+        lang = next;
+        for (var i = 0; i < nodes.length; i++) nodes[i].textContent = t(nodes[i].getAttribute('data-i18n'));
+        document.documentElement.lang = lang === 'br' ? 'pt-BR' : lang === 'pt' ? 'pt-PT' : lang;
+        document.title = t('docTitle');
+        document.getElementById('lang').value = lang;
+        if (current === 'result') renderResult(false);
+        else if (typeof current === 'number') renderQuestion(false);
+      }
+
+      var select = document.getElementById('lang');
+      select.addEventListener('change', function () {
+        try { localStorage.setItem('vyllo-lang', select.value); } catch (e) { /* so nesta visita */ }
+        apply(select.value);
+      });
+
+      apply(detect());
       history.replaceState({ view: 'intro' }, '');
       track('toolkit_viewed');
     })();
