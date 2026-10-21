@@ -73,12 +73,15 @@ Deno.serve(async (req) => {
     }
 
     // 4. A mesma compra não pode ativar contas diferentes
-    const { data: owner } = await supabase
+    // Outra conta qualquer com esta compra (maybeSingle falhava em silencio
+    // com mais de uma, e a compra passava para a conta seguinte).
+    const { data: others } = await supabase
       .from('profiles')
       .select('id')
       .eq('google_purchase_token', purchaseToken)
-      .maybeSingle()
-    if (owner && owner.id !== user.id) {
+      .neq('id', user.id)
+      .limit(1)
+    if (others && others.length > 0) {
       return json({ error: 'purchase already linked to another account' }, 409)
     }
 

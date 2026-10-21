@@ -64,12 +64,15 @@ Deno.serve(async (req) => {
 
     // 5. A mesma compra não pode ativar contas diferentes
     const originalTx = String(info.originalTransactionId ?? info.transactionId)
-    const { data: owner } = await supabase
+    // Outra conta qualquer com esta compra (maybeSingle falhava em silencio
+    // com mais de uma, e a compra passava para a conta seguinte).
+    const { data: others } = await supabase
       .from('profiles')
       .select('id')
       .eq('apple_original_transaction_id', originalTx)
-      .maybeSingle()
-    if (owner && owner.id !== user.id) {
+      .neq('id', user.id)
+      .limit(1)
+    if (others && others.length > 0) {
       return json({ error: 'purchase already linked to another account' }, 409)
     }
 
