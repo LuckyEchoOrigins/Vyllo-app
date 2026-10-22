@@ -298,6 +298,9 @@ with users as (
 steps as (
   select user_id,
          bool_or(event = 'onboarding_completed')  as onboarding,
+         -- Fim do onboarding (versões de 2026-10-22 em diante): escolheu uma
+         -- categoria para o primeiro item ou "Mais tarde".
+         bool_or(event = 'first_pick' and detail <> 'later') as picked_category,
          bool_or(event = 'search_started')        as searched,
          bool_or(event = 'search_results_viewed') as got_results,
          bool_or(event = 'item_selected')         as selected,
@@ -307,6 +310,7 @@ steps as (
 )
 select count(*)                                                     as signups,
        count(*) filter (where s.onboarding)                         as onboarding_completed,
+       count(*) filter (where s.picked_category)                    as first_pick_category,
        count(*) filter (where s.searched)                           as search_started,
        count(*) filter (where s.got_results)                        as search_results_viewed,
        count(*) filter (where s.selected)                           as item_selected,
