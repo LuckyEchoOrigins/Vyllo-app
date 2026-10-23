@@ -5,3 +5,6 @@ dist/
 build/
 remotion/
 .DS_Store
+
+# Exportacoes do funil (dados de contas)
+analytics-exports/
