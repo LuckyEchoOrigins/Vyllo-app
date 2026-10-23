@@ -1,6 +1,6 @@
 import Stripe from 'npm:stripe@14'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { logPurchase } from '../_shared/purchase_events.ts'
+import { logPurchase, logTrialConversion } from '../_shared/purchase_events.ts'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   apiVersion: '2024-06-20',
@@ -42,7 +42,19 @@ Deno.serve(async (req) => {
       kind: session.payment_status === 'no_payment_required' ? 'trial' : 'purchase',
       plan: plan ?? null,
       transaction_ref: String(session.subscription ?? session.id),
+      // Chaves de teste do Stripe: compra de teste.
+      environment: event.livemode ? 'production' : 'sandbox',
     })
+  }
+
+  // Os dias grátis passaram a pagamento: a primeira fatura paga da
+  // subscrição (a de 0€ ao começar o trial não conta). Só regista se houve um
+  // 'trial' com esta subscrição. Precisa do evento invoice.paid no webhook.
+  if (event.type === 'invoice.paid') {
+    const invoice = event.data.object as Stripe.Invoice
+    if (invoice.subscription && (invoice.amount_paid ?? 0) > 0) {
+      await logTrialConversion(supabase, 'stripe', String(invoice.subscription))
+    }
   }
 
   if (event.type === 'customer.subscription.updated') {

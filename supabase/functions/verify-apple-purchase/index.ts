@@ -9,7 +9,7 @@
 //   APPLE_KEY_ID · APPLE_ISSUER_ID · APPLE_PRIVATE_KEY (conteúdo do .p8)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { appleIsTrial, logPurchase, logTrialConversion } from '../_shared/purchase_events.ts'
+import { appleEnvironment, appleIsTrial, logPurchase, logTrialConversion } from '../_shared/purchase_events.ts'
 import {
   BUNDLE_ID,
   VALID_PRODUCTS,
@@ -96,6 +96,7 @@ Deno.serve(async (req) => {
       plan,
       product_id: info.productId,
       transaction_ref: originalTx,
+      environment: appleEnvironment(info),
     })
     if (!trial) await logTrialConversion(supabase, 'apple', originalTx, info.productId, plan)
 

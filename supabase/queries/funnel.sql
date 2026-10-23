@@ -206,6 +206,8 @@ with sales as (
   select user_id, min(created_at) as sold_at
     from public.purchase_events
    where kind in ('purchase', 'trial_converted')
+     -- Compras de teste fora (vazio = antes de 2026-10-24, desconhecido).
+     and environment is distinct from 'sandbox'
    group by user_id
 ),
 behaviours as (
@@ -245,11 +247,13 @@ select date_trunc('week', created_at at time zone 'Europe/Lisbon')::date as week
        store,
        kind,
        plan,
+       -- production, sandbox, ou (unknown) nas de antes de 2026-10-24.
+       coalesce(environment, '(unknown)') as environment,
        count(*) as n
   from public.purchase_events p
  where p.kind <> 'existing'
    and not exists (select 1 from public.analytics_excluded_users x where x.user_id = p.user_id)
- group by 1, 2, 3, 4
+ group by 1, 2, 3, 4, 5
  order by 1 desc, 2, 3;
 
 
@@ -261,6 +265,8 @@ with sales as (
   select user_id, min(created_at) as sold_at
     from public.purchase_events
    where kind in ('purchase', 'trial_converted')
+     -- Compras de teste fora (vazio = antes de 2026-10-24, desconhecido).
+     and environment is distinct from 'sandbox'
    group by user_id
 )
 select coalesce(s.source, '(not asked)')                     as source,
@@ -340,3 +346,124 @@ select date_trunc('week', day)::date as week,
  where not exists (select 1 from public.analytics_excluded_users x where x.user_id = m.user_id)
  group by 1, 2
  order by 1 desc, empty desc;
+
+
+-- ── 11. Cobertura: que versões e plataformas estão a registar ────────────────
+-- Contas com eventos por versão da app (app_version, desde 2026-10-24). Uma conta
+-- sem nenhuma linha aqui está numa versão sem contexto (ou não abriu a app):
+-- a ausência de eventos dessas contas não é abandono.
+select coalesce(o.app_version, '(before context)') as app_version,
+       coalesce(o.platform, '(unknown)')           as platform,
+       count(distinct o.user_id)                   as accounts,
+       min(o.day)                                  as first_day,
+       max(o.day)                                  as last_day
+  from public.app_opens o
+ where not exists (select 1 from public.analytics_excluded_users x where x.user_id = o.user_id)
+ group by 1, 2
+ order by last_day desc, accounts desc;
+
+
+-- ── 12. Onboarding passo a passo e porta para o primeiro item ───────────────
+-- Só contas instrumentadas (com onboarding_step_1, versão 1.0.44 em diante),
+-- para não misturar quem não tinha registo. first_pick: categoria ou 'later'.
+-- add_opened: por onde abriu o ecrã de adicionar pela primeira vez
+-- (onboarding, empty_home, button, link). Primeiro item em 24 h e tempo até
+-- ele (mediana, minutos), separando quem trouxe jogos da Steam.
+with cohort as (
+  select e.user_id, e.created_at as started_at
+    from public.activation_events e
+   where e.event = 'onboarding_step_1'
+     and not exists (select 1 from public.analytics_excluded_users x where x.user_id = e.user_id)
+),
+ev as (
+  select c.user_id, c.started_at,
+         bool_or(e.event = 'onboarding_step_2')    as step_2,
+         bool_or(e.event = 'onboarding_step_3')    as step_3,
+         bool_or(e.event = 'onboarding_step_4')    as step_4,
+         bool_or(e.event = 'onboarding_step_5')    as step_5,
+         bool_or(e.event = 'onboarding_completed') as completed,
+         max(e.detail) filter (where e.event = 'first_pick')  as first_pick,
+         max(e.detail) filter (where e.event = 'add_opened')  as add_origin,
+         bool_or(e.event = 'search_started')       as searched,
+         bool_or(e.event = 'item_selected')        as selected,
+         min(e.created_at) filter (where e.event = 'item_1') as first_item_at,
+         bool_or(e.event = 'steam_game_added')     as steam_added
+    from cohort c
+    left join public.activation_events e on e.user_id = c.user_id
+   group by c.user_id, c.started_at
+)
+select coalesce(first_pick, '(no pick)')                         as first_pick,
+       coalesce(add_origin, '(never opened add)')                as add_origin,
+       count(*)                                                  as accounts,
+       count(*) filter (where step_2)                            as step_2,
+       count(*) filter (where step_3)                            as step_3,
+       count(*) filter (where step_4)                            as step_4_source,
+       count(*) filter (where step_5)                            as step_5_first_pick,
+       count(*) filter (where completed)                         as completed,
+       count(*) filter (where searched)                          as searched,
+       count(*) filter (where selected)                          as selected,
+       count(*) filter (where first_item_at is not null)         as first_item,
+       count(*) filter (where first_item_at <= started_at + interval '24 hours') as first_item_24h,
+       -- Só contas com 24 h completas contam para a taxa de 24 h.
+       count(*) filter (where started_at <= now() - interval '24 hours')         as old_enough_24h,
+       round((percentile_cont(0.5) within group (
+         order by extract(epoch from first_item_at - started_at) / 60)
+         filter (where first_item_at is not null and not steam_added))::numeric, 1) as median_min_manual,
+       round((percentile_cont(0.5) within group (
+         order by extract(epoch from first_item_at - started_at) / 60)
+         filter (where first_item_at is not null and steam_added))::numeric, 1)     as median_min_steam
+  from ev
+ group by 1, 2
+ order by accounts desc;
+
+
+-- ── 13. Funil da Steam ───────────────────────────────────────────────────────
+-- Ligação → biblioteca lida → primeira sincronização → jogos adicionados, e os
+-- problemas (perfil privado, Steam sem resposta). Cada passo é a primeira vez
+-- da conta; os detalhes são intervalos (nunca o número exato de jogos).
+-- A sincronização automática do servidor (steam-cron, notas 'steam' e
+-- 'steam_import' no activity_log) não abre a app: não entra em app_opens, por
+-- isso não conta como regresso nas retenções deste ficheiro.
+select coalesce(l.detail, '(not linked)')                      as linked_profile,
+       count(*)                                                as accounts,
+       count(*) filter (where r.user_id is not null)           as library_read,
+       count(*) filter (where s.user_id is not null)           as sync_started,
+       count(*) filter (where c.user_id is not null)           as sync_completed,
+       count(*) filter (where g.user_id is not null)           as game_added,
+       count(*) filter (where p.user_id is not null)           as private_profile,
+       count(*) filter (where x.user_id is not null)           as steam_error,
+       string_agg(distinct r.detail, ', ')                     as library_sizes
+  from public.activation_events l
+  left join public.activation_events r on r.user_id = l.user_id and r.event = 'steam_library_read'
+  left join public.activation_events s on s.user_id = l.user_id and s.event = 'steam_sync_started'
+  left join public.activation_events c on c.user_id = l.user_id and c.event = 'steam_sync_completed'
+  left join public.activation_events g on g.user_id = l.user_id and g.event = 'steam_game_added'
+  left join public.activation_events p on p.user_id = l.user_id and p.event = 'steam_private'
+  left join public.activation_events x on x.user_id = l.user_id and x.event = 'steam_error'
+ where l.event = 'steam_linked'
+   and not exists (select 1 from public.analytics_excluded_users e where e.user_id = l.user_id)
+ group by 1;
+
+
+-- ── 14. Dias grátis: em curso, pagos ou acabados ────────────────────────────
+-- Cada trial real com o que lhe aconteceu. 'em curso' não é falha de conversão:
+-- só se conta como perdido depois de acabar sem 'trial_converted'. O estado vem
+-- de profiles (atualizado pelas notificações das lojas e pelo refresh-premium).
+select t.created_at::date                                         as trial_start,
+       t.store,
+       t.plan,
+       coalesce(t.environment, '(unknown)')                       as environment,
+       case
+         when c.id is not null then 'paid'
+         when coalesce(pr.apple_expires_at, pr.google_expires_at) > now() then 'in trial / renewing'
+         when pr.is_premium then 'premium (check)'
+         else 'ended without paying'
+       end                                                        as outcome,
+       coalesce(pr.apple_expires_at, pr.google_expires_at)        as expires_at
+  from public.purchase_events t
+  left join public.purchase_events c
+         on c.store = t.store and c.transaction_ref = t.transaction_ref || ':paid'
+  left join public.profiles pr on pr.id = t.user_id
+ where t.kind = 'trial'
+   and not exists (select 1 from public.analytics_excluded_users x where x.user_id = t.user_id)
+ order by t.created_at desc;

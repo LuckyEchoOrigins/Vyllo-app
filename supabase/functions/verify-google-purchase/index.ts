@@ -6,7 +6,7 @@
 // Secret: GOOGLE_SERVICE_ACCOUNT (ver _shared/google.ts)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { googleIsTrial, logPurchase, logTrialConversion } from '../_shared/purchase_events.ts'
+import { googleEnvironment, googleIsTrial, logPurchase, logTrialConversion } from '../_shared/purchase_events.ts'
 import {
   VALID_SKUS,
   googleToken,
@@ -53,10 +53,12 @@ Deno.serve(async (req) => {
     let expiresAt: Date | null = null
     let needsAck = false
     let trial = false
+    let environment: 'production' | 'sandbox' = 'production'
 
     if (product.subscription) {
       const sub = await fetchSubscription(String(purchaseToken), token)
       if (!sub) return json({ error: 'purchase not found' }, 400)
+      environment = googleEnvironment(sub)
 
       const { active, expiresAt: subExpiry } = readSubscription(sub)
       if (!active) return json({ error: 'subscription not active' }, 400)
@@ -66,6 +68,7 @@ Deno.serve(async (req) => {
     } else {
       const purchase = await fetchProduct(String(sku), String(purchaseToken), token)
       if (!purchase) return json({ error: 'purchase not found' }, 400)
+      environment = googleEnvironment(purchase)
 
       // 0 = comprado, 1 = cancelado, 2 = pendente
       if (purchase.purchaseState !== 0) return json({ error: 'purchase not completed' }, 400)
@@ -110,6 +113,7 @@ Deno.serve(async (req) => {
       plan: product.plan,
       product_id: String(sku),
       transaction_ref: String(purchaseToken),
+      environment,
     })
     if (!trial) {
       await logTrialConversion(supabase, 'google', String(purchaseToken), String(sku), product.plan)
