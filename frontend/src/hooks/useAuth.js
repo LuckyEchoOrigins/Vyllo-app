@@ -63,9 +63,25 @@ export function useAuth() {
       // saudação o mostrar — o idToken da Apple não traz o nome.
       if (data && data.type === 'APPLE_SIGN_IN' && data.idToken) {
         supabase.auth.signInWithIdToken({ provider: 'apple', token: data.idToken })
-          .then(() => {
+          .then(async () => {
             const name = (data.name || '').trim()
             if (name) supabase.auth.updateUser({ data: { full_name: name } }).catch(() => {})
+            // Envia o authorization code para o backend guardar o refresh_token,
+            // que permite revogar o Sign in with Apple na eliminação da conta.
+            const code = (data.code || '').trim()
+            if (code) {
+              try {
+                const { data: { session } } = await supabase.auth.getSession()
+                fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/apple-token`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${session?.access_token}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ code }),
+                }).catch(() => {})
+              } catch { /* best-effort */ }
+            }
           })
           .catch(() => {})
       }
