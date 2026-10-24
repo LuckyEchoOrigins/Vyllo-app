@@ -367,7 +367,8 @@ select coalesce(o.app_version, '(before context)') as app_version,
 -- Só contas instrumentadas (com onboarding_step_1, versão 1.0.44 em diante),
 -- para não misturar quem não tinha registo. first_pick: categoria ou 'later'.
 -- add_opened: por onde abriu o ecrã de adicionar pela primeira vez
--- (onboarding, empty_home, button, link). Primeiro item em 24 h e tempo até
+-- (onboarding, empty_home, button, link; desde a Home dinâmica também
+-- home_next e library_empty). Primeiro item em 24 h e tempo até
 -- ele (mediana, minutos), separando quem trouxe jogos da Steam.
 with cohort as (
   select e.user_id, e.created_at as started_at
