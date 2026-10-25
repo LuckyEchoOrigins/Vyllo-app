@@ -365,7 +365,16 @@ select coalesce(o.app_version, '(before context)') as app_version,
 
 -- ── 12. Onboarding passo a passo e porta para o primeiro item ───────────────
 -- Só contas instrumentadas (com onboarding_step_1, versão 1.0.44 em diante),
--- para não misturar quem não tinha registo. first_pick: categoria ou 'later'.
+-- para não misturar quem não tinha registo.
+-- Dois percursos, separados em flow (não se comparam linha a linha):
+--   old  = a escolha do primeiro item era a 5.ª página do onboarding. Quem
+--          concluiu passou por ela (onboarding_step_5) e tem sempre first_pick
+--          (categoria ou 'later'), gravado ao concluir.
+--   new  = desde 1.0.48 o onboarding acaba na origem (passos 1 a 4, sem 5) e a
+--          escolha é tocar numa capa da Home de primeira vez: first_pick só
+--          existe se tocou, depois de concluir, e nunca é 'later'.
+--   unfinished = não concluiu (sem first_pick em nenhum dos percursos).
+-- first_pick tem no máximo uma linha por conta (único por conta e evento).
 -- add_opened: por onde abriu o ecrã de adicionar pela primeira vez
 -- (onboarding, empty_home, button, link; desde a Home dinâmica também
 -- home_next e library_empty). Primeiro item em 24 h e tempo até
@@ -393,7 +402,10 @@ ev as (
     left join public.activation_events e on e.user_id = c.user_id
    group by c.user_id, c.started_at
 )
-select coalesce(first_pick, '(no pick)')                         as first_pick,
+select case when step_5 then 'old'
+            when completed then 'new'
+            else 'unfinished' end                                as flow,
+       coalesce(first_pick, '(no pick)')                         as first_pick,
        coalesce(add_origin, '(never opened add)')                as add_origin,
        count(*)                                                  as accounts,
        count(*) filter (where step_2)                            as step_2,
@@ -414,8 +426,8 @@ select coalesce(first_pick, '(no pick)')                         as first_pick,
          order by extract(epoch from first_item_at - started_at) / 60)
          filter (where first_item_at is not null and steam_added))::numeric, 1)     as median_min_steam
   from ev
- group by 1, 2
- order by accounts desc;
+ group by 1, 2, 3
+ order by 1, accounts desc;
 
 
 -- ── 13. Funil da Steam ───────────────────────────────────────────────────────
