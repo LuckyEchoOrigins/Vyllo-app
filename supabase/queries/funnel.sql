@@ -468,11 +468,15 @@ select t.created_at::date                                         as trial_start
  where t.kind = 'trial'
    and not exists (select 1 from public.analytics_excluded_users x where x.user_id = t.user_id)
  order by t.created_at desc;
+
 -- ── 15. Home de primeira vez: viu, interagiu, primeiro item ─────────────────
 -- home_intro_shown: a introdução animada apareceu (uma vez por conta).
 -- home_intro_tap: tocou numa capa ou no botão (detalhe: book, game, film ou
 -- any = botão sem categoria; a primeira escolha). item_1: primeiro item
--- (servidor). Por semana em que viu; mediana em minutos até ao primeiro item.
+-- (servidor). Só conta pela ordem: o toque depois de ver, o item depois de
+-- ver (e, à parte, depois do toque). Um item_1 anterior à introdução (conta
+-- que já tinha tido itens) não conta como conversão dela. Por semana em que
+-- viu; mediana em minutos de ver ao primeiro item.
 with shown as (
   select e.user_id, e.created_at as shown_at
     from public.activation_events e
@@ -481,7 +485,10 @@ with shown as (
 ),
 ev as (
   select s.user_id, s.shown_at,
-         max(e.detail) filter (where e.event = 'home_intro_tap')   as first_tap,
+         max(e.detail) filter (where e.event = 'home_intro_tap'
+                                 and e.created_at >= s.shown_at)   as first_tap,
+         min(e.created_at) filter (where e.event = 'home_intro_tap'
+                                     and e.created_at >= s.shown_at) as tap_at,
          min(e.created_at) filter (where e.event = 'item_1')       as first_item_at
     from shown s
     left join public.activation_events e on e.user_id = s.user_id
@@ -489,13 +496,15 @@ ev as (
 )
 select date_trunc('week', shown_at)::date                          as week,
        count(*)                                                    as saw_intro,
-       count(*) filter (where first_tap is not null)               as tapped,
+       count(*) filter (where tap_at is not null)                  as tapped,
        count(*) filter (where first_tap = 'book')                  as tapped_book,
        count(*) filter (where first_tap = 'game')                  as tapped_game,
        count(*) filter (where first_tap = 'film')                  as tapped_film,
        count(*) filter (where first_tap = 'any')                   as tapped_button,
-       count(*) filter (where first_item_at >= shown_at)           as first_item_after,
+       count(*) filter (where first_item_at >= shown_at)           as first_item_after_intro,
+       count(*) filter (where first_item_at >= tap_at)             as first_item_after_tap,
        count(*) filter (where first_item_at is null)               as no_item_yet,
+       count(*) filter (where first_item_at < shown_at)            as had_items_before,
        percentile_cont(0.5) within group (
          order by extract(epoch from first_item_at - shown_at) / 60
        ) filter (where first_item_at >= shown_at)                  as median_minutes_to_item
